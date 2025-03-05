@@ -1,0 +1,33 @@
+# Deno dependencies and caches
+/vendor/
+
+# Editor & system files
+.DS_Store
+Thumbs.db
+
+# Logs & debugging files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build artifacts
+/dist/
+/.dist/
+/out/
+
+# Environment & config files
+.env
+.env.local
+
+# Temporary files
+*.tmp
+*.log
+
+# Compiled JavaScript files
+tsconfig.tsbuildinfo
+
+# Miscellaneous
+node_modules/  # If using third-party tools that install node_modules
+
+# Test coverage reports
+/coverage/

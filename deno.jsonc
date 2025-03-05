@@ -1,0 +1,56 @@
+{
+  "name": "@zanix/utils",
+  "version": "0.1.1",
+  "license": "MIT",
+  "compilerOptions": {
+    "strict": true,
+    "noImplicitAny": true,
+    "types": ["./src/typings/zanix.ts"]
+  },
+  "exports": {
+    ".": "./mod.ts",
+    "./linter/deno-fmt-plugin": "./src/linter/plugins/format/mod.ts",
+    "./linter/deno-std-plugin": "./src/linter/plugins/standard/mod.ts",
+    "./linter/deno-test-plugin": "./src/linter/plugins/test/mod.ts"
+  },
+  "lint": {
+    "rules": {
+      "tags": ["recommended"],
+      "include": [
+        "eqeqeq",
+        "default-param-last",
+        "camelcase",
+        "no-await-in-loop",
+        //"no-console",
+        "no-const-assign",
+        "no-eval",
+        "no-inferrable-types",
+        "no-non-null-asserted-optional-chain",
+        "no-non-null-assertion",
+        "no-self-compare",
+        "no-sync-fn-in-async-fn",
+        "no-throw-literal",
+        "no-useless-rename"
+      ]
+    },
+    "exclude": [".dist/"],
+    "plugins": [
+      "./mod.ts"
+    ],
+    "report": "pretty"
+  },
+  "fmt": {
+    "exclude": [".dist/"],
+    "proseWrap": "preserve",
+    "indentWidth": 2,
+    "singleQuote": true,
+    "lineWidth": 100,
+    "useTabs": false,
+    "semiColons": false
+  },
+  "imports": {
+    "linter/": "./src/linter/",
+    "typings/": "./src/typings/",
+    "utils/": "./src/utils/"
+  }
+}
