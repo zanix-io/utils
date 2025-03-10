@@ -1,5 +1,6 @@
-import { assertEquals } from 'https://deno.land/std@0.151.0/testing/asserts.ts'
-import testPlugin from 'linter/plugins/test/mod.ts'
+import { assertEquals } from '@std/assert'
+import testPlugin from 'modules/linter/plugins/test/mod.ts'
+import { linterMessageFormat } from 'modules/linter/commons/message.ts'
 
 const fileName = 'test.ts'
 
@@ -14,15 +15,15 @@ Deno.test('no-only plugin should report test violations', () => {
   // Ensure there is exactly one diagnostic violation
   assertEquals(diagnostics.length, 1)
 
-  // Log diagnostics for debugging
+  // Verify the diagnostic contains the correct details
+
   const mainDiagnostic = diagnostics[0]
 
-  // Verify the diagnostic contains the correct details
   assertEquals({ ...mainDiagnostic }, {
     id: 'deno-test-plugin/no-only',
-    message: '❌ Deno.test.only is not allowed.',
+    message: linterMessageFormat('Deno.test.only is not allowed.'),
     range: [0, 32],
-    hint: 'Please remove it before pushing to the repository.',
+    hint: 'Please remove no only condition.',
     fix: [],
   })
 })

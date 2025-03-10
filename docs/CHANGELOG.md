@@ -7,15 +7,31 @@ adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-## [0.1.1] - 2025-03-04
+## [0.2.0] - 2025-03-07
 
 ### Added
 
-- Detailed documentation for the `Zanix Utils` library.
-- Export of previous modules, allowing them to be used in projects both within and outside the Zanix ecosystem.
-- Unit tests to ensure functionality and reliability of the library.
+- A logger module.
+- A testing module for mocks.
+- A workers module for using basic taskers.
+- Comprehensive documentation for the `Zanix Utils` library.
+- Export of existing modules, making them usable both within and outside the Zanix ecosystem.
+- Unit tests to ensure the library's functionality and reliability.
+- New `require-access-modifier` rule added to `deno-std-plugin`.
+- New `no-znx-console` rule added to `deno-zanix-plugin`, similar to `no-console`.
+- `Zanix` namespace for global use in modules and types.
 
-## [0.1.0] - 2025-03-03
+### Changed
+
+- Renamed the plugin `deno-standard-plugin` to `deno-std-plugin`.
+- Enabled the `deno-zanix-plugin` as a separate module.
+- Renamed some flags in the `use-znx-flags` validation rule of `deno-zanix-plugin`.
+
+### Fixed
+
+- Fixed some issues in `deno-fmt-plugin`.
+
+## [0.1.0] - 2025-03-04
 
 ### Initial Release
 

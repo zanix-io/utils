@@ -32,32 +32,62 @@ Zanix Utils is a library within the **Zanix** ecosystem, a collection of tools d
 
 ## Installation
 
-To install **Zanix Utils** in your project, use [Deno](https://deno.land/) with the following import:
+To install **Zanix Utils** in your project, use [Deno](https://deno.com/) with the following imports:
 
 ```ts
-import * from 'jsr:@zanix/utils@[version]/mod.ts'
+import * as utils from 'jsr:@zanix/utils@[version]'
 ```
 
 You can also import specific plugins or utilities as needed:
 
-- For the **zanix plugin**:
+- **Zanix linter plugin**:
   ```ts
-  import zanixPlugin from 'jsr:@zanix/utils@[version]'
+  import zanixPlugin from 'jsr:@zanix/utils@[version]/linter/deno-zanix-plugin'
   ```
 
-- For the **fmt plugin**:
+- **Format linter plugin**:
   ```ts
   import fmtPlugin from 'jsr:@zanix/utils@[version]/linter/deno-fmt-plugin'
   ```
 
-- For the **standard plugin**:
+- **Standard linter plugin**:
   ```ts
   import standardPlugin from 'jsr:@zanix/utils@[version]/linter/deno-standard-plugin'
   ```
 
-- For the **test plugin**:
+- **Testing linter plugin**:
   ```ts
   import testPlugin from 'jsr:@zanix/utils@[version]/linter/deno-test-plugin'
+  ```
+
+- **Helpers**:
+  ```ts
+  import * as zanixHelpers from 'jsr:@zanix/utils@[version]/helpers'
+  ```
+
+- **Constants**:
+  ```ts
+  import zanixConstants from 'jsr:@zanix/utils@[version]/constants'
+  ```
+
+- **Regex**:
+  ```ts
+  import zanixRegex from 'jsr:@zanix/utils@[version]/regex'
+  ```
+
+- **Testing utilities**:
+  ```ts
+  import * as zanixTesting from 'jsr:@zanix/utils@[version]/testing'
+  ```
+
+- **Logger**:
+  ```ts
+  import zanixLogger from 'jsr:@zanix/utils@[version]/logger'
+  ```
+
+- **Workers**:
+  ```ts
+  import * as zanixWorkers from 'jsr:@zanix/utils@[version]/workers'
   ```
 
 This provides clear instructions for installing and using the library, including importing specific plugins. Replace `[version]` with the actual version number when needed.
@@ -66,7 +96,7 @@ This provides clear instructions for installing and using the library, including
 
 **Important:**
 
-1. **Install Deno**: Ensure Deno is installed on your system. If not, follow the [official installation guide](https://deno.land/manual/getting_started/installation).
+1. **Install Deno**: Ensure Deno is installed on your system. If not, follow the [official installation guide](https://docs.deno.com/runtime/getting_started/installation).
 
 2. **Install VSCode Extension**: If using Visual Studio Code, install the **Deno extension** for syntax highlighting, IntelliSense, and linting. Get it from the [VSCode marketplace](https://marketplace.visualstudio.com/items?itemName=denoland.vscode-deno).
 
@@ -112,15 +142,15 @@ If you'd like to contribute to this library, please follow these steps:
 
 ## Changelog
 
-For a detailed list of changes, please refer to the [CHANGELOG](./CHANGELOG.md) file.
+For a detailed list of changes, please refer to the [CHANGELOG](./docs/CHANGELOG.md) file.
 
 ## License
 
-This library is licensed under the MIT License. See the [LICENSE](LICENSE) file for more details.
+This library is licensed under the MIT License. See the [LICENSE](./docs/LICENSE) file for more details.
 
 ## Resources
 
-- [Deno Documentation](https://deno.land/manual)
+- [Deno Documentation](https://docs.deno.com/)
 - [Zanix Framework Documentation](https://github.com/zanix-io)
 
 ---

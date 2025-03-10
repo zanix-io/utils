@@ -1,27 +1,33 @@
 {
   "name": "@zanix/utils",
-  "version": "0.1.1",
+  "version": "1.0.0",
   "license": "MIT",
   "compilerOptions": {
     "strict": true,
     "noImplicitAny": true,
-    "types": ["./src/typings/zanix.ts"]
+    "types": ["./src/typings/mod.ts"]
   },
   "exports": {
     ".": "./mod.ts",
-    "./linter/deno-fmt-plugin": "./src/linter/plugins/format/mod.ts",
-    "./linter/deno-std-plugin": "./src/linter/plugins/standard/mod.ts",
-    "./linter/deno-test-plugin": "./src/linter/plugins/test/mod.ts"
+    "./linter/deno-fmt-plugin": "./src/modules/linter/plugins/format/mod.ts",
+    "./linter/deno-std-plugin": "./src/modules/linter/plugins/standard/mod.ts",
+    "./linter/deno-test-plugin": "./src/modules/linter/plugins/test/mod.ts",
+    "./linter/deno-zanix-plugin": "./src/modules/linter/plugins/zanix/mod.ts",
+    "./constants": "./src/modules/constants/mod.ts",
+    "./helpers": "./src/modules/helpers/mod.ts",
+    "./logger": "./src/modules/logger/mod.ts",
+    "./regex": "./src/modules/regex/mod.ts",
+    "./testing": "./src/modules/testing/mod.ts",
+    "./workers": "./src/modules/workers/mod.ts"
   },
   "lint": {
     "rules": {
-      "tags": ["recommended"],
+      "tags": ["recommended", "jsr"],
       "include": [
         "eqeqeq",
         "default-param-last",
         "camelcase",
         "no-await-in-loop",
-        //"no-console",
         "no-const-assign",
         "no-eval",
         "no-inferrable-types",
@@ -31,11 +37,12 @@
         "no-sync-fn-in-async-fn",
         "no-throw-literal",
         "no-useless-rename"
-      ]
+      ],
+      "exclude": ["no-slow-types"]
     },
     "exclude": [".dist/"],
     "plugins": [
-      "./mod.ts"
+      "./src/modules/linter/plugins/zanix/mod.ts"
     ],
     "report": "pretty"
   },
@@ -49,8 +56,21 @@
     "semiColons": false
   },
   "imports": {
+    "@luca/esbuild-deno-loader": "jsr:@luca/esbuild-deno-loader@~0.11.1",
+    "@std/assert": "jsr:@std/assert@0.224",
+    "@std/fmt": "jsr:@std/fmt@0.224",
+    "@std/fs": "jsr:@std/fs@0.224",
+    "@std/path": "jsr:@std/path@0.224",
+    "@std/testing": "jsr:@std/testing@1.0.9",
+    "esbuild": "npm:esbuild@0.20.2",
+    "javascript-obfuscator": "npm:javascript-obfuscator@^4.0.2",
     "linter/": "./src/linter/",
     "typings/": "./src/typings/",
-    "utils/": "./src/utils/"
+    "utils/": "./src/utils/",
+    "modules/": "./src/modules/"
+  },
+  "zanix": {
+    "project": "library",
+    "hash": "zu226a"
   }
 }

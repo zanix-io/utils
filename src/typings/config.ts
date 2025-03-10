@@ -1,4 +1,16 @@
+import type { Projects } from 'typings/zanix.ts'
+
+/**
+ * Deno config file type
+ */
 export interface Config {
+  name?: string
+  zanix?: {
+    hash?: string
+    project?: Projects
+  }
+  version?: `${number}.${number}.${number}`
+  license?: string
   compilerOptions?: {
     jsx?: 'react' | 'react-jsx' | 'react-jsxdev' | 'preserve'
     strict: boolean
@@ -32,7 +44,7 @@ export interface Config {
     semiColons?: boolean
   }
   test?: {
-    allowAll?: boolean
-    filter?: string
+    exclude?: string[]
+    include?: string[]
   }
 }

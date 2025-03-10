@@ -19,9 +19,11 @@ yarn-error.log*
 .env
 .env.local
 
-# Temporary files
+# Temporary files and folders
+__tmp__/
 *.tmp
 *.log
+/.logs/
 
 # Compiled JavaScript files
 tsconfig.tsbuildinfo

@@ -1,4 +1,4 @@
-import { ZNX_STRUCT } from '../utils/zanix/projects.ts'
+import type { ZNX_STRUCT } from 'modules/helpers/zanix/folders/mod.ts'
 
 type ZnxFolderStructure = typeof ZNX_STRUCT
 
@@ -20,18 +20,14 @@ type ZnxFolderStructureModified<T extends ZnxProjects> = Omit<ZnxFolderStructure
   }
 }
 
-declare global {
-  /** Zanix project types */
-  namespace Zanix {
-    /**
-     * Defines the 'Projects' type, which is a reference to ZnxProjects
-     * This type represents the available projects in Zanix.
-     */
-    type Projects = ZnxProjects
-    /**
-     * Defines a generic 'FolderStructure' type that depends on the 'Projects' type
-     * for Zanix applications.
-     */
-    type FolderStructure<T extends Projects> = ZnxFolderStructureModified<T>
-  }
-}
+/**
+ * Defines the 'Projects' type, which is a reference to ZnxProjects
+ * This type represents the available projects in Zanix.
+ */
+export type Projects = ZnxProjects
+/**
+ * Defines a generic 'FolderStructure' type that depends on the 'Projects' type
+ * for Zanix applications.
+ */
+export type FolderStructure<T extends Projects = never> = T extends never ? ZnxFolderStructure
+  : ZnxFolderStructureModified<T>

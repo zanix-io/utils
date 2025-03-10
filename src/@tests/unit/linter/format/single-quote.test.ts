@@ -1,5 +1,6 @@
-import { assertEquals } from 'https://deno.land/std@0.151.0/testing/asserts.ts'
-import formatPlugin from 'linter/plugins/format/mod.ts'
+import { assertEquals } from '@std/assert'
+import formatPlugin from 'modules/linter/plugins/format/mod.ts'
+import { linterMessageFormat } from 'modules/linter/commons/message.ts'
 
 const fileName = 'test.ts'
 
@@ -14,13 +15,13 @@ Deno.test('single-quote plugin should report quotes width violations', () => {
   // Ensure there is exactly one diagnostic violation
   assertEquals(diagnostics.length, 1)
 
-  // Log diagnostics for debugging
+  // Verify the diagnostic contains the correct details
+
   const mainDiagnostic = diagnostics[0]
 
-  // Verify the diagnostic contains the correct details
   assertEquals({ ...mainDiagnostic }, {
     id: 'deno-fmt-plugin/single-quote',
-    message: '❌ Use single quotes instead of double quotes.',
+    message: linterMessageFormat('Use single quotes instead of double quotes.'),
     range: [10, 33],
     hint: 'Consider reviewing the formatting plugin.',
     fix: [],
