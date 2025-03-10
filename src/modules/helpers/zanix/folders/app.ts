@@ -1,8 +1,8 @@
 import { getFolderName, getRootDir } from 'modules/helpers/paths.ts'
 
-const root = getRootDir()
+const root: string = getRootDir()
 
-export const app = {
+export const app: AppFolders = {
   FOLDER: `${root}/src/app`,
   get NAME() {
     return getFolderName(this.FOLDER)
@@ -167,4 +167,135 @@ export const app = {
       },
     },
   },
+}
+
+export type AppFolders = {
+  FOLDER: string
+  get NAME(): string
+  subfolders: {
+    components: {
+      FOLDER: string
+      get NAME(): string
+      files: {
+        EXAMPLE: string
+      }
+    }
+    layout: {
+      FOLDER: string
+      get NAME(): string
+      files: {
+        EXAMPLE: string
+      }
+    }
+    pages: {
+      FOLDER: string
+      get NAME(): string
+      files: {
+        EXAMPLE: string
+      }
+    }
+    resources: {
+      FOLDER: string
+      get NAME(): string
+      subfolders: {
+        intl: {
+          FOLDER: string
+          get NAME(): string
+          subfolders: {
+            es: {
+              FOLDER: string
+              files: {
+                EXAMPLE: string
+              }
+            }
+          }
+        }
+        public: {
+          FOLDER: string
+          get NAME(): string
+          subfolders: {
+            assets: {
+              FOLDER: string
+              get NAME(): string
+              subfolders: {
+                docs: {
+                  FOLDER: string
+                  get NAME(): string
+                  files: {
+                    EXAMPLE: string
+                  }
+                }
+                fonts: {
+                  FOLDER: string
+                  get NAME(): string
+                  files: {
+                    EXAMPLE: string
+                  }
+                }
+                icons: {
+                  FOLDER: string
+                  get NAME(): string
+                  files: {
+                    EXAMPLE: string
+                  }
+                }
+                images: {
+                  FOLDER: string
+                  get NAME(): string
+                  files: {
+                    EXAMPLE: string
+                  }
+                }
+                videos: {
+                  FOLDER: string
+                  get NAME(): string
+                  files: {
+                    EXAMPLE: string
+                  }
+                }
+              }
+              scripts: {
+                FOLDER: string
+                get NAME(): string
+                files: {
+                  EXAMPLE: string
+                }
+              }
+              sitemap: {
+                FOLDER: string
+                get NAME(): string
+                files: {
+                  EXAMPLE_MAIN: string
+                  EXAMPLE_URL: string
+                }
+              }
+              styles: {
+                FOLDER: string
+                get NAME(): string
+                files: {
+                  fonts: string
+                }
+                subfolders: {
+                  apps: {
+                    FOLDER: string
+                    get NAME(): string
+                    files: {
+                      EXAMPLE: string
+                    }
+                  }
+                  global: {
+                    FOLDER: string
+                    get NAME(): string
+                    files: {
+                      EXAMPLE: string
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
 }

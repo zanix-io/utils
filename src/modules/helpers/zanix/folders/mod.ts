@@ -1,15 +1,15 @@
 import { getConfigDir, getRootDir } from 'modules/helpers/paths.ts'
 import { getFolderName } from 'modules/helpers/mod.ts'
-import { app } from './app.ts'
-import { library } from './library.ts'
-import { server } from './server.ts'
+import { app, type AppFolders } from './app.ts'
+import { library, type LibraryFolders } from './library.ts'
+import { server, type ServerFolders } from './server.ts'
 
-const root = `${getRootDir()}/`
+const root: string = `${getRootDir()}/`
 
 /**
  * Zanix folders object structure
  */
-export const ZNX_STRUCT = {
+export const ZNX_STRUCT: ZanixFolders = {
   FOLDER: `${root}`,
   get NAME() {
     return getFolderName(this.FOLDER)
@@ -127,4 +127,109 @@ export const ZNX_STRUCT = {
       },
     },
   },
-} as const
+}
+
+type ZanixFolders = {
+  FOLDER: string
+  get NAME(): string
+  files: {
+    DENO: string | null
+    MOD: string
+    README: string
+    gitignore: string
+  }
+  subfolders: {
+    dist: {
+      FOLDER: string
+      get NAME(): string
+      files: { APP: string }
+    }
+    docs: {
+      FOLDER: string
+
+      get NAME(): string
+      files: {
+        CHANGELOG: string
+        DOCUMENTATION: string
+        LICENCE: string
+      }
+    }
+    src: {
+      FOLDER: string
+
+      get NAME(): string
+      subfolders: {
+        tests: {
+          FOLDER: string
+
+          get NAME(): string
+          subfolders: {
+            functional: {
+              FOLDER: string
+
+              get NAME(): string
+              files: { EXAMPLE: string }
+            }
+            integration: {
+              FOLDER: string
+
+              get NAME(): string
+              files: { EXAMPLE: string }
+            }
+            unit: {
+              FOLDER: string
+
+              get NAME(): string
+              files: { EXAMPLE: string }
+            }
+          }
+        }
+        app: AppFolders
+        library: LibraryFolders
+        server: ServerFolders
+        shared: {
+          FOLDER: string
+
+          get NAME(): string
+          subfolders: {
+            middlewares: {
+              FOLDER: string
+
+              get NAME(): string
+              files: {
+                EXAMPLE_PIPE: string
+                EXAMPLE_INTERCEPTOR: string
+              }
+            }
+          }
+        }
+        typings: {
+          FOLDER: string
+
+          get NAME(): string
+          files: {
+            EXAMPLE: string
+            EXAMPLE_EXPORTED: string
+          }
+        }
+        utils: {
+          FOLDER: string
+
+          get NAME(): string
+          files: {
+            EXAMPLE: string
+          }
+        }
+      }
+    }
+    zanix: {
+      FOLDER: string
+
+      get NAME(): string
+      files: {
+        CONFIG: string
+        SECRETS: string
+      }
+    }
+  }
+}

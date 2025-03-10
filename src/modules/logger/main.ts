@@ -63,7 +63,7 @@ export class Logger<Return extends unknown = DefaultResponse> {
    * @param message - The primary debug message.
    * @param data - Values to be printed to the console.
    */
-  public debug(...console: LoggerData<'debug'>) {
+  public debug(...console: LoggerData<'debug'>): Return | undefined {
     return this.#log('debug', ...console)
   }
 
@@ -72,7 +72,7 @@ export class Logger<Return extends unknown = DefaultResponse> {
    * @param message - The primary error message.
    * @param data - Values to be printed to the console.
    */
-  public error(...console: LoggerData<'error'>) {
+  public error(...console: LoggerData<'error'>): Return | undefined {
     return this.#log('error', ...console)
   }
 
@@ -81,7 +81,7 @@ export class Logger<Return extends unknown = DefaultResponse> {
    * @param message - The primary info message.
    * @param data - Values to be printed to the console.
    */
-  public info(...console: LoggerData<'info'>) {
+  public info(...console: LoggerData<'info'>): Return | undefined {
     return this.#log('info', ...console)
   }
 
@@ -89,7 +89,7 @@ export class Logger<Return extends unknown = DefaultResponse> {
    * Logs a success message
    * @param message - The primary message.
    */
-  public success(...console: LoggerData<'success'>) {
+  public success(...console: LoggerData<'success'>): Return | undefined {
     return this.#log('success', ...console)
   }
 
@@ -98,7 +98,7 @@ export class Logger<Return extends unknown = DefaultResponse> {
    * @param message - The primary warning message.
    * @param data - Values to be printed to the console.
    */
-  public warn(...console: LoggerData<'warn'>) {
+  public warn(...console: LoggerData<'warn'>): Return | undefined {
     return this.#log('warn', ...console)
   }
 }

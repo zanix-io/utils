@@ -1,8 +1,8 @@
 import { getFolderName, getRootDir } from 'modules/helpers/paths.ts'
 
-const root = getRootDir()
+const root: string = getRootDir()
 
-export const server = {
+export const server: ServerFolders = {
   FOLDER: `${root}/src/server`,
   get NAME() {
     return getFolderName(this.FOLDER)
@@ -76,4 +76,64 @@ export const server = {
       },
     },
   },
+}
+
+export type ServerFolders = {
+  FOLDER: string
+  get NAME(): string
+  subfolders: {
+    connectors: {
+      FOLDER: string
+      get NAME(): string
+      files: {
+        EXAMPLE_PROVIDER: string
+        EXAMPLE_CLIENT: string
+      }
+    }
+    handlers: {
+      FOLDER: string
+      get NAME(): string
+      files: {
+        EXAMPLE_CONTROLLER: string
+        EXAMPLE_RESOLVER: string
+        EXAMPLE_SUBSCRIBER: string
+      }
+      subfolders: {
+        rtos: {
+          FOLDER: string
+          get NAME(): string
+          files: { EXAMPLE: string }
+        }
+      }
+    }
+    interactors: {
+      FOLDER: string
+      get NAME(): string
+      files: {
+        EXAMPLE_SERVICE: string
+      }
+    }
+    jobs: {
+      FOLDER: string
+      get NAME(): string
+      files: {
+        EXAMPLE: string
+      }
+    }
+    repositories: {
+      FOLDER: string
+      get NAME(): string
+      files: {
+        EXAMPLE_DATA: string
+        EXAMPLE_MODEL: string
+      }
+      subfolders: {
+        seeders: {
+          FOLDER: string
+          get NAME(): string
+          files: { EXAMPLE: string }
+        }
+      }
+    }
+  }
 }

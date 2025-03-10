@@ -8,7 +8,6 @@ export const linterBaseRules = [
   'no-await-in-loop',
   'no-const-assign',
   'no-eval',
-  'no-inferrable-types',
   'no-non-null-asserted-optional-chain',
   'no-non-null-assertion',
   'no-self-compare',

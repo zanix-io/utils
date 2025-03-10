@@ -44,7 +44,7 @@ export function getRelativePath(uri: string): string {
  * getPathFromCurrent("file.txt") // Resolves to: /currentScriptDir/file.txt
  * ```
  */
-export function getPathFromCurrent(callerUrl: string, relativePath: string) {
+export function getPathFromCurrent(callerUrl: string, relativePath: string): string {
   return fromFileUrl(join(callerUrl, '..', relativePath))
 }
 
@@ -57,7 +57,7 @@ export function getPathFromCurrent(callerUrl: string, relativePath: string) {
  *
  * This folder should be excluded from version control (e.g., added to .gitignore).
  */
-export function getTemporaryFolder(callerUrl: string) {
+export function getTemporaryFolder(callerUrl: string): string {
   const temporalFolder = getPathFromCurrent(callerUrl, '__tmp__')
   Deno.mkdirSync(temporalFolder, { recursive: true })
 

@@ -1,4 +1,5 @@
 import type { CompilerOptions } from 'typings/builder.ts'
+import type { TaskerCalbackArgs } from 'typings/workers.ts'
 
 import { getZanixPaths } from 'modules/helpers/mod.ts'
 import { TaskerManager } from 'modules/workers/tasker.ts'
@@ -19,7 +20,9 @@ import { join } from '@std/path'
  * This function requires the following permissions:
  * `allow-read`, `allow-env`, `allow-write`, `allow-run`
  */
-export function compileAndObfuscate(options: Partial<CompilerOptions> = {}) {
+export function compileAndObfuscate(
+  options: Partial<CompilerOptions> = {},
+): void | Promise<TaskerCalbackArgs> {
   const paths = getZanixPaths()
   const {
     inputFile = paths.files.MOD,

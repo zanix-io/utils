@@ -1,5 +1,6 @@
 export type TaskerFunction = (...args: never[]) => unknown
-export type TaskerCallback = (options: { message?: string; error?: unknown }) => void
+export type TaskerCalbackArgs = { message?: string; error?: unknown }
+export type TaskerCallback = (options: TaskerCalbackArgs) => void
 export type TaskerMessage = Omit<Parameters<Worker['onmessage']>[0], 'data'> & {
   data: {
     moduleUrl: string
