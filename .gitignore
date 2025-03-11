@@ -34,3 +34,6 @@ node_modules/  # If using third-party tools that install node_modules
 
 # Test coverage reports
 /coverage/
+
+# Node
+node_modules
