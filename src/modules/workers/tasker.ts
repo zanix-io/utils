@@ -1,6 +1,7 @@
 import type { TaskerCallback, TaskerFunction, TaskerMessage } from 'typings/workers.ts'
 
 /**
+ * @class
  * This class manages the execution of tasks in a Web Worker.
  * It allows sending functions to be executed in a separate thread, facilitating asynchronous task handling.
  *

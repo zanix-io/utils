@@ -7,6 +7,10 @@
  * \_____/ \__,_||_| |_||_|/_/\_\
  */
 
+import constants from 'utils/constants.ts'
+
+import zanixFlags from 'modules/helpers/zanix/flags.ts'
+
 /**
  * @module zanixConstants
  *
@@ -20,9 +24,4 @@
  * import constants from 'jsr:@zanix/utils@[version]/constants'
  * ```
  */
-
-import constants from 'utils/constants.ts'
-
-import zanixFlags from 'modules/helpers/zanix/flags.ts'
-
 export default { ...constants, ...zanixFlags }

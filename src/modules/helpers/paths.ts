@@ -1,6 +1,6 @@
 import { basename, fromFileUrl, join, relative } from '@std/path'
+import { CONFIG_FILE } from 'utils/constants.ts'
 import { fileExists } from './files.ts'
-import constants from 'utils/constants.ts'
 
 /** Gets the root directory of the project */
 export function getRootDir(): string {
@@ -10,8 +10,8 @@ export function getRootDir(): string {
 /** Gets the path to the `deno.json` configuration file */
 export function getConfigDir(): string | null {
   const rootDir = getRootDir()
-  const jsonFile = join(rootDir, constants.CONFIG_FILE)
-  const jsoncFile = join(rootDir, `${constants.CONFIG_FILE}c`)
+  const jsonFile = join(rootDir, CONFIG_FILE)
+  const jsoncFile = join(rootDir, `${CONFIG_FILE}c`)
 
   if (fileExists(jsonFile)) return jsonFile
   if (fileExists(jsoncFile)) return jsoncFile
@@ -24,9 +24,16 @@ export function getFolderName(uri: string): string {
   return basename(uri)
 }
 
-/** Gets the relative path from root to URI */
-export function getRelativePath(uri: string): string {
-  return relative(getRootDir(), uri)
+/**
+ * Calculates the relative path from one directory to another.
+ *
+ * @param to - The target path to which you want to find the relative path.
+ * @param from - The base directory from which the relative path will be calculated. Defaults to the root directory if not provided.
+ *
+ * @returns The relative path from the `from` directory to the `to` directory.
+ */
+export function getRelativePath(to: string, from?: string): string {
+  return relative(from || getRootDir(), to)
 }
 
 /**

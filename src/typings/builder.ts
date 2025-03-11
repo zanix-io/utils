@@ -17,7 +17,8 @@ export type CompilerOptions = {
    */
   obfuscate?: boolean
   /**
-   * A flag indicating whether a worker should be used for processing.
+   * A flag that determines whether a worker should be used for processing.
+   * Only set to true when necessary, as using workers can add overhead.
    */
   useWorker?: boolean
   /**

@@ -1,9 +1,18 @@
 import { assert, assertEquals, assertExists, assertMatch } from '@std/assert'
-import { Logger } from 'modules/logger/main.ts'
-import { getLogFileName } from 'modules/logger/defaults/storage.ts'
+import { getLogFileName } from 'modules/logger/defaults/storage/file.ts'
+import { serializeMultipleErrors } from 'modules/errors/serialize.ts'
 import { fileExists } from 'modules/helpers/files.ts'
 import { canUseZnx } from 'modules/helpers/zanix/namespace.ts'
+import { Logger } from 'modules/logger/main.ts'
+import { HttpError } from 'modules/errors/main.ts'
+import { stub } from '@std/testing/mock'
 import regex from 'utils/regex.ts'
+
+// Disable logs by testing
+stub(console, 'error')
+stub(console, 'info')
+stub(console, 'debug')
+stub(console, 'warn')
 
 Deno.test(
   'Define a logger with a custom save function and default formatter without global assing.',
@@ -40,6 +49,13 @@ Deno.test(
     assert(!globalSelfLogger.data.length)
     assertEquals(globalSelfLogger.level, 'error')
     assertEquals(globalSelfLogger.message, 'this is an error')
+
+    const error = new HttpError('BAD_GATEWAY')
+    const serializedErrorLog = await logger.error(
+      'this is a serialized error',
+      error,
+    )
+    assertEquals(serializedErrorLog?.data, serializeMultipleErrors([error]))
   },
 )
 
@@ -64,9 +80,8 @@ Deno.test(
 
     const log = JSON.parse(await Deno.readTextFile(customFolder + '/' + getLogFileName()))
 
-    assertExists(!Znx.logger)
-    assertExists(!self.logger)
-    assertExists(!globalThis['logger' as never])
+    assert(!self.logger)
+    assert(!globalThis['logger' as never])
     assertExists(log[0].id)
     assertExists(log[0].timestamp)
     assertEquals(log[0].level, 'warn')

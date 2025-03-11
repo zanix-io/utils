@@ -7,29 +7,6 @@
  * \_____/ \__,_||_| |_||_|/_/\_\
  */
 
-/**
- * @module denoZanixPlugin
- *
- * This module defines a custom linting plugin for Deno that aggregates rules
- * from multiple plugins, providing a comprehensive set of linting checks
- * to improve code quality and ensure consistency across Zanix projects.
- *
- * @example
- *
- * ```ts
- * import zanixPlugin 'jsr:@zanix/utils@[version]'
- *
- * // use of Zanix project flags.
- * const diagnostics = Deno.lint.runPlugin(
- *   zanixPlugin,
- *   'fileName.ts',
- *   `'enablePipe:global'`,
- * );
- * ```
- *
- * @see https://deno.com/
- */
-
 import zanixFlags from './rules/zanix-flags.ts'
 import zanixLogger from './rules/zanix-logger.ts'
 import formatPlugin from '../format/mod.ts'
@@ -56,4 +33,26 @@ const plugin: Deno.lint.Plugin = {
   },
 }
 
+/**
+ * @module denoZanixPlugin
+ *
+ * This module defines a custom linting plugin for Deno that aggregates rules
+ * from multiple plugins, providing a comprehensive set of linting checks
+ * to improve code quality and ensure consistency across Zanix projects.
+ *
+ * @example
+ *
+ * ```ts
+ * import zanixPlugin 'jsr:@zanix/utils@[version]'
+ *
+ * // use of Zanix project flags.
+ * const diagnostics = Deno.lint.runPlugin(
+ *   zanixPlugin,
+ *   'fileName.ts',
+ *   `'enablePipe:global'`,
+ * );
+ * ```
+ *
+ * @see https://deno.com/
+ */
 export default plugin

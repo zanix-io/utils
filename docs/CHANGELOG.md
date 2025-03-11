@@ -7,7 +7,19 @@ adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-## [0.2.0] - 2025-03-07
+## [1.1.0] - 2025-03-10
+
+### Added
+
+- `Errors` module: Custom `HttpErrors` and utility functions.
+- GitHub Actions and helpers to automate the creation of hooks.
+
+### Fixed
+
+- Some default documentation.
+- Logger default instance to get previous global instance.
+
+## [1.0.0] - 2025-03-09
 
 ### Added
 

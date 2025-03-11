@@ -7,27 +7,6 @@
  * \_____/ \__,_||_| |_||_|/_/\_\
  */
 
-/**
- * @module denoStdPlugin
- *
- * This module defines a linting plugin for Deno, which includes a set of custom rules
- * to improve code quality and follow best development practices.
- *
- * @example
- *
- * ```ts
- * import stdPlugin 'jsr:@zanix/utils@[version]/linter/deno-std-plugin'
- *
- * const diagnostics = Deno.lint.runPlugin(
- *   stdPlugin,
- *   'fileName.ts',
- *   `const fs = require('fs');`,
- * );
- * ```
- *
- * @see https://deno.com/
- */
-
 import noRequire from './rules/no-require.ts'
 import noUselessExpression from './rules/no-useless-expression.ts'
 import requireAccessModifier from './rules/require-access-modifier.ts'
@@ -48,4 +27,24 @@ const plugin: Deno.lint.Plugin = {
   },
 }
 
+/**
+ * @module denoStdPlugin
+ *
+ * This module defines a linting plugin for Deno, which includes a set of custom rules
+ * to improve code quality and follow best development practices.
+ *
+ * @example
+ *
+ * ```ts
+ * import stdPlugin 'jsr:@zanix/utils@[version]/linter/deno-std-plugin'
+ *
+ * const diagnostics = Deno.lint.runPlugin(
+ *   stdPlugin,
+ *   'fileName.ts',
+ *   `const fs = require('fs');`,
+ * );
+ * ```
+ *
+ * @see https://deno.com/
+ */
 export default plugin

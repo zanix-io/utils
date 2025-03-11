@@ -2,6 +2,7 @@ import type { Formatter as LoggerFormatter, SaveDataFunction as LoggerSaveData }
 import type { Logger } from 'modules/logger/main.ts'
 import type { TaskerCallback as WorkerTaskerCallback } from 'typings/workers.ts'
 import type { Projects } from 'typings/zanix.ts'
+import type { HttpErrorCodes as HttpErrors } from 'typings/errors.ts'
 
 type DefaultLogger = typeof Logger['prototype']
 
@@ -27,6 +28,9 @@ declare global {
     namespace workers {
       /** The tasker manager worker callback */
       type TaskerCallback = WorkerTaskerCallback
+    }
+    namespace errors {
+      type HttpErrorCodes = HttpErrors
     }
   }
 

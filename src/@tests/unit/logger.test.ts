@@ -3,13 +3,10 @@ import { assertSpyCall, returnsNext, stub } from '@std/testing/mock'
 import { showMessage } from 'modules/logger/base.ts'
 import { baseFormatter } from 'modules/logger/defaults/formatter.ts'
 import { mockWrap } from 'modules/testing/mocks.ts'
-import {
-  baseSaveData,
-  cleanupExpiredLogs,
-  getLogFileName,
-  shouldBeDeleted,
-} from 'modules/logger/defaults/storage.ts'
+import { baseSaveData } from 'modules/logger/defaults/storage/main.ts'
 import { getTemporaryFolder } from 'modules/helpers/paths.ts'
+import { cleanupExpiredLogs, shouldBeDeleted } from 'modules/logger/defaults/storage/cleanup.ts'
+import { getLogFileName } from 'modules/logger/defaults/storage/file.ts'
 import { fileExists } from 'modules/helpers/files.ts'
 import { getISODate } from 'utils/dates.ts'
 
@@ -123,6 +120,20 @@ Deno.test('Validates the custom save log', () => {
   })
 
   saveDataFunctionMocked.restore()
+})
+
+Deno.test('Validates the custom save log error', () => {
+  const errorMessage = 'An error ocurred on save'
+
+  const consoleMock = stub(console, 'warn')
+
+  const saveDataFunction = () => {
+    throw new Error(errorMessage)
+  }
+
+  baseSaveData(saveDataFunction)({} as never)
+
+  assertEquals(consoleMock.calls[0].args[2].cause.message, errorMessage)
 })
 
 Deno.test('Validates logger file default name', () => {

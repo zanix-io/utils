@@ -3,6 +3,7 @@
 
 # Editor & system files
 .DS_Store
+.vscode/
 Thumbs.db
 
 # Logs & debugging files
@@ -33,3 +34,6 @@ node_modules/  # If using third-party tools that install node_modules
 
 # Test coverage reports
 /coverage/
+
+# Github actions
+.github

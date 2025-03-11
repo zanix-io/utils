@@ -7,13 +7,10 @@
  * \_____/ \__,_||_| |_||_|/_/\_\
  */
 
-import { Logger } from 'modules/logger/main.ts'
+import { Logger as MainClass } from 'modules/logger/main.ts'
 
 /**
- * @module zanixLogger
- *
- * This module defines a Logger class that helps avoid direct usage of `console`,
- * improving log quality and ensuring consistency across your projects.
+ * @class The main logger class
  *
  * @example
  * Define a logger with a custom save function, where logs are saved according to custom specifications.
@@ -124,10 +121,23 @@ import { Logger } from 'modules/logger/main.ts'
  * self.logger.debug('message to log');  // Accessing via global context
  * ```
  */
+export class Logger extends MainClass {} //Necessary to extend because of docs
 
-export { Logger } from './main.ts'
-
-// Default logger
-const logger: Logger = new Logger()
+/**
+ * @instance zanixLogger
+ *
+ * This provides a default instance of the `Logger` class to help avoid direct usage of `console`,
+ * improving log quality and ensuring consistency across your projects.
+ *
+ * @see {@link Logger}
+ */
+const logger: Logger = new Proxy(Logger['prototype'], {
+  get(_, prop) {
+    // Retrieve the current global logger instance, or create a new one if it doesn't exist.
+    // This is necessary to replace the default Logger instance with the current global logger (self.logger).
+    const logger = self.logger || new Logger()
+    return logger[prop as keyof typeof Logger['prototype']].bind(logger)
+  },
+})
 
 export default logger

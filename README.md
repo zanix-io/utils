@@ -29,6 +29,8 @@ Zanix Utils is a library within the **Zanix** ecosystem, a collection of tools d
   - Regular expressions.
   - Constants.
   - General-purpose helpers.
+- Workers utilities.
+- Logger.
 
 ## Installation
 
@@ -40,55 +42,48 @@ import * as utils from 'jsr:@zanix/utils@[version]'
 
 You can also import specific plugins or utilities as needed:
 
-- **Zanix linter plugin**:
-  ```ts
-  import zanixPlugin from 'jsr:@zanix/utils@[version]/linter/deno-zanix-plugin'
-  ```
+<style>
+  pre code {
+    max-height: 200px;
+    overflow-y: auto;
+    display: block;
+  }
+</style>
 
-- **Format linter plugin**:
-  ```ts
-  import fmtPlugin from 'jsr:@zanix/utils@[version]/linter/deno-fmt-plugin'
-  ```
+```ts
+// Zanix linter plugin
+import zanixPlugin from 'jsr:@zanix/utils@[version]/linter/deno-zanix-plugin'
 
-- **Standard linter plugin**:
-  ```ts
-  import standardPlugin from 'jsr:@zanix/utils@[version]/linter/deno-standard-plugin'
-  ```
+// Format linter plugin
+import fmtPlugin from 'jsr:@zanix/utils@[version]/linter/deno-fmt-plugin'
 
-- **Testing linter plugin**:
-  ```ts
-  import testPlugin from 'jsr:@zanix/utils@[version]/linter/deno-test-plugin'
-  ```
+// Standard linter plugin
+import standardPlugin from 'jsr:@zanix/utils@[version]/linter/deno-standard-plugin'
 
-- **Helpers**:
-  ```ts
-  import * as zanixHelpers from 'jsr:@zanix/utils@[version]/helpers'
-  ```
+// Testing linter plugin
+import testPlugin from 'jsr:@zanix/utils@[version]/linter/deno-test-plugin'
 
-- **Constants**:
-  ```ts
-  import zanixConstants from 'jsr:@zanix/utils@[version]/constants'
-  ```
+// Available constants
+import zanixConstants from 'jsr:@zanix/utils@[version]/constants'
 
-- **Regex**:
-  ```ts
-  import zanixRegex from 'jsr:@zanix/utils@[version]/regex'
-  ```
+// Regular expressions
+import zanixRegex from 'jsr:@zanix/utils@[version]/regex'
 
-- **Testing utilities**:
-  ```ts
-  import * as zanixTesting from 'jsr:@zanix/utils@[version]/testing'
-  ```
+// Logger
+import zanixLogger, { Logger } from 'jsr:@zanix/utils@[version]/logger'
 
-- **Logger**:
-  ```ts
-  import zanixLogger from 'jsr:@zanix/utils@[version]/logger'
-  ```
+// Helpers
+import * as zanixHelpers from 'jsr:@zanix/utils@[version]/helpers'
 
-- **Workers**:
-  ```ts
-  import * as zanixWorkers from 'jsr:@zanix/utils@[version]/workers'
-  ```
+// Testing utilities
+import * as zanixTesting from 'jsr:@zanix/utils@[version]/testing'
+
+// Workers
+import * as zanixWorkers from 'jsr:@zanix/utils@[version]/workers'
+
+// Errors
+import * as zanixErrors from 'jsr:@zanix/utils@[version]/errors'
+```
 
 This provides clear instructions for installing and using the library, including importing specific plugins. Replace `[version]` with the actual version number when needed.
 
@@ -114,7 +109,7 @@ This provides clear instructions for installing and using the library, including
 Here’s a basic example of how to use the library:
 
 ```typescript
-import { helpers } from 'jsr:@zanix/utils@[version]/mod.ts'
+import { helpers } from 'jsr:@zanix/utils@[version]'
 
 // Some helpers
 await helpers.compileAndObfuscate() // esbuild

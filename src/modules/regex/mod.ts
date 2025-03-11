@@ -7,6 +7,8 @@
  * \_____/ \__,_||_| |_||_|/_/\_\
  */
 
+import regex from 'utils/regex.ts'
+
 /**
  * @module zanixRegex
  *
@@ -19,7 +21,4 @@
  * import regex from 'jsr:@zanix/utils@[version]/regex'
  * ```
  */
-
-import regex from 'utils/regex.ts'
-
-export default regex
+export default { ...regex }

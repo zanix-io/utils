@@ -1,73 +1,19 @@
 import type { DefaultResponse, SaveDataFile, SaveDataFunction } from 'typings/logger.ts'
 
 import { showMessage } from 'modules/logger/base.ts'
+import { serializeError } from 'modules/errors/serialize.ts'
 import { canUseZnx } from 'modules/helpers/zanix/namespace.ts'
 import { TaskerManager } from 'modules/workers/mod.ts'
-import { getISODate } from 'utils/dates.ts'
+import { cleanupExpiredLogs } from './cleanup.ts'
+import { getLogFileName } from './file.ts'
 import { join } from '@std/path'
-import regex from 'utils/regex.ts'
-
-let lastLogFilename: string
-const logFilename = 'log'
-
-/**
- * Function to define if a file should be deleted
- */
-export const shouldBeDeleted = (fileName: string, now: number, expirationDays: number) => {
-  const logDate = extractLogDate(fileName)
-  if (!logDate) return true
-  const fileDate = new Date(logDate).getTime() // Extract the date from the filename
-
-  return (now - fileDate >= expirationDays * 24 * 60 * 60 * 1000)
-}
-
-/**
- * Function to generate the log file name based on the expiration date
- */
-export const getLogFileName = () => {
-  const isoDate = getISODate()
-  lastLogFilename = `${logFilename}-${isoDate}.json`
-
-  return lastLogFilename
-}
-
-/**
- * Function to extract log date
- */
-export const extractLogDate = (file: string) => {
-  const match = file.match(new RegExp(regex.isoDateRegex.source.replace('^', '').replace('$', '')))
-
-  return match?.[0]
-}
-
-/**
- * Function to clean up expired log files
- */
-export const cleanupExpiredLogs = async (logsDir: string, expirationTime: `${number}d`) => {
-  if (lastLogFilename === getLogFileName()) return
-
-  await Deno.mkdir(logsDir, { recursive: true })
-
-  const files = Deno.readDir(logsDir)
-
-  const now = new Date(getISODate()).getTime()
-
-  const expirationDays = Number(expirationTime.charAt(0))
-
-  for await (const file of files) {
-    if (file.isDirectory) return
-    if (shouldBeDeleted(file.name, now, expirationDays)) {
-      await Deno.remove(`${logsDir}/${file.name}`) // Delete if the log file is older than expiration time
-    }
-  }
-}
 
 /**
  * Default save data function
  */
 export const defaultSaveData: SaveDataFunction<
   DefaultResponse,
-  Exclude<SaveDataFile & { _fmtLog?: unknown }, 'asFile'>
+  SaveDataFile & { _fmtLog?: unknown }
 > = async (
   context,
 ) => {
@@ -109,9 +55,9 @@ export function baseSaveData(
   // Zanix libraries do not save logs if  does not have a custom saveDataFunction.
   if (canUseZnx() && Znx.config.project === 'library' && !saveDataFunction) return () => {}
 
-  let baseContext: Exclude<SaveDataFile, 'asFile'>
+  let baseContext: SaveDataFile = {}
   if (typeof saveDataFunction !== 'function') {
-    baseContext = typeof saveDataFunction !== 'string' ? saveDataFunction as typeof baseContext : {}
+    baseContext = typeof saveDataFunction !== 'string' ? { ...saveDataFunction } : {}
     saveDataFunction = defaultSaveData
   }
 
@@ -120,7 +66,7 @@ export function baseSaveData(
       'warn',
       'Custom save data function failed. The log could not be saved.',
       {
-        cause: e,
+        cause: serializeError(e),
       },
     )
 

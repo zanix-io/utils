@@ -1,8 +1,8 @@
 import type { CompilerOptions } from 'typings/builder.ts'
 import type { TaskerCalbackArgs } from 'typings/workers.ts'
 
-import { getZanixPaths } from 'modules/helpers/mod.ts'
 import { TaskerManager } from 'modules/workers/tasker.ts'
+import { getZanixPaths } from 'modules/helpers/zanix/projects.ts'
 import { mainBuilderFunction } from './main.ts'
 import { join } from '@std/path'
 
@@ -40,7 +40,7 @@ export function compileAndObfuscate(
       mainBuilderFunction,
       callback,
     )
-    return tarker.invoke({ inputFile, outputFile, minify, obfuscate, bundle })
+    return tarker.invoke({ inputFile, outputFile, minify, obfuscate, bundle, onBackground: true })
   } else {
     return mainBuilderFunction({ inputFile, outputFile, minify, obfuscate, bundle, callback })
   }

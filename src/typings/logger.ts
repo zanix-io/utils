@@ -81,7 +81,7 @@ export type SaveDataFunctionOptions<Return extends unknown = unknown, BaseContex
 
 /** The save log data as a file */
 export type SaveDataFile =
-  | {
+  & {
     /**
      * Local URI folder to save file log
      */
@@ -92,23 +92,24 @@ export type SaveDataFile =
      */
     expirationTime?: `${number}d`
   }
-    & ({
-      /**
-       *  A flag that determines whether a worker should be utilized for processing.
-       */
-      useWorker?: false
-    } | {
-      /**
-       *  A flag that determines whether a worker should be utilized for processing.
-       */
-      useWorker?: true
-      /**
-       * Callback function to be executed when the process completes.
-       * It is recommended to use this only when `useWorker` is set to `true`.
-       */
-      callback?: TaskerCallback
-    })
-  | 'asFile'
+  & ({
+    /**
+     * A flag that determines whether a worker should be used for processing.
+     * Only set to true when necessary, as using workers can add overhead.
+     */
+    useWorker?: false
+  } | {
+    /**
+     * A flag that determines whether a worker should be used for processing.
+     * Only set to true when necessary, as using workers can add overhead.
+     */
+    useWorker?: true
+    /**
+     * Callback function to be executed when the process completes.
+     * It is recommended to use this only when `useWorker` is set to `true`.
+     */
+    callback?: TaskerCallback
+  })
 
 /** The save log data options as a file */
 export type SaveDataFileOptions = {

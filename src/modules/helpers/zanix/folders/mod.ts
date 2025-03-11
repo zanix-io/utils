@@ -1,5 +1,4 @@
-import { getConfigDir, getRootDir } from 'modules/helpers/paths.ts'
-import { getFolderName } from 'modules/helpers/mod.ts'
+import { getConfigDir, getFolderName, getRootDir } from 'modules/helpers/paths.ts'
 import { app, type AppFolders } from './app.ts'
 import { library, type LibraryFolders } from './library.ts'
 import { server, type ServerFolders } from './server.ts'

@@ -9,8 +9,8 @@ import logger from 'modules/logger/mod.ts'
  * Base function for worker
  */
 export const mainBuilderFunction = async (
-  { inputFile, outputFile, minify, bundle, obfuscate, callback }: Omit<
-    CompilerOptions,
+  { inputFile, outputFile, minify, bundle, obfuscate, callback, onBackground }: Omit<
+    CompilerOptions & { onBackground?: boolean },
     'useWorker'
   >,
 ) => {
@@ -51,7 +51,10 @@ export const mainBuilderFunction = async (
     // Write the obfuscated code back to the file
     await Deno.writeTextFile(outputFile, finalCode)
 
-    logger.success(`Build and obfuscation completed: ${outputFile}`, 'noSave')
+    logger.success(
+      `Build and obfuscation completed ${onBackground ? 'on background' : ''}: ${outputFile}`,
+      'noSave',
+    )
 
     result.message = 'Build completed'
     callback?.(result)

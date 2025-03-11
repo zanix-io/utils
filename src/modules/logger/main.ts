@@ -9,14 +9,12 @@ import type {
   SaveDataFunction,
 } from 'typings/logger.ts'
 
-import { baseSaveData } from 'modules/logger/defaults/storage.ts'
+import { serializeMultipleErrors } from 'modules/errors/serialize.ts'
 import { baseFormatter } from 'modules/logger/defaults/formatter.ts'
 import { setGlobalZnx } from 'modules/helpers/zanix/namespace.ts'
+import { baseSaveData } from './defaults/storage/main.ts'
 import { showMessage } from './base.ts'
 
-/**
- * The main logger class
- */
 export class Logger<Return extends unknown = DefaultResponse> {
   #formatter: Formatter = () => ({})
   #saveFuntion: SaveDataFunction = () => {}
@@ -72,8 +70,9 @@ export class Logger<Return extends unknown = DefaultResponse> {
    * @param message - The primary error message.
    * @param data - Values to be printed to the console.
    */
-  public error(...console: LoggerData<'error'>): Return | undefined {
-    return this.#log('error', ...console)
+  public error(...[message, ...console]: LoggerData<'error'>): Return | undefined {
+    const args: LoggerData = [message, ...serializeMultipleErrors(console)]
+    return this.#log('error', ...args)
   }
 
   /**

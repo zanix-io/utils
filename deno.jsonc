@@ -18,7 +18,8 @@
     "./logger": "./src/modules/logger/mod.ts",
     "./regex": "./src/modules/regex/mod.ts",
     "./testing": "./src/modules/testing/mod.ts",
-    "./workers": "./src/modules/workers/mod.ts"
+    "./workers": "./src/modules/workers/mod.ts",
+    "./errors": "./src/modules/errors/mod.ts"
   },
   "lint": {
     "rules": {

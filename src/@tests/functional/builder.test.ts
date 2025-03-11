@@ -1,6 +1,11 @@
 import { assert, assertEquals } from '@std/assert'
 import { compileAndObfuscate } from 'modules/helpers/mod.ts'
 import { getTemporaryFolder } from 'modules/helpers/paths.ts'
+import { stub } from '@std/testing/mock'
+
+// Disable logs by testing
+stub(console, 'error')
+stub(console, 'info')
 
 const temporaryFile = getTemporaryFolder(import.meta.url)
 const outputFile = temporaryFile + '/dist.js'

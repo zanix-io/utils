@@ -7,6 +7,24 @@
  * \_____/ \__,_||_| |_||_|/_/\_\
  */
 
+import singleQuote from './rules/single-quote.ts'
+import lineWidth from './rules/line-width.ts'
+
+/**
+ * @name deno-fmt-plugin
+ *
+ * This linter plugin currently includes the following rules:
+ * - {@link singleQuote}: Enforces the use of single quotes for string literals.
+ * - {@link lineWidth}: Enforces a maximum line width for better readability.
+ */
+const plugin: Deno.lint.Plugin = {
+  name: 'deno-fmt-plugin',
+  rules: {
+    ...singleQuote,
+    ...lineWidth,
+  },
+}
+
 /**
  * @module denoFormatPlugin
  *
@@ -27,23 +45,4 @@
  *
  * @see https://deno.com/
  */
-
-import singleQuote from './rules/single-quote.ts'
-import lineWidth from './rules/line-width.ts'
-
-/**
- * @name deno-fmt-plugin
- *
- * This linter plugin currently includes the following rules:
- * - {@link singleQuote}: Enforces the use of single quotes for string literals.
- * - {@link lineWidth}: Enforces a maximum line width for better readability.
- */
-const plugin: Deno.lint.Plugin = {
-  name: 'deno-fmt-plugin',
-  rules: {
-    ...singleQuote,
-    ...lineWidth,
-  },
-}
-
 export default plugin

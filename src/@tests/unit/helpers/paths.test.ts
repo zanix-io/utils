@@ -24,7 +24,7 @@ Deno.test('get config dir should return correct config filename', () => {
     getRootDir: () => root,
     join,
     fileExists: (_: string) => false,
-    constants: { CONFIG_FILE: 'config.json' },
+    CONFIG_FILE: 'config.json',
   }
 
   // result for jsonc
