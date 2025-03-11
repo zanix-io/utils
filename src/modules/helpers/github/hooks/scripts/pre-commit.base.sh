@@ -2,8 +2,6 @@
 
 ######### LINT STAGED ############
 
-#!/bin/sh
-
 # Get the files that are staged for commit (only specified extensions).
 STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(FILE_EXTENSIONS)$')
 
@@ -13,7 +11,7 @@ if [ -z "$STAGED_FILES" ]; then
 fi
 
 # Run the linter and fmt only on the staged files.
-deno fmt --check $STAGED_FILES -- --allow-read
+deno fmt $STAGED_FILES -- --allow-read
 deno lint --fix $STAGED_FILES -- --allow-read --allow-write
 
 # If the linter passes without errors, re-add the files to the staging area.
