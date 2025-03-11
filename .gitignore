@@ -34,6 +34,3 @@ node_modules/  # If using third-party tools that install node_modules
 
 # Test coverage reports
 /coverage/
-
-# Github actions
-.github

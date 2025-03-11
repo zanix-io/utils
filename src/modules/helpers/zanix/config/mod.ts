@@ -3,6 +3,7 @@ import type { Projects } from 'typings/zanix.ts'
 
 import { getZanixPaths } from 'modules/helpers/zanix/projects.ts'
 import { generateImports, generateZanixHash, linterBaseRules } from './main.ts'
+import { ZNX_STRUCT } from 'modules/helpers/zanix/folders/mod.ts'
 
 /**
  * Define a base `deno` configuration file
@@ -52,5 +53,12 @@ export function baseZnxConfig(type: Projects): Config {
       semiColons: false,
     },
     imports,
+    publish: {
+      exclude: [
+        '.github',
+        ZNX_STRUCT.subfolders.src.NAME + '/' +
+        ZNX_STRUCT.subfolders.src.subfolders.tests.NAME,
+      ],
+    },
   }
 }

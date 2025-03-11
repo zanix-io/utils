@@ -64,6 +64,14 @@ export const configAdaptation = (currentConfig: Config, config: Config) => {
     ...config.imports,
   }
 
+  //  Excludes be overriden
+
+  const currentExclude = currentConfig.publish?.exclude || []
+  const baseExclude = config.publish?.exclude || []
+  const exclude = Array.from(new Set([...currentExclude, ...baseExclude]))
+
+  newConfig.publish = { ...currentConfig.publish, exclude }
+
   // TODO: tasks when cli be ready
 
   return newConfig

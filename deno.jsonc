@@ -21,6 +21,9 @@
     "./workers": "./src/modules/workers/mod.ts",
     "./errors": "./src/modules/errors/mod.ts"
   },
+  "publish": {
+    "exclude": [".github", "src/@tests"]
+  },
   "lint": {
     "rules": {
       "tags": ["recommended", "jsr"],

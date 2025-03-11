@@ -17,6 +17,9 @@ export interface Config {
     noImplicitAny: boolean
   }
   imports?: Record<string, string>
+  publish?: {
+    exclude?: string[]
+  }
   tasks?: Record<string, string>
   lint?: {
     rules?: {

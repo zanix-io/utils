@@ -66,6 +66,7 @@ Deno.test('baseZnxConfig should return a valid config object for app-server proj
 
   assert(config.zanix?.project === 'app-server')
   assertExists(config.zanix.hash)
+  assertEquals(config.publish?.exclude, ['.github', 'src/@tests'])
   assertEquals(config.lint?.rules?.tags, ['recommended', 'jsr', 'react', 'jsx'])
   assertEquals(config.imports, {
     'app/': 'src/app',
@@ -157,6 +158,7 @@ Deno.test('saveZanixConfig should update an existing config file', async () => {
         'example/': './src/linter/',
         'typings/': './src/typings/',
       },
+      'publish': { 'exclude': ['myOwn'], 'other': 1 },
     }),
   )
 
@@ -179,6 +181,8 @@ Deno.test('saveZanixConfig should update an existing config file', async () => {
 
   assertEquals(file.lint.rules.tags, ['recommended', 'jsr'])
 
+  assertEquals(file.publish.other, 1)
+  assertEquals(file.publish.exclude, ['myOwn', '.github', 'src/@tests'])
   assertEquals(file.fmt, {
     'exclude': [],
     'proseWrap': 'always',
