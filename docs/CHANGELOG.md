@@ -13,6 +13,7 @@ adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 - `Errors` module: Custom `HttpErrors` and utility functions.
 - GitHub Actions and helpers to automate the creation of hooks.
+- Editor helpers to automate the creation of settings.
 
 ### Fixed
 
