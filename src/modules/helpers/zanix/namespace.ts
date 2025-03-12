@@ -5,6 +5,8 @@ type Zanix = typeof Znx
  * If the `Znx` namespace does not exist, it is created automatically.
  *
  * @param data - The object to be stored globally.
+ *
+ * @category helpers
  */
 export function setGlobalZnx(data: Partial<Zanix>) {
   if (typeof Znx === 'undefined') {
@@ -33,6 +35,8 @@ export function setGlobalZnx(data: Partial<Zanix>) {
  *   // Do something with myConfig
  * }
  * ```
+ *
+ * @category helpers
  */
 export function canUseZnx(): boolean {
   return typeof Znx !== 'undefined'
@@ -45,6 +49,8 @@ export function canUseZnx(): boolean {
  * This function checks if the `Znx` namespace is available for use (via `canUseZnx()`), and if so, it returns the `Znx` object.
  *
  * @returns The `Znx` namespace if it is available and can be used, or `undefined` if it cannot.
+ *
+ * @category helpers
  */
 export function getGlobalZnx(): Zanix | undefined {
   if (canUseZnx()) return Znx

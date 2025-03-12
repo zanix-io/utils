@@ -1,5 +1,7 @@
 /**
- * Helper to generate a basic random uuid
+ * Helper to generate a basic random `uuid`
+ *
+ * @category helpers
  */
 export function generateBasicUUID(): string {
   const randomHex = (length: number): string =>

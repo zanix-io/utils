@@ -4,8 +4,6 @@ import regex from 'utils/regex.ts'
 /**
  * `Deno lint` rule to enforce the use of single quotes for string literals.
  *
- * @description
- *
  * This rule checks for string literals in the code and ensures they use single quotes (`'`)
  * instead of double quotes (`"`). Consistent use of single quotes improves readability and
  * follows certain style guidelines, especially for JavaScript/TypeScript code.

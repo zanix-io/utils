@@ -10,8 +10,6 @@
 import regex from 'utils/regex.ts'
 
 /**
- * @module zanixRegex
- *
  * This module provides regular expressions used in the project.
  * Contains reusable patterns for validating data.
  *
@@ -20,5 +18,7 @@ import regex from 'utils/regex.ts'
  * ```typescript
  * import regex from 'jsr:@zanix/utils@[version]/regex'
  * ```
+ *
+ * @module zanixRegex
  */
-export default { ...regex }
+export default Object.freeze(regex) as typeof regex

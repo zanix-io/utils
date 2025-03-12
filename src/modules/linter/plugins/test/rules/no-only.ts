@@ -3,8 +3,6 @@ import { linterMessageFormat } from 'modules/linter/commons/message.ts'
 /**
  * `Deno lint` rule to disallow the usage of `Deno.test.only` in the code.
  *
- * @description
- *
  * This rule checks for the usage of `Deno.test.only`, which is often used to run
  * a single test while skipping others. While useful for development, it should
  * not be present in the code pushed to the repository to avoid unintentional test skipping.

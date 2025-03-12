@@ -1,8 +1,7 @@
 import type { TaskerCallback, TaskerFunction, TaskerMessage } from 'typings/workers.ts'
 
 /**
- * @class
- * This class manages the execution of tasks in a Web Worker.
+ * This class manages the execution of `tasks` in a Web Worker.
  * It allows sending functions to be executed in a separate thread, facilitating asynchronous task handling.
  *
  * @example
@@ -16,6 +15,8 @@ import type { TaskerCallback, TaskerFunction, TaskerMessage } from 'typings/work
  * This example demonstrates how to create a function (`myFunction`) that utilizes
  * the `TaskerManager` class to invoke a task using the current module's URL and
  * the function itself as parameters. The function is then invoked with `arg0`.
+ *
+ * @category workers
  */
 export class TaskerManager<T extends TaskerFunction> {
   #worker

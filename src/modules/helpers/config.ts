@@ -12,6 +12,9 @@ let configFile: ConfigFile | null = null
  *
  * This function requires the following permissions:
  * `allow-read` for `deno` config json file.
+ *
+ * @tags allow-read
+ * @category helpers
  */
 export function readConfig(configPath?: string | null): ConfigFile {
   if (configFile) return configFile
@@ -40,6 +43,9 @@ export function readConfig(configPath?: string | null): ConfigFile {
  *
  * This function requires the following permissions:
  * `allow-read` and `allow-write` for `deno` config json file.
+ *
+ * @tags allow-read, allow-write
+ * @category helpers
  */
 export async function saveConfig(config: ConfigFile, path?: string | null): Promise<void> {
   configFile = null // reset saved config file data

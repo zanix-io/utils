@@ -11,7 +11,7 @@ import { createPublishWorkflow } from 'modules/helpers/github/workflows/publish.
 import { createIgnoreBaseFile } from 'modules/helpers/github/files/main.ts'
 
 /**
- * Prepares the GitHub environment by setting up necessary hooks and workflows.
+ * Prepares the `GitHub` environment by setting up necessary hooks and workflows.
  * This function ensures that the pre-commit hook, pre-push hook, publish workflow, and `.gitignore` are created.
  *
  * @param {Object} options - Configuration options for setting up hooks and workflows.
@@ -19,6 +19,8 @@ import { createIgnoreBaseFile } from 'modules/helpers/github/files/main.ts'
  * @param {HookOptions} [options.pushHook] - Optional configuration for the pre-push hook.
  * @param {WorkflowOptions} [options.publishWorkflow] - Optional configuration for the publish workflow.
  * @param {WorkflowOptions} [options.publishWorkflow] - Optional configuration for the publish workflow.
+ *
+ * @category helpers
  */
 export function prepareGithub(options: {
   preCommitHook?: PreCommitHookOptions

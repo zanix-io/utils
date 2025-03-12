@@ -1,12 +1,10 @@
-import constants from 'modules/helpers/zanix/flags.ts'
+import { ZNX_FLAGS } from 'utils/constants.ts'
 import { linterMessageFormat } from 'modules/linter/commons/message.ts'
 
 /**
  * `Deno lint` rule to validate the use of flags in the code for `Zanix Framework`.
  *
  * @see {@link constants.ZNX_FLAGS} for the more information of zanix flags.
- *
- * @description
  *
  * If an invalid flag is found, the following message will be shown:
  *
@@ -29,12 +27,12 @@ const rules: Record<string, Deno.lint.Rule> = {
 
           const flagName = node.expression.value.toString()
 
-          if (constants.ZNX_FLAGS.includes(flagName)) return
+          if (ZNX_FLAGS.includes(flagName)) return
 
           context.report({
             node,
             message: linterMessageFormat(`The flag "${flagName}" is invalid.`),
-            hint: `Review available flags:\n ${constants.ZNX_FLAGS.join(', ')}`,
+            hint: `Review available flags:\n ${ZNX_FLAGS.join(', ')}`,
           })
         },
       }

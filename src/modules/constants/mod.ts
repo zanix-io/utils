@@ -9,11 +9,7 @@
 
 import constants from 'utils/constants.ts'
 
-import zanixFlags from 'modules/helpers/zanix/flags.ts'
-
 /**
- * @module zanixConstants
- *
  * This module provides constants used throughout the project.
  *
  * Includes static values that are reused across different parts of the code.
@@ -23,5 +19,7 @@ import zanixFlags from 'modules/helpers/zanix/flags.ts'
  * ```typescript
  * import constants from 'jsr:@zanix/utils@[version]/constants'
  * ```
+ *
+ * @module zanixConstants
  */
-export default { ...constants, ...zanixFlags }
+export default Object.freeze(constants) as typeof constants

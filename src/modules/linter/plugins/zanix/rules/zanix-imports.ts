@@ -4,8 +4,6 @@ import { linterMessageFormat } from 'modules/linter/commons/message.ts'
 /**
  * `Deno lint` rule to prevent explicit imports from `@zanix` modules with file extensions.
  *
- * @description
- *
  * This rule disallows the use of explicit file imports from any module within the `@zanix` scope
  * that include a file extension (e.g., `.ts`, `.js`, `.mjs`, etc.).
  *

@@ -6,6 +6,8 @@
  *
  * @param url - The string to be checked and parsed as a URL.
  * @returns A `URL` object if the input string is a valid URL; `undefined` if the string cannot be parsed as a URL.
+ *
+ * @category helpers
  */
 export function verifyUrl(url: string): URL | undefined {
   try {
@@ -20,6 +22,8 @@ export function verifyUrl(url: string): URL | undefined {
  *
  * @param {string} url - The URL string to be checked.
  * @returns {boolean} - Returns `true` if the URL has a `file:` protocol, otherwise `false`.
+ *
+ * @category helpers
  */
 export function isFileUrl(url: string): boolean {
   const parsedUrl = verifyUrl(url)

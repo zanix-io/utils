@@ -11,11 +11,13 @@ import singleQuote from './rules/single-quote.ts'
 import lineWidth from './rules/line-width.ts'
 
 /**
- * @name deno-fmt-plugin
+ * Deno format linter plugin.
  *
  * This linter plugin currently includes the following rules:
  * - {@link singleQuote}: Enforces the use of single quotes for string literals.
  * - {@link lineWidth}: Enforces a maximum line width for better readability.
+ *
+ * @name deno-fmt-plugin
  */
 const plugin: Deno.lint.Plugin = {
   name: 'deno-fmt-plugin',
@@ -26,8 +28,6 @@ const plugin: Deno.lint.Plugin = {
 }
 
 /**
- * @module denoFormatPlugin
- *
  * This module defines a formatting plugin for Deno, which includes a set of custom rules
  * to enforce consistent code formatting styles.
  *
@@ -44,5 +44,7 @@ const plugin: Deno.lint.Plugin = {
  * ```
  *
  * @see https://deno.com/
+ *
+ * @module denoFormatPlugin
  */
 export default plugin

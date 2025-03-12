@@ -3,8 +3,6 @@ import { linterMessageFormat } from 'modules/linter/commons/message.ts'
 /**
  * `Deno lint` rule to validate the use of logger and console in `Zanix Framework`.
  *
- * @description
- *
  * If an invalid logger or console use is found, the following message will be shown:
  *
  *  `❌ Disallows the use of 'console'.`

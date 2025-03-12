@@ -11,6 +11,8 @@ import type { SerializeError } from 'typings/errors.ts'
  *
  * @param error - The error (or unknown value) to serialize.
  * @returns A plain object representing the serialized error or the original input if serialization fails.
+ *
+ * @category errors
  */
 export function serializeError(error: unknown): SerializeError {
   const isError = error instanceof Error
@@ -37,6 +39,8 @@ export function serializeError(error: unknown): SerializeError {
  *
  * @param errors - An array of errors (or unknown values) to serialize.
  * @returns An array of serialized objects, where each object represents the corresponding error or value.
+ *
+ * @category errors
  */
 export function serializeMultipleErrors<T>(errors: T[]): (SerializeError)[] {
   return errors.map((errors) => serializeError(errors))

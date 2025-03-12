@@ -3,14 +3,13 @@ import type { WorkflowOptions } from 'typings/github.ts'
 import { createWorkflow } from './main.ts'
 
 /**
- * Creates a pre-push hook for run tests.
+ * Creates a `GitHub Actions` workflow to automatically run tests during the publish process.
  *
- * This function generates a pre-push hook that runs `deno test`.
- * It will also add the necessary permissions to the hook and create a symbolic link to `.git/hooks/pre-push`.
+ * @param options The options for configuring the workflow.
+ *   - `baseFolder`: The directory where the workflow file should be created.
+ *   - `mainBranch`: The main branch that will trigger the workflow when publishing a new version.
  *
- * @param options The create hook options.
- *   - `baseFolder`: The folder where the hook should be created.
- *   - `mainBranch`: The main branch where the version should be published using the workflow.
+ * @category helpers
  */
 export function createPublishWorkflow(
   options: WorkflowOptions = {},

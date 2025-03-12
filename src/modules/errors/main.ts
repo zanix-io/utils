@@ -4,10 +4,8 @@ import logger from 'modules/logger/mod.ts'
 import { serializeError } from 'modules/errors/serialize.ts'
 
 /**
- * @class HttpError
- * @extends {Deno.errors.Http}
+ * A custom error class for HTTP-related `exceptions`, extending Deno's `Http` error class.
  *
- * A custom error class for HTTP-related errors, extending Deno's `Http` error class.
  * This class allows for more detailed and structured error handling, including associating
  * error codes with their corresponding HTTP status codes and providing customizable error messages.
  * It is particularly useful for throwing and catching HTTP errors with standardized status codes
@@ -27,6 +25,8 @@ import { serializeError } from 'modules/errors/serialize.ts'
  *  console.log(error.status.code);  // 'BAD_REQUEST'
  *  console.log(error.status.value);  // 400
  * ```
+ *
+ * @category errors
  */
 export class HttpError extends Deno.errors.Http {
   public override message: string

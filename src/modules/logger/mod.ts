@@ -7,11 +7,9 @@
  * \_____/ \__,_||_| |_||_|/_/\_\
  */
 
-import { Logger as MainClass } from 'modules/logger/main.ts'
+import { Logger as LoggerMainClass } from 'modules/logger/main.ts'
 
 /**
- * @class Logger
- *
  * The main logger class that provides various options for logging with customizable behavior.
  * You can configure the logger to save logs to different locations, use custom formats, and even
  * enable workers for processing logs asynchronously.
@@ -143,15 +141,15 @@ import { Logger as MainClass } from 'modules/logger/main.ts'
  * logger.debug('message to log');  // Accessing via global context
  * ```
  */
-export class Logger extends MainClass {} //Necessary to extend because of docs
+export class Logger extends LoggerMainClass {} //Necessary to extend because of docs
 
 new Logger() // Creating the first instance of Logger
 
 /**
- * @instance zanixLogger
- *
  * This provides a default instance of the `Logger` class to help avoid direct usage of `console`,
  * improving log quality and ensuring consistency across your projects.
+ *
+ * @instance zanixLogger
  *
  * @see {@link Logger}
  */

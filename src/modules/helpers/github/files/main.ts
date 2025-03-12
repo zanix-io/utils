@@ -5,12 +5,12 @@ import { getRootDir } from 'modules/helpers/paths.ts'
 import logger from 'modules/logger/mod.ts'
 
 /**
- * Creates ignore base file
- *
- * This function generates a basic `.gitignore` file.
+ * Generates a base `.gitignore` file to exclude common files and directories from being versioned in a Git repository.
  *
  * @param options The create file options.
  *   - `baseFolder`: The folder where the `.gitignore` should be created. Defaults to `root`
+ *
+ * @category helpers
  */
 export async function createIgnoreBaseFile(
   options: BaseGithubHelperOptions = {},

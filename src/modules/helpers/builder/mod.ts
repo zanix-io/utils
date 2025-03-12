@@ -19,6 +19,10 @@ import { join } from '@std/path'
  *
  * This function requires the following permissions:
  * `allow-read`, `allow-env`, `allow-write`, `allow-run`
+ *
+ * @tags allow-read, allow-env, allow-write, allow-run
+ *
+ * @category helpers
  */
 export function compileAndObfuscate(
   options: Partial<CompilerOptions> = {},

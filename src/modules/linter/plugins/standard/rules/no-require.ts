@@ -3,8 +3,6 @@ import { linterMessageFormat } from 'modules/linter/commons/message.ts'
 /**
  * `Deno lint` rule to disallow the use of `require()` for loading modules.
  *
- * @description
- *
  * This rule prevents the usage of the CommonJS `require()` function to load modules.
  * Deno uses ES modules (ECMAScript Modules) by default, and `require()` is not supported
  * in Deno. Instead, modules should be imported using `import` statements.

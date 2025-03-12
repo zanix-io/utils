@@ -3,8 +3,6 @@ import { linterMessageFormat } from 'modules/linter/commons/message.ts'
 /**
  * `Deno lint` rule to disallow useless expressions in the code.
  *
- * @description
- *
  * This rule detects expressions that are unnecessary and have no effect on the code's behavior.
  * These expressions typically occur when a literal value is written on its own, without being
  * assigned, returned, or used in any meaningful way.

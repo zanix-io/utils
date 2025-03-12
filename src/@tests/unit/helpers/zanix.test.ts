@@ -22,3 +22,13 @@ Deno.test('getZanixPaths should return correct folder structure for server type'
   assert(paths.subfolders.src.subfolders['library' as never] === undefined)
   assert(paths.subfolders.src.subfolders['app' as never] === undefined)
 })
+
+Deno.test('getZanixPaths should return correct folder structure for custom dir', () => {
+  const mainFolderName = 'my-app'
+  const paths = getZanixPaths('app', 'my-app')
+
+  assert(paths.FOLDER.startsWith(mainFolderName))
+  assert(paths.subfolders.zanix.FOLDER.startsWith(mainFolderName))
+  assert(paths.subfolders.src.FOLDER.startsWith(mainFolderName))
+  assert(paths.subfolders.src.subfolders.app.FOLDER.startsWith(mainFolderName))
+})

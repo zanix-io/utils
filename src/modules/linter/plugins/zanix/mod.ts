@@ -15,13 +15,13 @@ import standardPlugin from '../standard/mod.ts'
 import testPlugin from '../test/mod.ts'
 
 /**
- * @name deno-zanix-plugin
- *
  * This linter plugin includes rules from the following plugins:
  * - {@link zanixFlags}: A set of custom rules related to Zanix projects.
  * - {@link testPlugin}: A set of rules of `deno-test-plugin`.
  * - {@link standardPlugin}:  A set of rules of `deno-std-plugin`.
  * - {@link formatPlugin}:  A set of rules of `deno-fmt-plugin`.
+ *
+ * @name deno-zanix-plugin
  */
 const plugin: Deno.lint.Plugin = {
   name: 'deno-zanix-plugin',
@@ -36,8 +36,6 @@ const plugin: Deno.lint.Plugin = {
 }
 
 /**
- * @module denoZanixPlugin
- *
  * This module defines a custom linting plugin for Deno that aggregates rules
  * from multiple plugins, providing a comprehensive set of linting checks
  * to improve code quality and ensure consistency across Zanix projects.
@@ -56,5 +54,7 @@ const plugin: Deno.lint.Plugin = {
  * ```
  *
  * @see https://deno.com/
+ *
+ * @module denoZanixPlugin
  */
 export default plugin

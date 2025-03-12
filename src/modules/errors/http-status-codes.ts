@@ -1,7 +1,7 @@
 import type { HttpErrorCodes } from 'typings/errors.ts'
 
 /**
- * A mapping object that associates HTTP error codes with their corresponding HTTP status codes.
+ * A mapping object that associates `HTTP` error `codes` with their corresponding HTTP `status` codes.
  *
  * This object helps map the error codes (e.g., 'BAD_REQUEST', 'NOT_FOUND') to their respective HTTP status
  * codes (e.g., 400, 404), making it easier to return appropriate status codes in API responses when errors
@@ -13,6 +13,8 @@ import type { HttpErrorCodes } from 'typings/errors.ts'
  * const statusCode = httpErrorStatus[errorCode];  // 400
  *
  * @type {Record<HttpErrorCodes, number>}
+ *
+ * @category errors
  */
 const httpErrorStates: Record<HttpErrorCodes, number> = {
   // 4xx Client Errors (Client-side errors, when the request is invalid or malformed)

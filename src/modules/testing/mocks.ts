@@ -1,10 +1,9 @@
 // deno-lint-ignore-file ban-types no-explicit-any
 
 /**
- * Creates a mock version of the provided function.
+ * Creates a mock version of the provided function wrapped in a specific context.
  *
- * This function wraps the given `fn` in a specific context, simulating its behavior within the provided
- * context for testing purposes.
+ * This function simulates the behavior of `fn` within the given context, useful for testing purposes.
  *
  * @param fn The function to be wrapped by the mock. This is the function that will execute within the simulated context.
  * @param context The context in which the function will run. It should be an object with properties that will apply to the execution context of `fn`.
@@ -21,6 +20,8 @@
  * const mock = mockWrap(myFunction, { user: () => 'testUser' });
  * mock();  // Here, `myFunction` will return 'testUser'
  * ```
+ *
+ * @category testing
  */
 export function mockWrap<F extends Function>(
   this: any,

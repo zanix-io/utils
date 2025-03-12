@@ -5,8 +5,6 @@ import regex from 'utils/regex.ts'
 /**
  * `Deno lint` rule to enforce a maximum line width limit in the code.
  *
- * @description
- *
  * This rule ensures that no line exceeds a certain maximum width (default is 100 characters).
  * Limiting line length enhances code readability and helps maintain a consistent code style.
  *

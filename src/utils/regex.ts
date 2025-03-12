@@ -13,7 +13,7 @@ const isoDateRegex = /^\d{4}-\d{2}-\d{2}$/
 export const zanixScopeLib = /^(https?:\/\/.*)?@zanix\//
 export const anyExtensionRegex = /\.[a-z]+$/
 
-/** Available regular expressions */
+/** Available regular expressions to export in the main module*/
 export default {
   /**
    * Matches the beginning of a line comment (`//`) or the start of a multi-line comment (`/*`),

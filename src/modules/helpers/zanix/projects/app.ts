@@ -1,10 +1,8 @@
 import type { ZanixAppFolders } from 'typings/zanix.ts'
 
-import { getFolderName, getRootDir } from 'modules/helpers/paths.ts'
+import { getFolderName } from 'modules/helpers/paths.ts'
 
-const root: string = getRootDir()
-
-export const app: ZanixAppFolders = {
+export const getAppFolders = (root: string): ZanixAppFolders => ({
   FOLDER: `${root}/src/app`,
   get NAME() {
     return getFolderName(this.FOLDER)
@@ -169,4 +167,4 @@ export const app: ZanixAppFolders = {
       },
     },
   },
-}
+})
