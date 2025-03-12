@@ -27,4 +27,4 @@ jobs:
         run: deno test --allow-all
 
       - name: Publish to Deno
-        run: deno publish --allow-net --allow-read
+        run: deno publish
