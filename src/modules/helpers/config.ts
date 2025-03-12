@@ -1,9 +1,9 @@
-import type { Config } from 'typings/config.ts'
+import type { ConfigFile } from 'typings/config.ts'
 
 import { setGlobalZnx } from 'modules/helpers/zanix/namespace.ts'
 import { getConfigDir } from './paths.ts'
 
-let configFile: Config | null = null
+let configFile: ConfigFile | null = null
 
 /**
  * Reads and parses the `deno` configuration file
@@ -13,7 +13,7 @@ let configFile: Config | null = null
  * This function requires the following permissions:
  * `allow-read` for `deno` config json file.
  */
-export function readConfig(configPath?: string | null): Config {
+export function readConfig(configPath?: string | null): ConfigFile {
   if (configFile) return configFile
 
   const configDir = configPath || getConfigDir()
@@ -29,7 +29,7 @@ export function readConfig(configPath?: string | null): Config {
     // and configuration data is required to set it up.
     setGlobalZnx({ config: configFile.zanix })
   }
-  return configFile as Config
+  return configFile as ConfigFile
 }
 
 /**
@@ -41,7 +41,7 @@ export function readConfig(configPath?: string | null): Config {
  * This function requires the following permissions:
  * `allow-read` and `allow-write` for `deno` config json file.
  */
-export async function saveConfig(config: Config, path?: string | null): Promise<void> {
+export async function saveConfig(config: ConfigFile, path?: string | null): Promise<void> {
   configFile = null // reset saved config file data
   const configDir = path || getConfigDir()
   const formattedContent = JSON.stringify(config, null, 2)

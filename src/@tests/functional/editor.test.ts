@@ -12,6 +12,8 @@ stub(console, 'error')
 stub(console, 'warn')
 
 Deno.test('Editor config creation validation', async () => {
+  const cwdMock = stub(Deno, 'cwd', () => '')
+
   const currentEditor = { ...editors.vscode }
   editors.vscode = { FOLDER: defaultFolder, FILENAME: 'settings' }
 
@@ -23,4 +25,6 @@ Deno.test('Editor config creation validation', async () => {
   await Deno.remove(defaultFolder, { recursive: true })
 
   editors.vscode = currentEditor
+
+  cwdMock.restore()
 })

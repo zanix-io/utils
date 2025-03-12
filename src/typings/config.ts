@@ -1,13 +1,13 @@
-import type { Projects } from 'typings/zanix.ts'
+import type { ZanixProjects } from 'typings/zanix.ts'
 
 /**
  * Deno config file type
  */
-export interface Config {
+export interface ConfigFile {
   name?: string
   zanix?: {
     hash?: string
-    project?: Projects
+    project?: ZanixProjects
   }
   version?: `${number}.${number}.${number}`
   license?: string

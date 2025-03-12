@@ -10,6 +10,16 @@ export const editors: Record<Editors, { FOLDER: string; FILENAME: string }> = {
   vscode: { FOLDER: '.vscode', FILENAME: 'settings.json' },
 }
 
+const ZANIX_LOGO: string = `
+ ______               _       
+|___  /              (_)      
+   / /   __ _  _ __   _ __  __
+  / /   / _\` || '_ \\ | |\\ \\/ /
+./ /___| (_| || | | || | >  < 
+\\_____/ \\__,_||_| |_||_|/_/\\_\\                       
+
+`
+
 /** Available constanst to export in the main module*/
 export default {
   /**
@@ -17,4 +27,10 @@ export default {
    * Defaults to 'deno.json', which contains the project's settings and configurations.
    */
   CONFIG_FILE,
+  /**
+   * Represents the ZANIX logo as a string.
+   * This constant holds the text-based representation of the ZANIX logo
+   * that can be used for displaying in the console or logs.
+   */
+  ZANIX_LOGO,
 }

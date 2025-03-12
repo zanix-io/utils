@@ -1,10 +1,10 @@
 import type { EditorOptions } from 'typings/editor.ts'
 
-import { getPathFromCurrent } from 'modules/helpers/paths.ts'
+import { fileExists, readFileFromCurrentUrl } from 'modules/helpers/files.ts'
+import { getRootDir } from 'modules/helpers/paths.ts'
 import logger from 'modules/logger/mod.ts'
 import { capitalize } from 'utils/strings.ts'
 import { editors } from 'utils/constants.ts'
-import { fileExists } from 'modules/helpers/files.ts'
 
 /** Base function to create main file editor config */
 export async function createEditorFileConfig(
@@ -17,12 +17,11 @@ export async function createEditorFileConfig(
     // Create content for the pre-commit hook
     let configContent = JSON.parse(
       replaceContentCallback(
-        await Deno.readTextFile(
-          getPathFromCurrent(import.meta.url, `./settings/${type}.json`),
-        ),
+        await readFileFromCurrentUrl(import.meta.url, `./settings/${type}.json`),
       ),
     )
-    const baseFolder = editors[type].FOLDER
+    const root = getRootDir()
+    const baseFolder = `${root}/${editors[type].FOLDER}`
 
     // Create the directory if it doesn't exist
     await Deno.mkdir(baseFolder, { recursive: true })

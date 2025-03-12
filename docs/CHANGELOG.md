@@ -7,6 +7,21 @@ adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [2.0.0] - 2025-03-11
+
+### Added
+
+- `Types` module.
+
+### Changed
+
+- Several Zanix utilities have been removed and migrated to @zanix/cli.
+- Main module exports have been updated.
+
+### Fixed
+
+- Read file from current URL on `createPreCommitHook`, `createPrePushHook`, `createPublishWorkflow` and `createIgnoreBaseFile`
+
 ## [1.1.0] - 2025-03-10
 
 ### Added

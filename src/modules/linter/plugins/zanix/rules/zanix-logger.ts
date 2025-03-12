@@ -21,7 +21,7 @@ const rules: Record<string, Deno.lint.Rule> = {
             node,
             message: linterMessageFormat(`Disallows the use of 'console'.`),
             hint:
-              `Please use the Zanix global 'logger' module instead for consistent and properly formatted logging.`,
+              `Please use the Zanix 'logger' module instead for consistent and properly formatted logging.`,
           })
         },
       }

@@ -80,8 +80,6 @@ Deno.test(
 
     const log = JSON.parse(await Deno.readTextFile(customFolder + '/' + getLogFileName()))
 
-    assert(!self.logger)
-    assert(!globalThis['logger' as never])
     assertExists(log[0].id)
     assertExists(log[0].timestamp)
     assertEquals(log[0].level, 'warn')

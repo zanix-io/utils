@@ -1,12 +1,12 @@
 {
   "name": "@zanix/utils",
-  "version": "1.1.0",
+  "version": "2.0.0",
   "license": "MIT",
   "nodeModulesDir": "auto",
   "compilerOptions": {
     "strict": true,
     "noImplicitAny": true,
-    "types": ["./src/typings/mod.ts"]
+    "types": ["./src/typings/index.d.ts"]
   },
   "exports": {
     ".": "./mod.ts",
@@ -20,7 +20,8 @@
     "./regex": "./src/modules/regex/mod.ts",
     "./testing": "./src/modules/testing/mod.ts",
     "./workers": "./src/modules/workers/mod.ts",
-    "./errors": "./src/modules/errors/mod.ts"
+    "./errors": "./src/modules/errors/mod.ts",
+    "./types": "./src/modules/types/mod.ts"
   },
   "publish": {
     "exclude": [".github", "src/@tests"]
@@ -44,9 +45,7 @@
       ]
     },
     "exclude": [".dist/"],
-    "plugins": [
-      "./src/modules/linter/plugins/zanix/mod.ts"
-    ],
+    "plugins": ["./src/modules/linter/plugins/zanix/mod.ts"],
     "report": "pretty"
   },
   "fmt": {
@@ -75,5 +74,10 @@
   "zanix": {
     "project": "library",
     "hash": "zu226a"
+  },
+  "test": {
+    "include": [
+      "src/@tests/**/*.test.ts"
+    ]
   }
 }

@@ -1,11 +1,6 @@
-import type { FolderStructure, Projects } from 'typings/zanix.ts'
+import type { FolderStructure, ZanixProjects } from 'typings/zanix.ts'
 
-import { ZNX_STRUCT } from './folders/mod.ts'
-import { saveConfig } from 'modules/helpers/config.ts'
-import { readConfig } from 'modules/helpers/mod.ts'
-import { getConfigDir } from 'modules/helpers/paths.ts'
-import { configAdaptation } from './config/adaptation.ts'
-import { baseZnxConfig } from './config/mod.ts'
+import { ZNX_STRUCT } from './projects/main.ts'
 
 /**
  * Retrieves the recommended folder structure for Zanix projects based on the provided type.
@@ -24,7 +19,7 @@ import { baseZnxConfig } from './config/mod.ts'
  * `allow-read` for `deno` config json file.
  */
 export function getZanixPaths<
-  T extends Projects = 'app-server',
+  T extends ZanixProjects = 'app-server',
 >(type?: T): FolderStructure<T> {
   const subfolders = { ...ZNX_STRUCT.subfolders.src.subfolders }
 
@@ -76,26 +71,3 @@ export function getSrcDir(): string {
 export function getSrcName(): string {
   return ZNX_STRUCT.subfolders.src.NAME
 }
-
-/**
- * Write a `deno` base config file for **Zanix** projects
- * @param type - Zanix project type (`server`, `app`, `app-server` or `library`)
- *
- *               Defaults to `app-server`
- */
-export async function saveZanixConfig(type: Projects = 'app-server') {
-  let config = baseZnxConfig(type)
-  const configPath = getConfigDir()
-
-  try {
-    const currentConfig = readConfig(configPath)
-    config = configAdaptation(currentConfig, config)
-  } catch {
-    // Ignore error
-  }
-
-  await saveConfig(config, configPath)
-}
-
-// TODO: createBaseZanixProject to generate file and folder structure on CLI
-// review to pass all this to cli

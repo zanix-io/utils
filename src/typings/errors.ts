@@ -1,3 +1,11 @@
+/**
+ * Type representing the various HTTP error codes commonly used in REST APIs.
+ * These error codes are defined by the HTTP standard and are used to indicate
+ * the specific reason for the failure of an HTTP request.
+ *
+ * Each error code corresponds to a different HTTP status code and is used to
+ * represent various error scenarios in the context of client and server communication.
+ */
 export type HttpErrorCodes =
   | 'BAD_REQUEST'
   | 'UNAUTHORIZED'

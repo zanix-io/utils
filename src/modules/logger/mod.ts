@@ -10,21 +10,29 @@
 import { Logger as MainClass } from 'modules/logger/main.ts'
 
 /**
- * @class The main logger class
+ * @class Logger
  *
+ * The main logger class that provides various options for logging with customizable behavior.
+ * You can configure the logger to save logs to different locations, use custom formats, and even
+ * enable workers for processing logs asynchronously.
+ *
+ * ### Examples:
  * @example
- * Define a logger with a custom save function, where logs are saved according to custom specifications.
+ *
+ * #### 1. Custom Save Function (Synchronous or Asynchronous)
+ *
+ * Define a logger with a custom save function where logs are saved according to custom specifications.
  * The save function can be either synchronous or asynchronous.
  *
  * ```ts
  * import { Logger } from 'jsr:@zanix/utils@[version]/logger';
  *
- * // Instantiate the logger with custom storage configuration.
+ * // Instantiate the logger with a custom storage configuration.
  * const logger = new Logger({
  *   storage: {
  *     async save(context) {
  *       const data = context.getFmtLog();
- *       // Function to save the logs asynchronously
+ *       // Function to save logs asynchronously
  *     }
  *   }
  * });
@@ -32,10 +40,10 @@ import { Logger as MainClass } from 'modules/logger/main.ts'
  * logger.debug('Some debug information'); // The save function will be called and return a Promise.
  * ```
  *
- * @example
- * Define a logger that saves logs to a file in a specific folder (default is the `.logs/` folder).
- * You can also set an expiration time (in days) for when the log files should be automatically deleted.
- * The default expiration time is 5 days.
+ * #### 2. File-based Log Saving with Expiration
+ *
+ * Define a logger that saves logs to a specific folder (default is `.logs/`) and automatically deletes
+ * files after a set expiration time (default is 5 days).
  *
  * ```ts
  * import { Logger } from 'jsr:@zanix/utils@[version]/logger';
@@ -44,18 +52,18 @@ import { Logger as MainClass } from 'modules/logger/main.ts'
  * const logger = new Logger({
  *   storage: {
  *     save: {
- *       folder: 'myCustomFolder',     // Your custom folder for saving logs
- *       expirationTime: '1d'          // Your custom expiration time for log files
+ *       folder: 'myCustomFolder',     // Custom folder for saving logs
+ *       expirationTime: '1d'          // Expiration time for log files
  *     }
- *     // Other storage properties
  *   }
  * });
  *
  * logger.debug('Some debug information to save in a file'); // Returns a Promise<void> by default.
  * ```
  *
- * @example
- * You can also enable workers for the default saver functionality as shown below:
+ * #### 3. Enable Workers for Log Processing
+ *
+ * You can enable workers to handle the log saving asynchronously.
  *
  * ```ts
  * import { Logger } from 'jsr:@zanix/utils@[version]/logger';
@@ -63,18 +71,16 @@ import { Logger as MainClass } from 'modules/logger/main.ts'
  * const logger = new Logger({
  *   storage: {
  *     save: {
- *       useWorker: true,   // Enables the use of workers for processing
- *       callback:()=>{}    // Optional callback to ensure completion, only when `useWorker` is set to `true`.
- *       // Other properties can be added here
- *     },
- *     // Additional storage configuration options can go here
+ *       useWorker: true,    // Enable the use of workers for processing logs
+ *       callback: () => {}  // Optional callback to ensure completion when `useWorker` is set to `true`
+ *     }
  *   }
  * });
  * ```
  *
- * @example
- * In all cases, you can provide a custom log formatter to modify how the logs are saved.
- * The formatter will process the log data before saving.
+ * #### 4. Custom Log Formatter
+ *
+ * You can define a custom formatter to process log data before saving.
  *
  * ```ts
  * import { Logger } from 'jsr:@zanix/utils@[version]/logger';
@@ -82,46 +88,64 @@ import { Logger as MainClass } from 'modules/logger/main.ts'
  * // Instantiate the logger with a custom formatter.
  * const logger = new Logger({
  *   storage: {
- *     formatter: (level, logData) => ({level, data: logData}) // your custom log processing logic,
- *     // Other storage properties
+ *     formatter: (level, logData) => ({level, data: logData}) // Custom log processing logic
  *   }
  * });
  *
- * logger.debug('Some debug information to save in a custom format'); // Logs will be saved with your custom formatter.
+ * logger.debug('Some debug information to save in a custom format'); // Logs will be saved with the custom formatter.
  * ```
  *
- * @example
- * By default, logs are saved as files in the default folder. You can disable saving by setting `storage: false` in the options configuration,
- * or you can prevent saving by passing a special flag.
+ * #### 5. Prevent Log Saving
+ *
+ * By default, logs are saved as files in the default folder. To prevent saving, set `storage: false` or
+ * pass a special flag to stop saving the log.
  *
  * ```ts
  * logger.debug('Some debug information without saving', 'noSave'); // The system recognizes 'noSave' as a flag to prevent saving.
  * ```
  *
- * @example
- * When you create a new `Logger` instance, it is stored in both the `Window` context
- * and the `Zanix` (`Znx`) namespace. You can access it via `Znx.logger` or `self.logger`.
+ * #### 6. Accessing Logger Globally
  *
- * However, the default logger instance uses a basic response type and is not generic.
- * If you need a globally accessible logger with a specific type, you can define it as follows:
+ * When creating a new `Logger` instance, it is stored both in the `Window` context and the `Zanix` (`Znx`) namespace.
+ * You can access the logger globally via `Znx.logger` or `self.logger`.
+ *
+ * ##### Option 1: Declare a Global Constant `logger`
+ *
+ * You can declare a global constant to access the logger globally.
  *
  * ```ts
  * declare global {
  *   const logger: typeof yourNewloggerInstance;
  * }
  * ```
+ * This makes the `logger` accessible globally without importing it in other files.
  *
- * @example
- * Accessing the global logger
+ * ##### Option 2: Add `logger` to the `Window` Interface (Browser)
+ *
+ * For browser environments, add `logger` as a property of the `Window` interface.
  *
  * ```ts
- * import 'jsr:@zanix/utils@[version]/logger' // Ensure to call the library before using the global logger
+ * declare global {
+ *    interface Window {
+ *      logger: DefaultLogger;
+ *    }
+ * }
+ * ```
+ * This allows you to access `logger` via `window.logger` (or `self.logger`).
+ *
+ * Once declared, the global logger can be accessed from anywhere in your application.
+ *
+ * ```ts
+ * import 'jsr:@zanix/utils@[version]/logger';  // Ensure the library is imported before using the global logger
  *
  * Znx.logger.debug('message to log');  // Accessing via Zanix namespace
  * self.logger.debug('message to log');  // Accessing via global context
+ * logger.debug('message to log');  // Accessing via global context
  * ```
  */
 export class Logger extends MainClass {} //Necessary to extend because of docs
+
+new Logger() // Creating the first instance of Logger
 
 /**
  * @instance zanixLogger
@@ -133,10 +157,10 @@ export class Logger extends MainClass {} //Necessary to extend because of docs
  */
 const logger: Logger = new Proxy(Logger['prototype'], {
   get(_, prop) {
-    // Retrieve the current global logger instance, or create a new one if it doesn't exist.
+    // Retrieve the current global logger instance
     // This is necessary to replace the default Logger instance with the current global logger (self.logger).
-    const logger = self.logger || new Logger()
-    return logger[prop as keyof typeof Logger['prototype']].bind(logger)
+    const logger = self.logger
+    return logger[prop as keyof typeof logger].bind(logger)
   },
 })
 

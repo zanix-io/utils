@@ -1,6 +1,7 @@
 import { basename, fromFileUrl, join, relative } from '@std/path'
 import { CONFIG_FILE } from 'utils/constants.ts'
 import { fileExists } from './files.ts'
+import { isFileUrl } from 'utils/urls.ts'
 
 /** Gets the root directory of the project */
 export function getRootDir(): string {
@@ -52,7 +53,11 @@ export function getRelativePath(to: string, from?: string): string {
  * ```
  */
 export function getPathFromCurrent(callerUrl: string, relativePath: string): string {
-  return fromFileUrl(join(callerUrl, '..', relativePath))
+  const path = join(callerUrl, '..', relativePath)
+
+  if (isFileUrl(callerUrl)) return fromFileUrl(path)
+
+  return path
 }
 
 /**

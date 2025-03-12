@@ -33,7 +33,7 @@ Deno.test('no-znx-console plugin should report Zanix logger violations', () => {
       id: 'deno-zanix-plugin/no-znx-console',
       message: linterMessageFormat("Disallows the use of 'console'."),
       hint:
-        "Please use the Zanix global 'logger' module instead for consistent and properly formatted logging.",
+        "Please use the Zanix 'logger' module instead for consistent and properly formatted logging.",
       range: ranges[index],
       fix: [],
     })

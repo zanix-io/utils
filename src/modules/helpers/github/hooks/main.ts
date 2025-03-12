@@ -1,25 +1,26 @@
 import type { HookOptions } from 'typings/github.ts'
 
-import { getPathFromCurrent, getRelativePath } from 'modules/helpers/paths.ts'
-import { fileExists, folderExists } from 'modules/helpers/files.ts'
+import { fileExists, folderExists, readFileFromCurrentUrl } from 'modules/helpers/files.ts'
 import { GIT_HOOKS_FOLDER, GITHUB_HOOKS_FOLDER } from 'utils/constants.ts'
+import { getRelativePath, getRootDir } from 'modules/helpers/paths.ts'
 import logger from 'modules/logger/mod.ts'
 import { capitalize } from 'utils/strings.ts'
 
 /** Base function to create a hook */
 export async function createHook(
-  { baseFolder = GITHUB_HOOKS_FOLDER, filename: script, createLink = true }: HookOptions & {
+  options: HookOptions & {
     filename: 'pre-commit' | 'pre-push'
   },
   replaceContentCallback: (content: string) => string = (content) => content,
 ) {
+  const root = getRootDir()
+  const { baseFolder = `${root}/${GITHUB_HOOKS_FOLDER}`, filename: script, createLink = true } =
+    options
   const mainScript = capitalize(script)
 
   try {
     // Create content for the pre-commit hook
-    const hookContent = await Deno.readTextFile(
-      getPathFromCurrent(import.meta.url, `./scripts/${script}.base.sh`),
-    )
+    const hookContent = await readFileFromCurrentUrl(import.meta.url, `./scripts/${script}.base.sh`)
 
     // Create the .github/hooks directory if it doesn't exist
     await Deno.mkdir(baseFolder, { recursive: true })
@@ -79,11 +80,11 @@ export async function createHook(
       }
     }
 
-    logger.success(`${mainScript} hook created successfully!`, 'noSave')
+    logger.success(`'${mainScript}' hook created successfully!`, 'noSave')
 
     return true
   } catch (e) {
-    logger.error(`${mainScript} hook creation error`, e, 'noSave')
+    logger.error(`'${mainScript}' hook creation error in '${baseFolder}'`, e, 'noSave')
 
     return false
   }

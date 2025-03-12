@@ -1,8 +1,8 @@
 import type { CompilerOptions } from 'typings/builder.ts'
 import type { TaskerCalbackArgs } from 'typings/workers.ts'
 
+import { ZNX_STRUCT } from 'modules/helpers/zanix/projects/main.ts'
 import { TaskerManager } from 'modules/workers/tasker.ts'
-import { getZanixPaths } from 'modules/helpers/zanix/projects.ts'
 import { mainBuilderFunction } from './main.ts'
 import { join } from '@std/path'
 
@@ -23,7 +23,7 @@ import { join } from '@std/path'
 export function compileAndObfuscate(
   options: Partial<CompilerOptions> = {},
 ): void | Promise<TaskerCalbackArgs> {
-  const paths = getZanixPaths()
+  const paths = ZNX_STRUCT
   const {
     inputFile = paths.files.MOD,
     outputFile = paths.subfolders.dist.files.APP,

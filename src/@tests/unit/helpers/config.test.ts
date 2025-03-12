@@ -1,4 +1,4 @@
-import type { Config } from 'typings/config.ts'
+import type { ConfigFile } from 'typings/config.ts'
 
 import { readConfig, saveConfig } from 'modules/helpers/config.ts'
 import { assertEquals, assertThrows } from '@std/assert'
@@ -9,7 +9,7 @@ import { getTemporaryFolder } from 'modules/helpers/paths.ts'
 const baseFilePath = getTemporaryFolder(import.meta.url) + '/deno.jsonc'
 
 Deno.test('saveConfig should write a JSON config file', async () => {
-  const testConfig: Config = { version: '1.0.0' }
+  const testConfig: ConfigFile = { version: '1.0.0' }
   const writeConfigMock = mockWrap(saveConfig, {
     getConfigDir: () => baseFilePath,
   })

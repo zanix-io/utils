@@ -1,5 +1,5 @@
 import { assertMatch, assertNotMatch } from '@std/assert'
-import regex from 'utils/regex.ts'
+import regex, { zanixScopeLib } from 'utils/regex.ts'
 
 const {
   baseLineCommentRegex,
@@ -60,4 +60,18 @@ Deno.test('Validates general regex', () => {
   /** Dates regex */
   assertMatch('2025-03-09T21:40:18.443Z', isoDatetimeRegex)
   assertNotMatch('2025-03-09T21:40:18.443', isoDatetimeRegex)
+})
+
+Deno.test('Validates internal regex', () => {
+  assertMatch(
+    'https://jsr.io/@zanix/utils/1.0.0/src/modules/helpers/zanix/folders/mod.ts',
+    zanixScopeLib,
+  )
+  assertMatch('@zanix/utils/1.0.0/src/modules/helpers/zanix/folders/mod.ts', zanixScopeLib)
+
+  assertNotMatch('utils/1.0.0/src/modules/helpers/zanix/folders/mod.ts', zanixScopeLib)
+  assertNotMatch(
+    'https://jsr.io/utils/1.0.0/src/modules/helpers/zanix/folders/mod.ts',
+    zanixScopeLib,
+  )
 })

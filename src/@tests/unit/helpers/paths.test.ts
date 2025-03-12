@@ -1,7 +1,13 @@
-import { assert, assertEquals } from '@std/assert'
+import { assert, assertEquals, assertExists } from '@std/assert'
 import { join } from '@std/path/join'
 import { stub } from '@std/testing/mock'
-import { getConfigDir, getFolderName, getRelativePath, getRootDir } from 'modules/helpers/paths.ts'
+import {
+  getConfigDir,
+  getFolderName,
+  getPathFromCurrent,
+  getRelativePath,
+  getRootDir,
+} from 'modules/helpers/paths.ts'
 import { mockWrap } from 'modules/testing/mod.ts'
 
 // Test for getting root path
@@ -41,6 +47,19 @@ Deno.test('get config dir should return correct config filename', () => {
 Deno.test('getFolderName should return the folder name from a URI', () => {
   assertEquals(getFolderName('/home/user/project/paths.ts'), 'paths.ts')
   assertEquals(getFolderName('/user/project/another-folder/'), 'another-folder')
+})
+
+Deno.test('getPathFromCurrent should return a path relative to the executing script', () => {
+  assert(getPathFromCurrent(import.meta.url, 'test.ts').startsWith(Deno.cwd()))
+  assert(getPathFromCurrent(import.meta.url, './script/test.ts').endsWith('/script/test.ts'))
+  assert(getPathFromCurrent(import.meta.url, '') !== import.meta.url)
+
+  assertExists(
+    getPathFromCurrent(
+      'https://jsr.io/@zanix/utils/1.1.0/src/modules/helpers/github/hooks/scripts/pre-commit.base.sh',
+      '',
+    ),
+  )
 })
 
 Deno.test('getRelativePath should return the relative path from root to URI', () => {

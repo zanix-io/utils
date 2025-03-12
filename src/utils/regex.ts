@@ -10,6 +10,9 @@ const utcTimeRegex = /^\d{2}:\d{2}:\d{2}\.\d{3}Z$/
 const localTimeRegex = /^\d{1,2}:\d{2}:\d{2} ?(AM|PM)?$/
 const isoDateRegex = /^\d{4}-\d{2}-\d{2}$/
 
+export const zanixScopeLib = /^(https?:\/\/.*)?@zanix\//
+export const anyExtensionRegex = /\.[a-z]+$/
+
 /** Available regular expressions */
 export default {
   /**

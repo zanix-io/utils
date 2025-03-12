@@ -37,3 +37,15 @@ export function setGlobalZnx(data: Partial<Zanix>) {
 export function canUseZnx(): boolean {
   return typeof Znx !== 'undefined'
 }
+
+/**
+ * Retrieves the `Znx` namespace from the global scope, making it accessible throughout the application.
+ * If the `Znx` namespace does not exist, it will return `undefined`.
+ *
+ * This function checks if the `Znx` namespace is available for use (via `canUseZnx()`), and if so, it returns the `Znx` object.
+ *
+ * @returns The `Znx` namespace if it is available and can be used, or `undefined` if it cannot.
+ */
+export function getGlobalZnx(): Zanix | undefined {
+  if (canUseZnx()) return Znx
+}

@@ -1,8 +1,9 @@
+import type { ZanixLibraryFolders } from 'typings/zanix.ts'
 import { getFolderName, getRootDir } from 'modules/helpers/paths.ts'
 
 const root: string = getRootDir()
 
-export const library: LibraryFolders = {
+export const library: ZanixLibraryFolders = {
   FOLDER: `${root}/src/modules`,
   get NAME() {
     return getFolderName(this.FOLDER)
@@ -10,12 +11,4 @@ export const library: LibraryFolders = {
   files: {
     EXAMPLE: `${root}/src/modules/mod.ts`,
   },
-}
-
-export type LibraryFolders = {
-  FOLDER: string
-  get NAME(): string
-  files: {
-    EXAMPLE: string
-  }
 }

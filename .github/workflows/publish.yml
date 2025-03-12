@@ -17,6 +17,14 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        
+      - name: Setup Deno
+        uses: denoland/setup-deno@v1
+        with:
+          deno-version: v2.x 
 
-      - name: Publish to JSR
-        run: npx jsr publish
+      - name: Run tests
+        run: deno test --allow-all
+
+      - name: Publish to Deno
+        run: deno publish --allow-net --allow-read

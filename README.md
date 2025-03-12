@@ -83,6 +83,9 @@ import * as zanixWorkers from 'jsr:@zanix/utils@[version]/workers'
 
 // Errors
 import * as zanixErrors from 'jsr:@zanix/utils@[version]/errors'
+
+// Typing
+import * as zanixTypes from 'jsr:@zanix/utils@[version]/types'
 ```
 
 This provides clear instructions for installing and using the library, including importing specific plugins. Replace `[version]` with the actual version number when needed.
@@ -109,10 +112,10 @@ This provides clear instructions for installing and using the library, including
 Here’s a basic example of how to use the library:
 
 ```typescript
-import { helpers } from 'jsr:@zanix/utils@[version]'
+import { compileAndObfuscate } from 'jsr:@zanix/utils@[version]'
 
 // Some helpers
-await helpers.compileAndObfuscate() // esbuild
+await compileAndObfuscate() // esbuild
 ```
 
 ## Documentation
