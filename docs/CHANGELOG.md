@@ -7,6 +7,14 @@ adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [2.0.1] - 2025-03-12
+
+### Fixed
+
+- Some documentation
+- `getZanixPaths` helper to allows custom root dir.
+- Lint stagged file patterns
+
 ## [2.0.0] - 2025-03-11
 
 ### Added

@@ -23,12 +23,15 @@ const rules: Record<string, Deno.lint.Rule> = {
       return Line(context, ({ lineLength: baseLenght, lineStart, lineEnd, line, lines, index }) => {
         const cleanLine = line.replace(regex.commentRegex, '').trim()
         const lineLength = cleanLine.length
-        const prevLine = lines[index - 1] || ''
+        const prevLine = (lines[index - 1] || '').trim()
+        const nextLine = (lines[index + 1] || '').trim()
 
         const exceptions = lineLength <= maxLineWidth ||
           cleanLine.replace(regex.enclosedStringRegex, '').length < 2 ||
-          cleanLine.startsWith('*') || prevLine.startsWith('*') || prevLine.startsWith('/') ||
-          cleanLine.startsWith('/')
+          regex.baseLineCommentRegex.test(cleanLine) ||
+          regex.baseLineCommentRegex.test(prevLine) &&
+            (nextLine.endsWith('*/') && !regex.commentRegex.test(prevLine) ||
+              nextLine.startsWith('*'))
 
         if (exceptions) return
 

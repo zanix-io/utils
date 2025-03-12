@@ -20,9 +20,12 @@ Deno.test('Github create pre-commit hook validation', async () => {
   const response = await createPreCommitHook({
     baseFolder: defaultFolder,
     createLink: false,
-    fileType: [
-      'ts',
-    ],
+    filePatterns: {
+      lint: [
+        'ts',
+      ],
+      fmt: ['ts', 'md'],
+    },
   })
   assert(response)
   assertExists(fileExists(defaultFolder + '/pre-commit'))

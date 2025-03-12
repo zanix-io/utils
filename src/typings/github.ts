@@ -1,5 +1,5 @@
 import type { GITHUB_HOOKS_FOLDER as _baseDir } from 'utils/constants.ts'
-import type { LinterAvailableFiles } from 'typings/files.ts'
+import type { FormatAvailableFiles, LinterAvailableFiles } from 'typings/files.ts'
 
 export type BaseGithubHelperOptions = {
   /** The folder where the hook should be created. Defaults to {@link _baseDir} */
@@ -11,8 +11,20 @@ export type HookOptions = BaseGithubHelperOptions & {
 }
 
 export type PreCommitHookOptions = HookOptions & {
-  /** An array of file extensions to be linted and formatted */
+  /**
+   * An array of file extensions to be linted.
+   * @deprecated Use filePatterns instead.
+   */
   fileType?: LinterAvailableFiles[]
+  /**
+   * The filePatterns property is an optional configuration object that defines the file patterns for linting and formatting operations.
+   */
+  filePatterns?: {
+    /** This parameter specifies the types of files that should be checked by the linter.  */
+    lint?: LinterAvailableFiles[]
+    /** This parameter defines which file types should be automatically formatted. */
+    fmt?: FormatAvailableFiles[]
+  }
 }
 
 export type WorkflowOptions = BaseGithubHelperOptions & {

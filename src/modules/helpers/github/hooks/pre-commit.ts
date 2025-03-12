@@ -11,8 +11,8 @@ import { createHook } from './main.ts'
  * @param options The create hook options.
  *   - `baseFolder`: The folder where the hook should be created.
  *   - `createLink`: A flag indicating whether a symbolic link should be created in the GitHub hooks directory.
- *   - `fileType` - An array of file extensions to be linted and formatted (e.g., `['ts', 'tsx', 'js', 'jsx', 'md', 'json']`).
- *                   Defaults to `['ts', 'tsx', 'js', 'jsx', 'md', 'json']` if not provided.
+ *   - `filePatterns` - The filePatterns property is an optional configuration object that defines the file patterns for linting and formatting operations.
+ *                   Defaults to `{lint: ['ts', 'tsx', 'js', 'jsx'], fmt: ['ts', 'tsx', 'js', 'jsx', 'md', 'json']}` if not provided.
  *
  * @category helpers
  */
@@ -20,9 +20,20 @@ export function createPreCommitHook(
   options: PreCommitHookOptions = {},
 ): Promise<boolean> {
   const filename = 'pre-commit'
-  const { fileType = ['ts', 'tsx', 'js', 'jsx', 'md', 'json'], ...opts } = options
+  const {
+    fileType,
+    filePatterns: {
+      lint = fileType || ['ts', 'tsx', 'js', 'jsx'],
+      fmt = [...lint, 'md', 'json'],
+    } = {},
+    ...opts
+  } = options
+
   return createHook(
     { filename, ...opts },
-    (content) => content.replace('FILE_EXTENSIONS', fileType.join('|')),
+    (content) => {
+      content = content.replace('FILE_FMT_EXTENSIONS', fmt.join('|'))
+      return content.replace('FILE_LINT_EXTENSIONS', lint.join('|'))
+    },
   )
 }
