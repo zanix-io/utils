@@ -31,7 +31,7 @@ import { getRootDir } from 'modules/helpers/paths.ts'
 export function getZanixPaths<
   T extends ZanixProjectsFull = undefined,
 >(type?: T, projectDir?: string): ZanixFolderTree<T> {
-  return getZnxFolderTree(`${projectDir ?? getRootDir()}`, type)
+  return getZnxFolderTree(`${projectDir ?? getRootDir()}/`, type)
 }
 
 /**

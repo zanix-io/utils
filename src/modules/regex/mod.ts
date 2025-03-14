@@ -9,9 +9,6 @@
 
 import * as regexBaseModule from 'utils/regex.ts'
 
-type RegexBaseModule = Omit<typeof regexBaseModule, 'default'>
-type RegexModule = Readonly<RegexBaseModule>
-
 const regexModule = { ...regexBaseModule }
 Object.assign(regexModule, { default: undefined })
 
@@ -25,11 +22,9 @@ Object.assign(regexModule, { default: undefined })
  * import regex from 'jsr:@zanix/utils@[version]/regex'
  * ```
  *
- * @see {@link regexBaseModule}
- *
  * @module zanixRegex
  */
-const regex = regexModule as RegexModule
+const regex = Object.freeze(regexModule) as Readonly<Omit<typeof regexBaseModule, 'default'>>
 export default regex
 
 export * from 'utils/regex.ts'

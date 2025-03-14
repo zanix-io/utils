@@ -30,9 +30,10 @@ import requireAccessModifier from './rules/require-access-modifier.ts'
  * ```
  *
  * This linter plugin currently includes the following rules:
- * @see
- * - {@link noUselessExpression}: Detects unnecessary expressions that have no side effects.
- * - {@link noRequire}: Prevents the use of `require` instead of `import` to maintain consistency with ES modules.
+ *
+ * - `noUselessExpression`: Detects unnecessary expressions that have no side effects.
+ * - `noRequire`: Prevents the use of `require` instead of `import` to maintain consistency with ES modules.
+ * - `requireAccessModifier`: Ensure the use of access modifiers into a class.
  *
  * @see https://deno.com/
  *

@@ -28,9 +28,9 @@ import lineWidth from './rules/line-width.ts'
  * );
  * ```
  * This linter plugin currently includes the following rules:
- * @see
- * - {@link singleQuote}: Enforces the use of single quotes for string literals.
- * - {@link lineWidth}: Enforces a maximum line width for better readability.
+ *
+ * - `singleQuote`: Enforces the use of single quotes for string literals.
+ * - `lineWidth`: Enforces a maximum line width for better readability.
  *
  * @see https://deno.com/
  *

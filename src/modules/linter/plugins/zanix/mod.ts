@@ -35,10 +35,12 @@ import testPlugin from '../test/mod.ts'
  * ```
  * This linter plugin includes rules from the following plugins:
  * @see
- * - {@link zanixFlags}: A set of custom rules related to `Zanix` projects.
- * - {@link testPlugin}: A set of rules of `deno-test-plugin`.
- * - {@link standardPlugin}:  A set of rules of `deno-std-plugin`.
- * - {@link formatPlugin}:  A set of rules of `deno-fmt-plugin`.
+ * - `zanixFlags`: A set of custom rules related to `Zanix` projects.
+ * - `zanixLogger`: A set of custom rules related to `Zanix` logger.
+ * - `zanixImports`: A set of custom rules related to `Zanix` imports.
+ * - `testPlugin`: A set of rules of `deno-test-plugin`.
+ * - `standardPlugin`:  A set of rules of `deno-std-plugin`.
+ * - `formatPlugin`:  A set of rules of `deno-fmt-plugin`.
  *
  * @see https://deno.com/
  *

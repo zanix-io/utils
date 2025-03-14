@@ -30,9 +30,9 @@ import noIgnore from './rules/no-ignore.ts'
  * ```
  *
  * This linter plugin currently includes the following rule:
- * @see
- * - {@link noOnly}: Prevents the usage of `.only` in test functions (e.g., `Deno.test.only`),
- * - {@link noIgnore}: Prevents the usage of `.ignore` in test functions (e.g., `Deno.test.ignore`),
+ *
+ * - `noOnly`: Prevents the usage of `.only` in test functions (e.g., `Deno.test.only`),
+ * - `noIgnore`: Prevents the usage of `.ignore` in test functions (e.g., `Deno.test.ignore`),
  *   which can be an accidental leftover when debugging tests.
  *
  * @see https://deno.com/

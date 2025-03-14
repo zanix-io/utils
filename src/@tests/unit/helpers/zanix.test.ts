@@ -74,6 +74,6 @@ Deno.test('getZanixPaths should return correct folder tree for project type cust
 
 Deno.test('getZanixPaths should return correct folder tree wihtout root uri', () => {
   const paths = getZanixPaths('library', '')
-  assertEquals(paths.FOLDER, '')
-  assert(!paths.subfolders.dist.FOLDER.startsWith('/'))
+
+  assertEquals(paths.FOLDER, '/')
 })

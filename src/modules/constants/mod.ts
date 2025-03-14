@@ -9,9 +9,6 @@
 
 import * as constantsBaseModule from 'utils/constants.ts'
 
-type ConstantsBaseModule = Omit<typeof constantsBaseModule, 'default'>
-type ConstantsModule = Readonly<ConstantsBaseModule>
-
 const constantsModule = { ...constantsBaseModule }
 Object.assign(constantsModule, { default: undefined })
 
@@ -26,11 +23,11 @@ Object.assign(constantsModule, { default: undefined })
  * import constants from 'jsr:@zanix/utils@[version]/constants'
  * ```
  *
- * @see {@link constantsBaseModule}
- *
  * @module zanixConstants
  */
-const constants = constantsModule as ConstantsModule
+const constants = Object.freeze(constantsModule) as Readonly<
+  Omit<typeof constantsBaseModule, 'default'>
+>
 export default constants
 
 export * from 'utils/constants.ts'

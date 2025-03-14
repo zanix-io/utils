@@ -20,7 +20,7 @@ export const getAppFolders = (root: string): ZanixAppSrcTree => {
           return getFolderName(this.FOLDER)
         },
         files: {
-          EXAMPLE: `${root}/src/app/components/Example.txs`,
+          EXAMPLE: `${root}/src/app/components/ExampleComponent.txs`,
         },
       },
       layout: {
@@ -29,7 +29,7 @@ export const getAppFolders = (root: string): ZanixAppSrcTree => {
           return getFolderName(this.FOLDER)
         },
         files: {
-          EXAMPLE: `${root}/src/app/layout/GlobalFooter.txs`,
+          EXAMPLE: `${root}/src/app/layout/ExampleLayout.txs`,
         },
       },
       pages: {
@@ -38,7 +38,7 @@ export const getAppFolders = (root: string): ZanixAppSrcTree => {
           return getFolderName(this.FOLDER)
         },
         files: {
-          EXAMPLE: `${root}/src/app/pages/Home.tsx`,
+          EXAMPLE: `${root}/src/app/pages/ExamplePage.tsx`,
         },
       },
       resources: {
@@ -91,7 +91,7 @@ export const getAppFolders = (root: string): ZanixAppSrcTree => {
                       return getFolderName(this.FOLDER)
                     },
                     files: {
-                      EXAMPLE: `${root}/src/resources/public/assets/fonts/example.font`,
+                      EXAMPLE: `${root}/src/resources/public/assets/fonts/example.woff2`,
                     },
                   },
                   icons: {
