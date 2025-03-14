@@ -1,31 +1,31 @@
-const enclosedStringRegex = /(['"`])(?:\\\1|.)*?\1/
-const singleQuoteRegex = /^"[^']*"$/
-const leftWhiteSpacesRegex = /^\s+/
 const commentRegex = /(?<!['"`])\/\/.*|(?<!['"`])\/\*[\s\S]*?\*\/(?!['"`])/
-const baseLineCommentRegex = /^(\/|\*).*/
-const keyValueRegex = /^\s*[a-zA-Z_$][a-zA-Z0-9_$]*\s*:\s*['"`].*['"`]\s*$/
-const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
-const isoDatetimeRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z$/
-const utcTimeRegex = /^\d{2}:\d{2}:\d{2}\.\d{3}Z$/
-const localTimeRegex = /^\d{1,2}:\d{2}:\d{2} ?(AM|PM)?$/
+const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
+const enclosedStringRegex = /(['"`])(?:\\\1|.)*?\1/
 const isoDateRegex = /^\d{4}-\d{2}-\d{2}$/
+const isoDatetimeRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z$/
+const keyValueRegex = /^\s*[a-zA-Z_$][a-zA-Z0-9_$]*\s*:\s*['"`].*['"`]\s*$/
+const localTimeRegex = /^\d{1,2}:\d{2}:\d{2} ?(AM|PM)?$/
+const phoneRegex = /^\+?[1-9]\d{1,14}$/
+const securePasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d@$!%*?&]{8,}$/
+const singleQuoteRegex = /^"[^']*"$/
+const urlRegex = /^(https?:\/\/)?(www\.)?[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}([/?].*)?$/
+const usernameRegex = /^[a-zA-Z0-9_]{3,16}$/
+const utcTimeRegex = /^\d{2}:\d{2}:\d{2}\.\d{3}Z$/
+const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+const versionRegex = /^(\d+\.\d+\.\d+(-[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)*)?|latest)$/
 
-export const zanixScopeLib = /^(https?:\/\/.*)?@zanix\//
-export const anyExtensionRegex = /\.[a-z]+$/
-
-/** Available regular expressions to export in the main module*/
-export default {
-  /**
-   * Matches the beginning of a line comment (`//`) or the start of a multi-line comment (`/*`),
-   * commonly used to detect whether a line is part of a comment or contains unfinished comment syntax.
-   */
-  baseLineCommentRegex,
+/** Available regular expressions for external use */
+export {
   /**
    * Matches both single-line (`// ...`) and multi-line (`/* ... *\/`) comments
    * in a string. Ensures that comments are only captured when they are not
    * part of another structure (e.g., inside a string).
    */
   commentRegex,
+  /**
+   * Matches a valid email. This regular expression ensures the email is in the correct format,
+   */
+  emailRegex,
   /**
    * Matches any type of quote (single, double, or backtick) and its contents.
    * It captures strings that are enclosed by any type of quote and handles escaped characters
@@ -49,20 +49,41 @@ export default {
    */
   keyValueRegex,
   /**
-   * Matches the leading whitespace (spaces, tabs, etc.) at the beginning of a string
-   * It captures all the spaces or tabs at the start of a string (if any)
-   */
-  leftWhiteSpacesRegex,
-  /**
    * Validates a time string in the format "H:MM:SS AM/PM" or "H:MM:SS", representing a 12-hour time format.
    * The time may optionally include "AM" or "PM", but it is not required.
    */
   localTimeRegex,
   /**
+   * Regular expression to validate international phone numbers.
+   * - Can start with an optional `+` followed by a country code.
+   * - Must contain only digits and have a length between 2 and 15.
+   */
+  phoneRegex,
+  /**
+   * Regular expression to validate secure passwords.
+   * - Must be at least 8 characters long.
+   * - Must contain at least one uppercase letter, one lowercase letter, and one number.
+   * - Special characters are allowed.
+   */
+  securePasswordRegex,
+  /**
    * Matches a string that is wrapped in double quotes and does not contain single quotes
    * It matches a string like: "some text here" (but not "some ' text" here")
    */
   singleQuoteRegex,
+  /**
+   * Regular expression to validate URLs.
+   * - Supports `http` and `https` protocols.
+   * - Allows `www.` subdomain but it's optional.
+   * - Ensures a valid domain name followed by a top-level domain (TLD).
+   */
+  urlRegex,
+  /**
+   * Regular expression to validate usernames.
+   * - Must be between 3 and 16 characters long.
+   * - Can only contain letters, numbers, and underscores (_).
+   */
+  usernameRegex,
   /**
    * Validates a time string in the format "HH:MM:SS.MMMZ", which represents a time in UTC with milliseconds.
    * This regular expression ensures the time is in the correct format, including milliseconds and the `Z` for UTC.
@@ -73,4 +94,17 @@ export default {
    * UUID (Universally Unique Identifier) is a 128-bit identifier commonly used in databases, distributed systems, and cryptography.
    */
   uuidRegex,
+  /**
+   * Regular expression to validate version strings in the format x.x.x (e.g., 2.0.1).
+   */
+  versionRegex,
 }
+
+/** Available regular expressions for internal use only*/
+
+const leftWhiteSpacesRegex = /^\s+/
+const baseLineCommentRegex = /^(\/|\*).*/
+const zanixScopeLib = /^(https?:\/\/.*)?@zanix\//
+const anyExtensionRegex = /\.[a-z]+$/
+
+export default { anyExtensionRegex, baseLineCommentRegex, leftWhiteSpacesRegex, zanixScopeLib }

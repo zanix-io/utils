@@ -157,9 +157,9 @@ const logger: Logger = new Proxy(Logger['prototype'], {
   get(_, prop) {
     // Retrieve the current global logger instance
     // This is necessary to replace the default Logger instance with the current global logger (self.logger).
-    const logger = self.logger
-    return logger[prop as keyof typeof logger].bind(logger)
+    const property = prop as keyof typeof logger
+    const target = self.logger
+    return target[property].bind(target)
   },
 })
-
 export default logger

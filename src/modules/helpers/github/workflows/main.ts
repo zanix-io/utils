@@ -1,20 +1,25 @@
-import type { WorkflowOptions } from 'typings/github.ts'
+import type { WorkflowOptions, WorkFlowTypes } from 'typings/github.ts'
 
 import { readFileFromCurrentUrl } from 'modules/helpers/files.ts'
-import { GITHUB_WORKFLOW_FOLDER } from 'utils/constants.ts'
 import { getRootDir } from 'modules/helpers/paths.ts'
-import logger from 'modules/logger/mod.ts'
 import { capitalize } from 'utils/strings.ts'
+import logger from 'modules/logger/mod.ts'
+import constants from 'utils/constants.ts'
 
 /** Base function to create a YAML workflow file */
 export async function createWorkflow(
   options: WorkflowOptions & {
-    filename: 'publish'
+    filename: WorkFlowTypes
   },
   replaceContentCallback: (content: string) => string = (content) => content,
 ) {
+  if (!options.filename) {
+    logger.info('No workflow YAML file found for this project, unable to create', 'noSave')
+    return false
+  }
+
   const root = getRootDir()
-  const { baseFolder = `${root}/${GITHUB_WORKFLOW_FOLDER}`, filename: yml } = options
+  const { baseFolder = `${root}/${constants.GITHUB_WORKFLOW_FOLDER}`, filename: yml } = options
   const mainYamls = capitalize(yml)
 
   try {

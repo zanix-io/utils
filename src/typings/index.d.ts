@@ -1,5 +1,5 @@
 import type { Logger } from 'modules/logger/main.ts'
-import type { ZanixGlobal } from 'typings/zanix.ts'
+import type { ZanixGlobal } from './zanix.ts'
 
 type DefaultLogger = typeof Logger['prototype']
 

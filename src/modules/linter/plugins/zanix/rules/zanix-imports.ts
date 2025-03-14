@@ -1,4 +1,4 @@
-import { anyExtensionRegex, zanixScopeLib } from 'utils/regex.ts'
+import regex from 'utils/regex.ts'
 import { linterMessageFormat } from 'modules/linter/commons/message.ts'
 
 /**
@@ -14,7 +14,6 @@ import { linterMessageFormat } from 'modules/linter/commons/message.ts'
  * The purpose of this rule is to ensure that users import the Zanix modules by their package names without
  * specifying file extensions, allowing for more flexible and consistent module usage (e.g., during compilation).
  */
-
 const rules: Record<string, Deno.lint.Rule> = {
   'no-explicit-znx-imports': {
     create(context) {
@@ -26,8 +25,8 @@ const rules: Record<string, Deno.lint.Rule> = {
 
           // Check if the import path starts with '@zanix' and ends with any extension
           if (
-            typeof importPath === 'string' && zanixScopeLib.test(importPath) &&
-            anyExtensionRegex.test(importPath)
+            typeof importPath === 'string' && regex.zanixScopeLib.test(importPath) &&
+            regex.anyExtensionRegex.test(importPath)
           ) {
             context.report({
               node,

@@ -1,6 +1,6 @@
 import { linterMessageFormat } from 'modules/linter/commons/message.ts'
 import { Line } from 'modules/linter/commons/visitors.ts'
-import regex from 'utils/regex.ts'
+import regex, { commentRegex, enclosedStringRegex } from 'utils/regex.ts'
 
 /**
  * `Deno lint` rule to enforce a maximum line width limit in the code.
@@ -12,7 +12,6 @@ import regex from 'utils/regex.ts'
  *
  *  `❌ The line exceeds the maximum allowed width of [maxLineWidth] characters.`
  */
-
 const rules: Record<string, Deno.lint.Rule> = {
   'line-width': {
     create(context) {
@@ -21,16 +20,16 @@ const rules: Record<string, Deno.lint.Rule> = {
       if (!maxLineWidth) return {}
 
       return Line(context, ({ lineLength: baseLenght, lineStart, lineEnd, line, lines, index }) => {
-        const cleanLine = line.replace(regex.commentRegex, '').trim()
+        const cleanLine = line.replace(commentRegex, '').trim()
         const lineLength = cleanLine.length
         const prevLine = (lines[index - 1] || '').trim()
         const nextLine = (lines[index + 1] || '').trim()
 
         const exceptions = lineLength <= maxLineWidth ||
-          cleanLine.replace(regex.enclosedStringRegex, '').length < 2 ||
+          cleanLine.replace(enclosedStringRegex, '').length < 2 ||
           regex.baseLineCommentRegex.test(cleanLine) ||
           regex.baseLineCommentRegex.test(prevLine) &&
-            (nextLine.endsWith('*/') && !regex.commentRegex.test(prevLine) ||
+            (nextLine.endsWith('*/') && !commentRegex.test(prevLine) ||
               nextLine.startsWith('*'))
 
         if (exceptions) return

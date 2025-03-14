@@ -11,22 +11,8 @@ import noOnly from './rules/no-only.ts'
 import noIgnore from './rules/no-ignore.ts'
 
 /**
- * This linter plugin currently includes the following rule:
- * - {@link noOnly}: Prevents the usage of `.only` in test functions (e.g., `Deno.test.only`),
- * - {@link noIgnore}: Prevents the usage of `.ignore` in test functions (e.g., `Deno.test.ignore`),
- *   which can be an accidental leftover when debugging tests.
+ * Deno test linter plugin.
  *
- * @name deno-test-plugin
- */
-const plugin: Deno.lint.Plugin = {
-  name: 'deno-test-plugin',
-  rules: {
-    ...noOnly,
-    ...noIgnore,
-  },
-}
-
-/**
  * This module defines a testing plugin for Deno, which includes some rules, such as
  * ensure that test cases do not contain `.only` to avoid accidentally running
  * only a subset of tests.
@@ -43,8 +29,22 @@ const plugin: Deno.lint.Plugin = {
  * );
  * ```
  *
+ * This linter plugin currently includes the following rule:
+ * @see
+ * - {@link noOnly}: Prevents the usage of `.only` in test functions (e.g., `Deno.test.only`),
+ * - {@link noIgnore}: Prevents the usage of `.ignore` in test functions (e.g., `Deno.test.ignore`),
+ *   which can be an accidental leftover when debugging tests.
+ *
  * @see https://deno.com/
  *
+ * @name deno-test-plugin
  * @module denoTestPlugin
  */
+const plugin: Deno.lint.Plugin = {
+  name: 'deno-test-plugin',
+  rules: {
+    ...noOnly,
+    ...noIgnore,
+  },
+}
 export default plugin

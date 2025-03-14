@@ -15,7 +15,6 @@ import { linterMessageFormat } from 'modules/linter/commons/message.ts'
  * the code is compatible with Deno's ES module-based approach and eliminating
  * the use of incompatible CommonJS-style module loading.
  */
-
 const rules: Record<string, Deno.lint.Rule> = {
   'no-require': {
     create(context) {

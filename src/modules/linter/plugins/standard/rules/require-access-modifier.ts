@@ -15,7 +15,6 @@ import { linterMessageFormat } from 'modules/linter/commons/message.ts'
  *  The goal of this rule is to enforce good encapsulation practices and to improve
  *  the readability and maintainability of the codebase by making access levels clear.
  */
-
 const rules: Record<string, Deno.lint.Rule> = {
   'require-access-modifier': {
     create(context) {

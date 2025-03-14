@@ -12,22 +12,8 @@ import noUselessExpression from './rules/no-useless-expression.ts'
 import requireAccessModifier from './rules/require-access-modifier.ts'
 
 /**
- * This linter plugin currently includes the following rules:
- * - {@link noUselessExpression}: Detects unnecessary expressions that have no side effects.
- * - {@link noRequire}: Prevents the use of `require` instead of `import` to maintain consistency with ES modules.
+ * Deno standard linter plugin.
  *
- * @name deno-std-plugin
- */
-const plugin: Deno.lint.Plugin = {
-  name: 'deno-std-plugin',
-  rules: {
-    ...noUselessExpression,
-    ...noRequire,
-    ...requireAccessModifier,
-  },
-}
-
-/**
  * This module defines a linting plugin for Deno, which includes a set of custom rules
  * to improve code quality and follow best development practices.
  *
@@ -43,8 +29,22 @@ const plugin: Deno.lint.Plugin = {
  * );
  * ```
  *
+ * This linter plugin currently includes the following rules:
+ * @see
+ * - {@link noUselessExpression}: Detects unnecessary expressions that have no side effects.
+ * - {@link noRequire}: Prevents the use of `require` instead of `import` to maintain consistency with ES modules.
+ *
  * @see https://deno.com/
  *
+ * @name deno-std-plugin
  * @module denoStdPlugin
  */
+const plugin: Deno.lint.Plugin = {
+  name: 'deno-std-plugin',
+  rules: {
+    ...noUselessExpression,
+    ...noRequire,
+    ...requireAccessModifier,
+  },
+}
 export default plugin

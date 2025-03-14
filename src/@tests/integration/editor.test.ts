@@ -1,8 +1,8 @@
-import { getTemporaryFolder } from 'modules/helpers/paths.ts'
-import { stub } from '@std/testing/mock'
 import { createVSCodeConfig } from 'modules/helpers/editor/vscode.ts'
-import { editors } from 'utils/constants.ts'
+import { getTemporaryFolder } from 'modules/helpers/paths.ts'
 import { assert } from '@std/assert/assert'
+import constants from 'utils/constants.ts'
+import { stub } from '@std/testing/mock'
 
 const defaultFolder = getTemporaryFolder(import.meta.url) + '/editor'
 
@@ -14,8 +14,8 @@ stub(console, 'warn')
 Deno.test('Editor config creation validation', async () => {
   const cwdMock = stub(Deno, 'cwd', () => '')
 
-  const currentEditor = { ...editors.vscode }
-  editors.vscode = { FOLDER: defaultFolder, FILENAME: 'settings' }
+  const currentEditor = { ...constants.editors.vscode }
+  constants.editors.vscode = { FOLDER: defaultFolder, FILENAME: 'settings' }
 
   const response = await createVSCodeConfig()
 
@@ -24,7 +24,7 @@ Deno.test('Editor config creation validation', async () => {
   assert(content.includes('"deno.config": "deno.json'))
   await Deno.remove(defaultFolder, { recursive: true })
 
-  editors.vscode = currentEditor
+  constants.editors.vscode = currentEditor
 
   cwdMock.restore()
 })

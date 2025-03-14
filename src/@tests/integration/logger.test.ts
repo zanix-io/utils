@@ -3,10 +3,10 @@ import { getLogFileName } from 'modules/logger/defaults/storage/file.ts'
 import { serializeMultipleErrors } from 'modules/errors/serialize.ts'
 import { fileExists } from 'modules/helpers/files.ts'
 import { canUseZnx } from 'modules/helpers/zanix/namespace.ts'
+import { isoDatetimeRegex, uuidRegex } from 'utils/regex.ts'
 import { Logger } from 'modules/logger/main.ts'
 import { HttpError } from 'modules/errors/main.ts'
 import { stub } from '@std/testing/mock'
-import regex from 'utils/regex.ts'
 
 // Disable logs by testing
 stub(console, 'error')
@@ -32,8 +32,8 @@ Deno.test(
     const returned = await logger.debug('test message', { data: 'data debug' })
 
     assertExists(returned)
-    assertMatch(returned.id, regex.uuidRegex)
-    assertMatch(returned.timestamp, regex.isoDatetimeRegex)
+    assertMatch(returned.id, uuidRegex)
+    assertMatch(returned.timestamp, isoDatetimeRegex)
     assertEquals(returned.level, 'debug')
     assertEquals(returned.message, 'test message')
     assertEquals(returned.data, [{ data: 'data debug' }])

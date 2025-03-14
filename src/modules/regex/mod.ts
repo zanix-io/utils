@@ -7,7 +7,13 @@
  * \_____/ \__,_||_| |_||_|/_/\_\
  */
 
-import regex from 'utils/regex.ts'
+import * as regexBaseModule from 'utils/regex.ts'
+
+type RegexBaseModule = Omit<typeof regexBaseModule, 'default'>
+type RegexModule = Readonly<RegexBaseModule>
+
+const regexModule = { ...regexBaseModule }
+Object.assign(regexModule, { default: undefined })
 
 /**
  * This module provides regular expressions used in the project.
@@ -19,6 +25,11 @@ import regex from 'utils/regex.ts'
  * import regex from 'jsr:@zanix/utils@[version]/regex'
  * ```
  *
+ * @see {@link regexBaseModule}
+ *
  * @module zanixRegex
  */
-export default Object.freeze(regex) as typeof regex
+const regex = regexModule as RegexModule
+export default regex
+
+export * from 'utils/regex.ts'

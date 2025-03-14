@@ -15,27 +15,8 @@ import standardPlugin from '../standard/mod.ts'
 import testPlugin from '../test/mod.ts'
 
 /**
- * This linter plugin includes rules from the following plugins:
- * - {@link zanixFlags}: A set of custom rules related to Zanix projects.
- * - {@link testPlugin}: A set of rules of `deno-test-plugin`.
- * - {@link standardPlugin}:  A set of rules of `deno-std-plugin`.
- * - {@link formatPlugin}:  A set of rules of `deno-fmt-plugin`.
+ * Deno `Zanix` standard rules - linter plugin.
  *
- * @name deno-zanix-plugin
- */
-const plugin: Deno.lint.Plugin = {
-  name: 'deno-zanix-plugin',
-  rules: {
-    ...zanixFlags,
-    ...zanixLogger,
-    ...zanixImports,
-    ...testPlugin.rules,
-    ...standardPlugin.rules,
-    ...formatPlugin.rules,
-  },
-}
-
-/**
  * This module defines a custom linting plugin for Deno that aggregates rules
  * from multiple plugins, providing a comprehensive set of linting checks
  * to improve code quality and ensure consistency across Zanix projects.
@@ -52,9 +33,27 @@ const plugin: Deno.lint.Plugin = {
  *   `'enablePipe:global'`,
  * );
  * ```
+ * This linter plugin includes rules from the following plugins:
+ * @see
+ * - {@link zanixFlags}: A set of custom rules related to `Zanix` projects.
+ * - {@link testPlugin}: A set of rules of `deno-test-plugin`.
+ * - {@link standardPlugin}:  A set of rules of `deno-std-plugin`.
+ * - {@link formatPlugin}:  A set of rules of `deno-fmt-plugin`.
  *
  * @see https://deno.com/
  *
+ * @name deno-zanix-plugin
  * @module denoZanixPlugin
  */
+const plugin: Deno.lint.Plugin = {
+  name: 'deno-zanix-plugin',
+  rules: {
+    ...zanixFlags,
+    ...zanixLogger,
+    ...zanixImports,
+    ...testPlugin.rules,
+    ...standardPlugin.rules,
+    ...formatPlugin.rules,
+  },
+}
 export default plugin

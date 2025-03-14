@@ -1,115 +1,125 @@
-import type { ZanixAppFolders } from 'typings/zanix.ts'
+import type { ZanixAppSrcTree } from 'typings/zanix.ts'
 
 import { getFolderName } from 'modules/helpers/paths.ts'
 
-export const getAppFolders = (root: string): ZanixAppFolders => ({
-  FOLDER: `${root}/src/app`,
-  get NAME() {
-    return getFolderName(this.FOLDER)
-  },
-  subfolders: {
-    components: {
-      FOLDER: `${root}/src/app/components`,
-      get NAME() {
-        return getFolderName(this.FOLDER)
-      },
-      files: {
-        EXAMPLE: `${root}/src/app/components/Example.txs`,
-      },
+let appTree: ZanixAppSrcTree | undefined
+
+export const getAppFolders = (root: string): ZanixAppSrcTree => {
+  const mainFolder = `${root}/src/app`
+  if (appTree?.FOLDER === mainFolder) return appTree
+
+  return {
+    FOLDER: mainFolder,
+    get NAME() {
+      return getFolderName(this.FOLDER)
     },
-    layout: {
-      FOLDER: `${root}/src/app/layout`,
-      get NAME() {
-        return getFolderName(this.FOLDER)
+    subfolders: {
+      components: {
+        FOLDER: `${root}/src/app/components`,
+        get NAME() {
+          return getFolderName(this.FOLDER)
+        },
+        files: {
+          EXAMPLE: `${root}/src/app/components/Example.txs`,
+        },
       },
-      files: {
-        EXAMPLE: `${root}/src/app/layout/GlobalFooter.txs`,
+      layout: {
+        FOLDER: `${root}/src/app/layout`,
+        get NAME() {
+          return getFolderName(this.FOLDER)
+        },
+        files: {
+          EXAMPLE: `${root}/src/app/layout/GlobalFooter.txs`,
+        },
       },
-    },
-    pages: {
-      FOLDER: `${root}/src/app/pages`,
-      get NAME() {
-        return getFolderName(this.FOLDER)
+      pages: {
+        FOLDER: `${root}/src/app/pages`,
+        get NAME() {
+          return getFolderName(this.FOLDER)
+        },
+        files: {
+          EXAMPLE: `${root}/src/app/pages/Home.tsx`,
+        },
       },
-      files: {
-        EXAMPLE: `${root}/src/app/pages/Home.tsx`,
-      },
-    },
-    resources: {
-      FOLDER: `${root}/src/resources`,
-      get NAME() {
-        return getFolderName(this.FOLDER)
-      },
-      subfolders: {
-        intl: {
-          FOLDER: `${root}/src/resources/intl`,
-          get NAME() {
-            return getFolderName(this.FOLDER)
-          },
-          subfolders: {
-            es: {
-              FOLDER: `${root}/src/resources/intl/es`,
-              files: {
-                EXAMPLE: `${root}/src/resources/intl/es/example.json`,
+      resources: {
+        FOLDER: `${root}/src/resources`,
+        get NAME() {
+          return getFolderName(this.FOLDER)
+        },
+        subfolders: {
+          intl: {
+            FOLDER: `${root}/src/resources/intl`,
+            get NAME() {
+              return getFolderName(this.FOLDER)
+            },
+            subfolders: {
+              es: {
+                FOLDER: `${root}/src/resources/intl/es`,
+                get NAME() {
+                  return getFolderName(this.FOLDER)
+                },
+                files: {
+                  EXAMPLE: `${root}/src/resources/intl/es/example.json`,
+                },
               },
             },
           },
-        },
-        public: {
-          FOLDER: `${root}/src/resources/public`,
-          get NAME() {
-            return getFolderName(this.FOLDER)
-          },
-          subfolders: {
-            assets: {
-              FOLDER: `${root}/src/resources/public/assets`,
-              get NAME() {
-                return getFolderName(this.FOLDER)
-              },
-              subfolders: {
-                docs: {
-                  FOLDER: `${root}/src/resources/public/assets/docs`,
-                  get NAME() {
-                    return getFolderName(this.FOLDER)
-                  },
-                  files: {
-                    EXAMPLE: `${root}/src/resources/public/assets/docs/example.doc`,
-                  },
+          public: {
+            FOLDER: `${root}/src/resources/public`,
+            get NAME() {
+              return getFolderName(this.FOLDER)
+            },
+            subfolders: {
+              assets: {
+                FOLDER: `${root}/src/resources/public/assets`,
+                get NAME() {
+                  return getFolderName(this.FOLDER)
                 },
-                fonts: {
-                  FOLDER: `${root}/src/resources/public/assets/fonts`,
-                  get NAME() {
-                    return getFolderName(this.FOLDER)
+                subfolders: {
+                  docs: {
+                    FOLDER: `${root}/src/resources/public/assets/docs`,
+                    get NAME() {
+                      return getFolderName(this.FOLDER)
+                    },
+                    files: {
+                      EXAMPLE: `${root}/src/resources/public/assets/docs/example.txt`,
+                    },
                   },
-                  files: {
-                    EXAMPLE: `${root}/src/resources/public/assets/fonts/example.font`,
+                  fonts: {
+                    FOLDER: `${root}/src/resources/public/assets/fonts`,
+                    get NAME() {
+                      return getFolderName(this.FOLDER)
+                    },
+                    files: {
+                      EXAMPLE: `${root}/src/resources/public/assets/fonts/example.font`,
+                    },
                   },
-                },
-                icons: {
-                  FOLDER: `${root}/src/resources/public/assets/icons`,
-                  get NAME() {
-                    return getFolderName(this.FOLDER)
+                  icons: {
+                    FOLDER: `${root}/src/resources/public/assets/icons`,
+                    get NAME() {
+                      return getFolderName(this.FOLDER)
+                    },
+                    files: {
+                      EXAMPLE: `${root}/src/resources/public/assets/icons/example.svg`,
+                    },
                   },
-                  files: {
-                    EXAMPLE: `${root}/src/resources/public/assets/icons/example.svg`,
+                  images: {
+                    FOLDER: `${root}/src/resources/public/assets/images`,
+                    get NAME() {
+                      return getFolderName(this.FOLDER)
+                    },
+                    files: {
+                      EXAMPLE: `${root}/src/resources/public/assets/images/example.webp`,
+                    },
                   },
-                },
-                images: {
-                  FOLDER: `${root}/src/resources/public/assets/images`,
-                  get NAME() {
-                    return getFolderName(this.FOLDER)
-                  },
-                  files: {
-                    EXAMPLE: `${root}/src/resources/public/assets/images/example.webp`,
-                  },
-                },
-                videos: {
-                  FOLDER: `${root}/src/resources/public/assets/videos`,
-                  get NAME() {
-                    return getFolderName(this.FOLDER)
-                  },
-                  files: {
-                    EXAMPLE: `${root}/src/resources/public/assets/videos/example.webm`,
+                  videos: {
+                    FOLDER: `${root}/src/resources/public/assets/videos`,
+                    get NAME() {
+                      return getFolderName(this.FOLDER)
+                    },
+                    files: {
+                      EXAMPLE: `${root}/src/resources/public/assets/videos/example.webm`,
+                    },
                   },
                 },
               },
@@ -166,5 +176,5 @@ export const getAppFolders = (root: string): ZanixAppFolders => ({
         },
       },
     },
-  },
-})
+  }
+}

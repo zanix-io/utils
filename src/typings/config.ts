@@ -1,4 +1,4 @@
-import type { ZanixProjects } from 'typings/zanix.ts'
+import type { ZanixProjects } from './zanix.ts'
 
 /**
  * Deno config file type

@@ -1,8 +1,8 @@
-import type { GITHUB_HOOKS_FOLDER as _baseDir } from 'utils/constants.ts'
 import type { FormatAvailableFiles, LinterAvailableFiles } from 'typings/files.ts'
+import type { ZanixProjects } from 'typings/zanix.ts'
 
 export type BaseGithubHelperOptions = {
-  /** The folder where the hook should be created. Defaults to {@link _baseDir} */
+  /** The folder where the hook should be created. Defaults to '.github/hooks' */
   baseFolder?: string
 }
 export type HookOptions = BaseGithubHelperOptions & {
@@ -27,7 +27,14 @@ export type PreCommitHookOptions = HookOptions & {
   }
 }
 
+/** The workflow types */
+export type WorkFlowTypes = 'publish' | null
+
 export type WorkflowOptions = BaseGithubHelperOptions & {
+  /**
+   * Defines the `ZanixProjects` type, which is a reference to ZnxProjects.
+   */
+  projectType?: ZanixProjects
   /**
    * The main branch where the version should be published using the workflow.
    * This specifies the primary branch for version deployment.

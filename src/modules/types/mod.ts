@@ -8,12 +8,10 @@
  */
 
 export type {
-  ZanixAppFolders,
-  ZanixFolders,
+  ZanixFolderGenericTree,
+  ZanixFolderTree,
   ZanixGlobal,
-  ZanixLibraryFolders,
   ZanixProjects,
-  ZanixServerFolders,
 } from 'typings/zanix.ts'
 
 export type {

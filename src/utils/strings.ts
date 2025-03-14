@@ -5,8 +5,10 @@
  * ```ts
  * capitalizeWords("hello world"));  // Output: "Hello world"
  * ```
+ *
+ * @category helpers
  */
-export function capitalize(value: string) {
+export function capitalize(value: string): string {
   if (value.length === 0) return value
 
   return value.charAt(0).toUpperCase() + value.slice(1)
@@ -17,6 +19,8 @@ export function capitalize(value: string) {
  * ```ts
  * capitalizeWords("hello world"));  // Output: "Hello World"
  * ```
+ *
+ * @category helpers
  */
 export function capitalizeWords(str: string): string {
   return str

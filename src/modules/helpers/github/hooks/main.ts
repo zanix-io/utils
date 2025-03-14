@@ -1,10 +1,10 @@
 import type { HookOptions } from 'typings/github.ts'
 
 import { fileExists, folderExists, readFileFromCurrentUrl } from 'modules/helpers/files.ts'
-import { GIT_HOOKS_FOLDER, GITHUB_HOOKS_FOLDER } from 'utils/constants.ts'
 import { getRelativePath, getRootDir } from 'modules/helpers/paths.ts'
-import logger from 'modules/logger/mod.ts'
 import { capitalize } from 'utils/strings.ts'
+import logger from 'modules/logger/mod.ts'
+import constants from 'utils/constants.ts'
 
 /** Base function to create a hook */
 export async function createHook(
@@ -14,8 +14,11 @@ export async function createHook(
   replaceContentCallback: (content: string) => string = (content) => content,
 ) {
   const root = getRootDir()
-  const { baseFolder = `${root}/${GITHUB_HOOKS_FOLDER}`, filename: script, createLink = true } =
-    options
+  const {
+    baseFolder = `${root}/${constants.GITHUB_HOOKS_FOLDER}`,
+    filename: script,
+    createLink = true,
+  } = options
   const mainScript = capitalize(script)
 
   try {
@@ -42,8 +45,10 @@ export async function createHook(
       throw new Error('chmod command failed. Please check your folder permissions and try again.')
     }
 
-    if (!folderExists(GIT_HOOKS_FOLDER)) {
-      logger.warn(`${GIT_HOOKS_FOLDER} directory does not exist. Initializing Git repository...`)
+    if (!folderExists(constants.GIT_HOOKS_FOLDER)) {
+      logger.warn(
+        `${constants.GIT_HOOKS_FOLDER} directory does not exist. Initializing Git repository...`,
+      )
 
       // Execute `git init` for initializing the repo if does not exist.
       const gitInit = new Deno.Command('git', {
@@ -58,7 +63,7 @@ export async function createHook(
       }
     }
 
-    const fileHook = `${GIT_HOOKS_FOLDER}/${script}`
+    const fileHook = `${constants.GIT_HOOKS_FOLDER}/${script}`
 
     if (createLink) {
       if (fileExists(fileHook)) {

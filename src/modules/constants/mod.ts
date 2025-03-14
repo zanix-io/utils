@@ -7,7 +7,13 @@
  * \_____/ \__,_||_| |_||_|/_/\_\
  */
 
-import constants from 'utils/constants.ts'
+import * as constantsBaseModule from 'utils/constants.ts'
+
+type ConstantsBaseModule = Omit<typeof constantsBaseModule, 'default'>
+type ConstantsModule = Readonly<ConstantsBaseModule>
+
+const constantsModule = { ...constantsBaseModule }
+Object.assign(constantsModule, { default: undefined })
 
 /**
  * This module provides constants used throughout the project.
@@ -20,6 +26,11 @@ import constants from 'utils/constants.ts'
  * import constants from 'jsr:@zanix/utils@[version]/constants'
  * ```
  *
+ * @see {@link constantsBaseModule}
+ *
  * @module zanixConstants
  */
-export default Object.freeze(constants) as typeof constants
+const constants = constantsModule as ConstantsModule
+export default constants
+
+export * from 'utils/constants.ts'

@@ -14,7 +14,6 @@ import { linterMessageFormat } from 'modules/linter/commons/message.ts'
  * The goal of this rule is to help clean up the code by removing redundant expressions
  * that do not contribute to the logic, improving code readability and maintainability.
  */
-
 const rules: Record<string, Deno.lint.Rule> = {
   'no-useless-expression': {
     create(context) {

@@ -5,7 +5,9 @@ import type * as types from 'jsr:@zanix/utils/types'
 Deno.test('test library main module', async () => {
   const utils = await import(`jsr:@zanix/utils`)
 
+  assert(utils.constants['default' as never] === undefined)
   assertExists(utils.constants)
+  assert(utils.regex['default' as never] === undefined)
   assertExists(utils.regex)
   assertExists(utils.HttpError)
   assertExists(utils.TaskerManager)
@@ -21,6 +23,7 @@ Deno.test('test library main module', async () => {
 Deno.test('test library constants module', async () => {
   const constants = await import(`jsr:@zanix/utils/constants`)
 
+  assertExists(constants.CONFIG_FILE)
   assertExists(constants.default)
 })
 
@@ -32,6 +35,7 @@ Deno.test('test library types module', () => {
 Deno.test('test library regex module', async () => {
   const regex = await import(`jsr:@zanix/utils/regex`)
 
+  assertExists(regex.commentRegex)
   assertExists(regex.default)
 })
 

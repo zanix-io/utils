@@ -1,9 +1,46 @@
-import type { ZNX_STRUCT } from 'modules/helpers/zanix/projects/main.ts'
+// deno-lint-ignore-file ban-types
 import type { Logger } from 'modules/logger/main.ts'
 
-type ZnxFolderStructure = typeof ZNX_STRUCT
-
 type DefaultLogger = typeof Logger['prototype']
+
+type ZanixBaseFolder<
+  F extends Record<string, string | null> | undefined = undefined,
+  S extends Record<string, Partial<ZanixBaseFolder>> | undefined = undefined,
+> = Omit<
+  {
+    readonly FOLDER: string
+    get NAME(): string
+    files: F
+    subfolders: S
+  },
+  F extends undefined ? (S extends undefined ? 'subfolders' | 'files' : 'files')
+    : (S extends undefined ? 'subfolders' : never)
+>
+
+export type ZanixProjectsFull = ZanixProjects | 'all' | undefined
+
+type ZanixSrcTree<T extends ZanixProjectsFull> = T extends 'server' ? { server: ZanixServerSrcTree }
+  : T extends 'app' ? { app: ZanixAppSrcTree }
+  : T extends 'library' ? { library: ZanixLibrarySrcTree }
+  : T extends 'app-server' ? {
+      app: ZanixAppSrcTree
+      server: ZanixServerSrcTree
+    }
+  : T extends 'all' ? {
+      library: ZanixLibrarySrcTree
+      app: ZanixAppSrcTree
+      server: ZanixServerSrcTree
+    }
+  : {}
+
+type ZanixProjectSrc<T extends ZanixProjectsFull> = T extends 'library' ? {}
+  : T extends undefined ? {}
+  : {
+    zanix: ZanixBaseFolder<{
+      CONFIG: string
+      SECRETS: string
+    }>
+  }
 
 /**
  * Defines the 'ZanixProjects' type, which is a reference to ZnxProjects
@@ -11,337 +48,112 @@ type DefaultLogger = typeof Logger['prototype']
  */
 export type ZanixProjects = 'library' | 'server' | 'app' | 'app-server'
 
-type ZnxSubfoldersRewrited<O extends ZanixProjects> = Omit<
-  ZnxFolderStructure['subfolders']['src']['subfolders'],
-  O
+/**
+ * Represents a generic folder structure used to model a file system where each folder
+ * can contain other subfolders (recursively) and files
+ */
+export type ZanixFolderGenericTree = Partial<
+  ZanixBaseFolder<
+    Record<string, string | null>,
+    Record<string, ZanixBaseFolder>
+  >
 >
 
-type ZnxFolderStructureModified<T extends ZanixProjects> =
-  & Omit<ZnxFolderStructure, 'subfolders'>
-  & {
-    subfolders: Omit<ZnxFolderStructure['subfolders'], 'src'> & {
-      src: Omit<ZnxFolderStructure['subfolders']['src'], 'subfolders'> & {
-        subfolders: 'library' extends T ? ZnxSubfoldersRewrited<'app' | 'server'>
-          : T extends 'app' ? ZnxSubfoldersRewrited<'library' | 'server'>
-          : T extends 'server' ? ZnxSubfoldersRewrited<'app' | 'library'>
-          : ZnxSubfoldersRewrited<'library'>
-      }
-    }
-  }
-
-/**
- * Defines a generic 'FolderStructure' type that depends on the 'Projects' type
- * for Zanix applications.
- */
-export type FolderStructure<T extends ZanixProjects = never> = T extends never ? ZnxFolderStructure
-  : ZnxFolderStructureModified<T>
-
 /** Zanix Server Folder structure */
-export type ZanixServerFolders = {
-  FOLDER: string
-  get NAME(): string
-  subfolders: {
-    connectors: {
-      FOLDER: string
-      get NAME(): string
-      files: {
-        EXAMPLE_PROVIDER: string
-        EXAMPLE_CLIENT: string
-      }
-    }
-    handlers: {
-      FOLDER: string
-      get NAME(): string
-      files: {
-        EXAMPLE_CONTROLLER: string
-        EXAMPLE_RESOLVER: string
-        EXAMPLE_SUBSCRIBER: string
-      }
-      subfolders: {
-        rtos: {
-          FOLDER: string
-          get NAME(): string
-          files: { EXAMPLE: string }
-        }
-      }
-    }
-    interactors: {
-      FOLDER: string
-      get NAME(): string
-      files: {
-        EXAMPLE_SERVICE: string
-      }
-    }
-    jobs: {
-      FOLDER: string
-      get NAME(): string
-      files: {
-        EXAMPLE: string
-      }
-    }
-    repositories: {
-      FOLDER: string
-      get NAME(): string
-      files: {
-        EXAMPLE_DATA: string
-        EXAMPLE_MODEL: string
-      }
-      subfolders: {
-        seeders: {
-          FOLDER: string
-          get NAME(): string
-          files: { EXAMPLE: string }
-        }
-      }
-    }
-  }
-}
+export type ZanixServerSrcTree = ZanixBaseFolder<undefined, {
+  connectors: ZanixBaseFolder<{
+    EXAMPLE_PROVIDER: string
+    EXAMPLE_CLIENT: string
+  }>
+  handlers: ZanixBaseFolder<{
+    EXAMPLE_CONTROLLER: string
+    EXAMPLE_RESOLVER: string
+    EXAMPLE_SUBSCRIBER: string
+  }, { rtos: ZanixBaseFolder<{ EXAMPLE: string }> }>
+  interactors: ZanixBaseFolder<{ EXAMPLE_SERVICE: string }>
+  jobs: ZanixBaseFolder<{ EXAMPLE: string }>
+  repositories: ZanixBaseFolder<{
+    EXAMPLE_DATA: string
+    EXAMPLE_MODEL: string
+  }, { seeders: ZanixBaseFolder<{ EXAMPLE: string }> }>
+}>
 
 /** Zanix Library Folder structure */
-export type ZanixLibraryFolders = {
-  FOLDER: string
-  get NAME(): string
-  files: {
-    EXAMPLE: string
-  }
-}
+export type ZanixLibrarySrcTree = ZanixBaseFolder<
+  { EXAMPLE: string },
+  { templates: ZanixBaseFolder }
+>
 
-/** Zanix App Folder structure */
-export type ZanixAppFolders = {
-  FOLDER: string
-  get NAME(): string
-  subfolders: {
-    components: {
-      FOLDER: string
-      get NAME(): string
-      files: {
-        EXAMPLE: string
-      }
-    }
-    layout: {
-      FOLDER: string
-      get NAME(): string
-      files: {
-        EXAMPLE: string
-      }
-    }
-    pages: {
-      FOLDER: string
-      get NAME(): string
-      files: {
-        EXAMPLE: string
-      }
-    }
-    resources: {
+/**
+ * Zanix App Folder structure
+ * @experimental
+ */
+export type ZanixAppSrcTree = ZanixBaseFolder<undefined, {
+  components: ZanixBaseFolder<{ EXAMPLE: string }>
+  layout: ZanixBaseFolder<{ EXAMPLE: string }>
+  pages: ZanixBaseFolder<{ EXAMPLE: string }>
+  resources: ZanixBaseFolder<undefined, {
+    intl: ZanixBaseFolder<undefined, { es: ZanixBaseFolder<{ EXAMPLE: string }> }>
+    public: {
       FOLDER: string
       get NAME(): string
       subfolders: {
-        intl: {
-          FOLDER: string
-          get NAME(): string
-          subfolders: {
-            es: {
-              FOLDER: string
-              files: {
-                EXAMPLE: string
-              }
-            }
-          }
-        }
-        public: {
-          FOLDER: string
-          get NAME(): string
-          subfolders: {
-            assets: {
-              FOLDER: string
-              get NAME(): string
-              subfolders: {
-                docs: {
-                  FOLDER: string
-                  get NAME(): string
-                  files: {
-                    EXAMPLE: string
-                  }
-                }
-                fonts: {
-                  FOLDER: string
-                  get NAME(): string
-                  files: {
-                    EXAMPLE: string
-                  }
-                }
-                icons: {
-                  FOLDER: string
-                  get NAME(): string
-                  files: {
-                    EXAMPLE: string
-                  }
-                }
-                images: {
-                  FOLDER: string
-                  get NAME(): string
-                  files: {
-                    EXAMPLE: string
-                  }
-                }
-                videos: {
-                  FOLDER: string
-                  get NAME(): string
-                  files: {
-                    EXAMPLE: string
-                  }
-                }
-              }
-              scripts: {
-                FOLDER: string
-                get NAME(): string
-                files: {
-                  EXAMPLE: string
-                }
-              }
-              sitemap: {
-                FOLDER: string
-                get NAME(): string
-                files: {
-                  EXAMPLE_MAIN: string
-                  EXAMPLE_URL: string
-                }
-              }
-              styles: {
-                FOLDER: string
-                get NAME(): string
-                files: {
-                  fonts: string
-                }
-                subfolders: {
-                  apps: {
-                    FOLDER: string
-                    get NAME(): string
-                    files: {
-                      EXAMPLE: string
-                    }
-                  }
-                  global: {
-                    FOLDER: string
-                    get NAME(): string
-                    files: {
-                      EXAMPLE: string
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
+        assets: ZanixBaseFolder<undefined, {
+          docs: ZanixBaseFolder<{ EXAMPLE: string }>
+          fonts: ZanixBaseFolder<{ EXAMPLE: string }>
+          icons: ZanixBaseFolder<{ EXAMPLE: string }>
+          images: ZanixBaseFolder<{ EXAMPLE: string }>
+          videos: ZanixBaseFolder<{ EXAMPLE: string }>
+        }>
+        scripts: ZanixBaseFolder<{ EXAMPLE: string }>
+        sitemap: ZanixBaseFolder<{
+          EXAMPLE_MAIN: string
+          EXAMPLE_URL: string
+        }>
+        styles: ZanixBaseFolder<{ fonts: string }, {
+          apps: ZanixBaseFolder<{ EXAMPLE: string }>
+          global: ZanixBaseFolder<{ EXAMPLE: string }>
+        }>
       }
     }
-  }
-}
+  }>
+}>
 
 /** Zanix general folders */
-export type ZanixFolders = {
-  FOLDER: string
-  get NAME(): string
-  files: {
-    DENO: string | null
+export type ZanixFolderTree<T extends ZanixProjectsFull = undefined> = ZanixBaseFolder<
+  {
     MOD: string
     README: string
-    gitignore: string
+  },
+  ZanixProjectSrc<T> & {
+    dist: ZanixBaseFolder<{ APP: string }>
+    docs: ZanixBaseFolder<{
+      CHANGELOG: string
+      LICENCE: string
+    }>
+    src: ZanixBaseFolder<
+      undefined,
+      ZanixSrcTree<T> & {
+        tests: ZanixBaseFolder<undefined, {
+          functional: ZanixBaseFolder<{ EXAMPLE: string }>
+          integration: ZanixBaseFolder<{ EXAMPLE: string }>
+          unit: ZanixBaseFolder<{ EXAMPLE: string }>
+        }>
+        shared: ZanixBaseFolder<
+          undefined,
+          T extends 'library' ? never : T extends undefined ? {} : {
+            middlewares: ZanixBaseFolder<{
+              EXAMPLE_PIPE: string
+              EXAMPLE_INTERCEPTOR: string
+            }>
+          }
+        >
+        typings: ZanixBaseFolder<{ INDEX: string }>
+        utils: ZanixBaseFolder<{ EXAMPLE: string }>
+      }
+    >
   }
-  subfolders: {
-    dist: {
-      FOLDER: string
-      get NAME(): string
-      files: { APP: string }
-    }
-    docs: {
-      FOLDER: string
-
-      get NAME(): string
-      files: {
-        CHANGELOG: string
-        DOCUMENTATION: string
-        LICENCE: string
-      }
-    }
-    src: {
-      FOLDER: string
-
-      get NAME(): string
-      subfolders: {
-        tests: {
-          FOLDER: string
-
-          get NAME(): string
-          subfolders: {
-            functional: {
-              FOLDER: string
-
-              get NAME(): string
-              files: { EXAMPLE: string }
-            }
-            integration: {
-              FOLDER: string
-
-              get NAME(): string
-              files: { EXAMPLE: string }
-            }
-            unit: {
-              FOLDER: string
-
-              get NAME(): string
-              files: { EXAMPLE: string }
-            }
-          }
-        }
-        app: ZanixAppFolders
-        library: ZanixLibraryFolders
-        server: ZanixServerFolders
-        shared: {
-          FOLDER: string
-
-          get NAME(): string
-          subfolders: {
-            middlewares: {
-              FOLDER: string
-
-              get NAME(): string
-              files: {
-                EXAMPLE_PIPE: string
-                EXAMPLE_INTERCEPTOR: string
-              }
-            }
-          }
-        }
-        typings: {
-          FOLDER: string
-
-          get NAME(): string
-          files: {
-            INDEX: string
-          }
-        }
-        utils: {
-          FOLDER: string
-
-          get NAME(): string
-          files: {
-            EXAMPLE: string
-          }
-        }
-      }
-    }
-    zanix: {
-      FOLDER: string
-
-      get NAME(): string
-      files: {
-        CONFIG: string
-        SECRETS: string
-      }
-    }
-  }
-}
+>
 
 /**
  * Global library type modules definition
@@ -364,4 +176,18 @@ export interface ZanixGlobal {
       hash?: string
     }
   }
+}
+
+type ZanixBaseLibraryInfo = { version: string }
+
+/** Zanix library types. Shows library name and version */
+export type ZanixLibraries = {
+  '@zanix/app': ZanixBaseLibraryInfo
+  '@zanix/auth': ZanixBaseLibraryInfo
+  '@zanix/asyncmq': ZanixBaseLibraryInfo
+  '@zanix/core': ZanixBaseLibraryInfo
+  '@zanix/datamaster': ZanixBaseLibraryInfo
+  '@zanix/server': ZanixBaseLibraryInfo
+  '@zanix/tasker': ZanixBaseLibraryInfo
+  '@zanix/utils': ZanixBaseLibraryInfo
 }

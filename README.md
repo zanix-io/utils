@@ -1,6 +1,9 @@
 # Zanix - Utils
 
-[![Version](https://img.shields.io/badge/version-v1.0.0-blue.svg)](https://github.com/yourusername/zanix-[library_name]/releases)\
+[![Version](https://img.shields.io/jsr/v/@zanix/utils?color=blue&label=jsr)](https://jsr.io/@zanix/utils/versions)
+
+[![Release](https://img.shields.io/github/v/release/zanix-io/utils?color=blue&label=git)](https://github.com/zanix-io/utils/releases)
+
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](https://opensource.org/licenses/MIT)
 
 ## Table of Contents
@@ -30,6 +33,7 @@ Zanix Utils is a library within the **Zanix** ecosystem, a collection of tools d
   - Constants.
   - General-purpose helpers.
 - Workers utilities.
+- Http Errors.
 - Logger.
 
 ## Installation
@@ -41,14 +45,6 @@ import * as utils from 'jsr:@zanix/utils@[version]'
 ```
 
 You can also import specific plugins or utilities as needed:
-
-<style>
-  pre code {
-    max-height: 200px;
-    overflow-y: auto;
-    display: block;
-  }
-</style>
 
 ```ts
 // Zanix linter plugin
@@ -64,10 +60,10 @@ import standardPlugin from 'jsr:@zanix/utils@[version]/linter/deno-standard-plug
 import testPlugin from 'jsr:@zanix/utils@[version]/linter/deno-test-plugin'
 
 // Available constants
-import zanixConstants from 'jsr:@zanix/utils@[version]/constants'
+import zanixConstants, {/*SOME_CONSTANT*/} from 'jsr:@zanix/utils@[version]/constants'
 
 // Regular expressions
-import zanixRegex from 'jsr:@zanix/utils@[version]/regex'
+import zanixRegex, {/*SOME_REGEXP*/} from 'jsr:@zanix/utils@[version]/regex'
 
 // Logger
 import zanixLogger, { Logger } from 'jsr:@zanix/utils@[version]/logger'

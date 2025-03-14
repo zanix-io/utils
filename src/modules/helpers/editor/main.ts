@@ -2,9 +2,9 @@ import type { EditorOptions } from 'typings/editor.ts'
 
 import { fileExists, readFileFromCurrentUrl } from 'modules/helpers/files.ts'
 import { getRootDir } from 'modules/helpers/paths.ts'
-import logger from 'modules/logger/mod.ts'
 import { capitalize } from 'utils/strings.ts'
-import { editors } from 'utils/constants.ts'
+import logger from 'modules/logger/mod.ts'
+import constants from 'utils/constants.ts'
 
 /** Base function to create main file editor config */
 export async function createEditorFileConfig(
@@ -21,13 +21,13 @@ export async function createEditorFileConfig(
       ),
     )
     const root = getRootDir()
-    const baseFolder = `${root}/${editors[type].FOLDER}`
+    const baseFolder = `${root}/${constants.editors[type].FOLDER}`
 
     // Create the directory if it doesn't exist
     await Deno.mkdir(baseFolder, { recursive: true })
 
     // file dir
-    const baseFileDir = `${baseFolder}/${editors[type].FILENAME}`
+    const baseFileDir = `${baseFolder}/${constants.editors[type].FILENAME}`
 
     if (fileExists(baseFileDir)) {
       const currentContent = JSON.parse(await Deno.readTextFile(baseFileDir))

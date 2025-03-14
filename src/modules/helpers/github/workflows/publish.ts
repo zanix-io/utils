@@ -8,14 +8,16 @@ import { createWorkflow } from './main.ts'
  * @param options The options for configuring the workflow.
  *   - `baseFolder`: The directory where the workflow file should be created.
  *   - `mainBranch`: The main branch that will trigger the workflow when publishing a new version.
+ *   - `projectType`: Optional ZanixProject type to define correct workflow. Defaults to `library`
  *
  * @category helpers
  */
 export function createPublishWorkflow(
   options: WorkflowOptions = {},
 ): Promise<boolean> {
-  const filename = 'publish'
-  const { mainBranch = 'master', ...opts } = options
+  const { mainBranch = 'master', projectType = 'library', ...opts } = options
+  const filename = projectType === 'library' ? 'publish' : null
+
   return createWorkflow(
     { filename, ...opts },
     (content) => content.replace('${MAIN_BRANCH}', mainBranch),

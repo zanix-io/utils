@@ -7,10 +7,11 @@
  * \_____/ \__,_||_| |_||_|/_/\_\
  */
 
-export * from 'modules/helpers/zanix/namespace.ts'
-export * from 'modules/helpers/zanix/folders.ts'
 export * from 'utils/identifiers.ts'
 export * from 'utils/dates.ts'
+export * from './zanix/tree.ts'
+export * from './zanix/namespace.ts'
+export * from './zanix/info.ts'
 export * from './paths.ts'
 export * from './files.ts'
 export * from './config.ts'
@@ -22,3 +23,4 @@ export * from './github/files/main.ts'
 export * from './github/prepare.ts'
 export * from './editor/vscode.ts'
 export * from 'utils/urls.ts'
+export * from 'utils/strings.ts'

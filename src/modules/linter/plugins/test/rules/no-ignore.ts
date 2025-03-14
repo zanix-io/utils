@@ -14,7 +14,6 @@ import { linterMessageFormat } from 'modules/linter/commons/message.ts'
  * The goal of this rule is to ensure that developers don't accidentally leave
  * test exclusions in the codebase, promoting a complete and consistent test suite.
  */
-
 const rules: Record<string, Deno.lint.Rule> = {
   'no-ignore': {
     create(context) {

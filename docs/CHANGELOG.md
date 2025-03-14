@@ -7,6 +7,20 @@ adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [2.0.2] - 2025-03-13
+
+### Added
+
+- Some documentation.
+- New constants.
+- New regexps.
+- New Zanix utilities, for Zanix Framework purposes.
+
+### Changed
+
+- Exported modules on `constants` and `regex`
+- Zanix Tree update for `Zanix` libraries.
+
 ## [2.0.1] - 2025-03-12
 
 ### Fixed
