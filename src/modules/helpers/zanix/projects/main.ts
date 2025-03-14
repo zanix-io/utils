@@ -5,6 +5,9 @@ import { getCommonTree } from './commons.ts'
 import { getServerFolders } from './server.ts'
 import { getLibraryFolders } from './library.ts'
 import { getAppFolders } from './app.ts'
+import zanixLibInfo from '../info.ts'
+
+const library = '@zanix/core' as const
 
 /**
  * Zanix folders function structure for all projects
@@ -30,9 +33,21 @@ export const getZnxFolderTree = <
       get NAME() {
         return getFolderName(this.FOLDER)
       },
-      files: {
-        CONFIG: `${root}zanix/config.ts`,
-        SECRETS: `${root}zanix/secrets.sqlite`,
+      templates: {
+        base: [
+          {
+            PATH: `${root}zanix/config.ts`,
+            content(local) {
+              return zanixLibInfo.templateContent({ local, root, path: this.PATH, library })
+            },
+          },
+          {
+            PATH: `${root}zanix/secrets.sqlite`,
+            content(local) {
+              return zanixLibInfo.templateContent({ local, root, path: this.PATH, library })
+            },
+          },
+        ],
       },
     }
 
@@ -42,9 +57,21 @@ export const getZnxFolderTree = <
         get NAME() {
           return getFolderName(this.FOLDER)
         },
-        files: {
-          EXAMPLE_PIPE: `${root}src/shared/middlewares/example.pipe.ts`,
-          EXAMPLE_INTERCEPTOR: `${root}src/shared/middlewares/example.interceptor.ts`,
+        templates: {
+          base: [
+            {
+              PATH: `${root}src/shared/middlewares/example.pipe.ts`,
+              content(local) {
+                return zanixLibInfo.templateContent({ local, root, path: this.PATH, library })
+              },
+            },
+            {
+              PATH: `${root}src/shared/middlewares/example.interceptor.ts`,
+              content(local) {
+                return zanixLibInfo.templateContent({ local, root, path: this.PATH, library })
+              },
+            },
+          ],
         },
       },
     }

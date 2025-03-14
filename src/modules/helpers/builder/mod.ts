@@ -1,10 +1,11 @@
 import type { CompilerOptions } from 'typings/builder.ts'
 import type { TaskerCalbackArgs } from 'typings/workers.ts'
 
+import { DISTRIBUTION_FILE, MAIN_MODULE } from 'utils/constants.ts'
+import { getZanixPaths } from 'modules/helpers/zanix/tree.ts'
 import { TaskerManager } from 'modules/workers/tasker.ts'
 import { mainBuilderFunction } from './main.ts'
 import { join } from '@std/path'
-import { getZanixPaths } from 'modules/helpers/zanix/tree.ts'
 
 /**
  * Compiles and obfuscates a TypeScript/JavaScript file using esbuild and javascript-obfuscator.
@@ -29,8 +30,8 @@ export function compileAndObfuscate(
 ): void | Promise<TaskerCalbackArgs> {
   const paths = getZanixPaths()
   const {
-    inputFile = paths.files.MOD,
-    outputFile = paths.subfolders.dist.files.APP,
+    inputFile = paths.FOLDER + MAIN_MODULE,
+    outputFile = paths.subfolders.dist.FOLDER + '/' + DISTRIBUTION_FILE,
     useWorker,
     minify = true,
     bundle = true,

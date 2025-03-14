@@ -7,6 +7,16 @@ import type { Editors } from 'typings/editor.ts'
 export const CONFIG_FILE: string = 'deno.json'
 
 /**
+ * Default distribution file name for compilations
+ */
+export const DISTRIBUTION_FILE = 'app.js'
+
+/**
+ * Default main module name.
+ */
+export const MAIN_MODULE = 'mod.ts'
+
+/**
  * Zanix flags to enable different behaviors of a module:
  *
  * - `'enablePipe'` – Enables pipe functionality for a function,
@@ -68,4 +78,9 @@ const editors: Record<Editors, { FOLDER: string; FILENAME: string }> = {
   vscode: { FOLDER: '.vscode', FILENAME: 'settings.json' },
 }
 
-export default { GITHUB_HOOKS_FOLDER, GITHUB_WORKFLOW_FOLDER, GIT_HOOKS_FOLDER, editors }
+export default {
+  GITHUB_HOOKS_FOLDER,
+  GITHUB_WORKFLOW_FOLDER,
+  GIT_HOOKS_FOLDER,
+  editors,
+}

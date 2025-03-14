@@ -3,19 +3,25 @@ import type { Logger } from 'modules/logger/main.ts'
 
 type DefaultLogger = typeof Logger['prototype']
 
+type ZanixTemplates = 'base'
 type ZanixBaseFolder<
-  F extends Record<string, string | null> | undefined = undefined,
   S extends Record<string, Partial<ZanixBaseFolder>> | undefined = undefined,
+  O extends 'noTemplates' | undefined = undefined,
 > = Omit<
   {
     readonly FOLDER: string
     get NAME(): string
-    files: F
+    templates: Record<ZanixTemplates, {
+      PATH: string
+      content(local: ZanixLocalContentProps): Promise<string>
+    }[]>
     subfolders: S
   },
-  F extends undefined ? (S extends undefined ? 'subfolders' | 'files' : 'files')
+  O extends 'noTemplates' ? (S extends undefined ? 'subfolders' | 'templates' : 'templates')
     : (S extends undefined ? 'subfolders' : never)
 >
+
+export type ZanixLocalContentProps = { metaUrl: string; relativePath: string }
 
 export type ZanixProjectsFull = ZanixProjects | 'all' | undefined
 
@@ -36,10 +42,7 @@ type ZanixSrcTree<T extends ZanixProjectsFull> = T extends 'server' ? { server: 
 type ZanixProjectSrc<T extends ZanixProjectsFull> = T extends 'library' ? {}
   : T extends undefined ? {}
   : {
-    zanix: ZanixBaseFolder<{
-      CONFIG: string
-      SECRETS: string
-    }>
+    zanix: ZanixBaseFolder
   }
 
 /**
@@ -54,103 +57,74 @@ export type ZanixProjects = 'library' | 'server' | 'app' | 'app-server'
  */
 export type ZanixFolderGenericTree = Partial<
   ZanixBaseFolder<
-    Record<string, string | null>,
     Record<string, ZanixBaseFolder>
   >
 >
 
 /** Zanix Server Folder structure */
-export type ZanixServerSrcTree = ZanixBaseFolder<undefined, {
-  connectors: ZanixBaseFolder<{
-    EXAMPLE_PROVIDER: string
-    EXAMPLE_CLIENT: string
-  }>
-  handlers: ZanixBaseFolder<{
-    EXAMPLE_CONTROLLER: string
-    EXAMPLE_RESOLVER: string
-    EXAMPLE_SUBSCRIBER: string
-  }, { rtos: ZanixBaseFolder<{ EXAMPLE: string }> }>
-  interactors: ZanixBaseFolder<{ EXAMPLE_SERVICE: string }>
-  jobs: ZanixBaseFolder<{ EXAMPLE: string }>
-  repositories: ZanixBaseFolder<{
-    EXAMPLE_DATA: string
-    EXAMPLE_MODEL: string
-  }, { seeders: ZanixBaseFolder<{ EXAMPLE: string }> }>
-}>
+export type ZanixServerSrcTree = ZanixBaseFolder<{
+  connectors: ZanixBaseFolder
+  handlers: ZanixBaseFolder<{ rtos: ZanixBaseFolder }>
+  interactors: ZanixBaseFolder
+  jobs: ZanixBaseFolder
+  repositories: ZanixBaseFolder<{ seeders: ZanixBaseFolder }>
+}, 'noTemplates'>
 
 /** Zanix Library Folder structure */
 export type ZanixLibrarySrcTree = ZanixBaseFolder<
-  { EXAMPLE: string },
-  { templates: ZanixBaseFolder }
+  { templates: ZanixBaseFolder<undefined, 'noTemplates'> }
 >
 
 /**
  * Zanix App Folder structure
  * @experimental
  */
-export type ZanixAppSrcTree = ZanixBaseFolder<undefined, {
-  components: ZanixBaseFolder<{ EXAMPLE: string }>
-  layout: ZanixBaseFolder<{ EXAMPLE: string }>
-  pages: ZanixBaseFolder<{ EXAMPLE: string }>
-  resources: ZanixBaseFolder<undefined, {
-    intl: ZanixBaseFolder<undefined, { es: ZanixBaseFolder<{ EXAMPLE: string }> }>
-    public: {
-      FOLDER: string
-      get NAME(): string
-      subfolders: {
-        assets: ZanixBaseFolder<undefined, {
-          docs: ZanixBaseFolder<{ EXAMPLE: string }>
-          fonts: ZanixBaseFolder<{ EXAMPLE: string }>
-          icons: ZanixBaseFolder<{ EXAMPLE: string }>
-          images: ZanixBaseFolder<{ EXAMPLE: string }>
-          videos: ZanixBaseFolder<{ EXAMPLE: string }>
-        }>
-        scripts: ZanixBaseFolder<{ EXAMPLE: string }>
-        sitemap: ZanixBaseFolder<{
-          EXAMPLE_MAIN: string
-          EXAMPLE_URL: string
-        }>
-        styles: ZanixBaseFolder<{ fonts: string }, {
-          apps: ZanixBaseFolder<{ EXAMPLE: string }>
-          global: ZanixBaseFolder<{ EXAMPLE: string }>
-        }>
-      }
-    }
-  }>
-}>
+export type ZanixAppSrcTree = ZanixBaseFolder<{
+  components: ZanixBaseFolder
+  layout: ZanixBaseFolder
+  pages: ZanixBaseFolder
+  resources: ZanixBaseFolder<{
+    intl: ZanixBaseFolder<{ es: ZanixBaseFolder }, 'noTemplates'>
+    public: ZanixBaseFolder<{
+      assets: ZanixBaseFolder<{
+        docs: ZanixBaseFolder
+        fonts: ZanixBaseFolder
+        icons: ZanixBaseFolder
+        images: ZanixBaseFolder
+        videos: ZanixBaseFolder
+      }, 'noTemplates'>
+      scripts: ZanixBaseFolder
+      sitemap: ZanixBaseFolder
+      styles: ZanixBaseFolder<{
+        apps: ZanixBaseFolder
+        global: ZanixBaseFolder
+      }>
+    }, 'noTemplates'>
+  }, 'noTemplates'>
+}, 'noTemplates'>
 
 /** Zanix general folders */
 export type ZanixFolderTree<T extends ZanixProjectsFull = undefined> = ZanixBaseFolder<
-  {
-    MOD: string
-    README: string
-  },
   ZanixProjectSrc<T> & {
-    dist: ZanixBaseFolder<{ APP: string }>
-    docs: ZanixBaseFolder<{
-      CHANGELOG: string
-      LICENCE: string
-    }>
+    dist: ZanixBaseFolder
+    docs: ZanixBaseFolder
     src: ZanixBaseFolder<
-      undefined,
       ZanixSrcTree<T> & {
-        tests: ZanixBaseFolder<undefined, {
-          functional: ZanixBaseFolder<{ EXAMPLE: string }>
-          integration: ZanixBaseFolder<{ EXAMPLE: string }>
-          unit: ZanixBaseFolder<{ EXAMPLE: string }>
-        }>
+        tests: ZanixBaseFolder<{
+          functional: ZanixBaseFolder
+          integration: ZanixBaseFolder
+          unit: ZanixBaseFolder
+        }, 'noTemplates'>
         shared: ZanixBaseFolder<
-          undefined,
           T extends 'library' ? never : T extends undefined ? {} : {
-            middlewares: ZanixBaseFolder<{
-              EXAMPLE_PIPE: string
-              EXAMPLE_INTERCEPTOR: string
-            }>
-          }
+            middlewares: ZanixBaseFolder
+          },
+          'noTemplates'
         >
-        typings: ZanixBaseFolder<{ INDEX: string }>
-        utils: ZanixBaseFolder<{ EXAMPLE: string }>
-      }
+        typings: ZanixBaseFolder
+        utils: ZanixBaseFolder
+      },
+      'noTemplates'
     >
   }
 >

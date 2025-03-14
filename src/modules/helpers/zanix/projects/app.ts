@@ -1,8 +1,11 @@
 import type { ZanixAppSrcTree } from 'typings/zanix.ts'
 
 import { getFolderName } from 'modules/helpers/paths.ts'
+import zanixLibInfo from '../info.ts'
 
 let appTree: ZanixAppSrcTree | undefined
+
+const library = '@zanix/app' as const
 
 export const getAppFolders = (root: string): ZanixAppSrcTree => {
   const mainFolder = `${root}/src/app`
@@ -19,8 +22,14 @@ export const getAppFolders = (root: string): ZanixAppSrcTree => {
         get NAME() {
           return getFolderName(this.FOLDER)
         },
-        files: {
-          EXAMPLE: `${root}/src/app/components/ExampleComponent.txs`,
+        templates: {
+          base: [{
+            PATH: `${root}/src/app/components/ExampleComponent.txs`,
+            content(local) {
+              const opts = { local, root, path: this.PATH, library }
+              return zanixLibInfo.templateContent(opts)
+            },
+          }],
         },
       },
       layout: {
@@ -28,8 +37,14 @@ export const getAppFolders = (root: string): ZanixAppSrcTree => {
         get NAME() {
           return getFolderName(this.FOLDER)
         },
-        files: {
-          EXAMPLE: `${root}/src/app/layout/ExampleLayout.txs`,
+        templates: {
+          base: [{
+            PATH: `${root}/src/app/layout/ExampleLayout.txs`,
+            content(local) {
+              const opts = { local, root, path: this.PATH, library }
+              return zanixLibInfo.templateContent(opts)
+            },
+          }],
         },
       },
       pages: {
@@ -37,8 +52,14 @@ export const getAppFolders = (root: string): ZanixAppSrcTree => {
         get NAME() {
           return getFolderName(this.FOLDER)
         },
-        files: {
-          EXAMPLE: `${root}/src/app/pages/ExamplePage.tsx`,
+        templates: {
+          base: [{
+            PATH: `${root}/src/app/pages/ExamplePage.tsx`,
+            content(local) {
+              const opts = { local, root, path: this.PATH, library }
+              return zanixLibInfo.templateContent(opts)
+            },
+          }],
         },
       },
       resources: {
@@ -58,8 +79,14 @@ export const getAppFolders = (root: string): ZanixAppSrcTree => {
                 get NAME() {
                   return getFolderName(this.FOLDER)
                 },
-                files: {
-                  EXAMPLE: `${root}/src/resources/intl/es/example.json`,
+                templates: {
+                  base: [{
+                    PATH: `${root}/src/resources/intl/es/example.json`,
+                    content(local) {
+                      const opts = { local, root, path: this.PATH, library }
+                      return zanixLibInfo.templateContent(opts)
+                    },
+                  }],
                 },
               },
             },
@@ -81,8 +108,14 @@ export const getAppFolders = (root: string): ZanixAppSrcTree => {
                     get NAME() {
                       return getFolderName(this.FOLDER)
                     },
-                    files: {
-                      EXAMPLE: `${root}/src/resources/public/assets/docs/example.txt`,
+                    templates: {
+                      base: [{
+                        PATH: `${root}/src/resources/public/assets/docs/example.txt`,
+                        content(local) {
+                          const opts = { local, root, path: this.PATH, library }
+                          return zanixLibInfo.templateContent(opts)
+                        },
+                      }],
                     },
                   },
                   fonts: {
@@ -90,8 +123,14 @@ export const getAppFolders = (root: string): ZanixAppSrcTree => {
                     get NAME() {
                       return getFolderName(this.FOLDER)
                     },
-                    files: {
-                      EXAMPLE: `${root}/src/resources/public/assets/fonts/example.woff2`,
+                    templates: {
+                      base: [{
+                        PATH: `${root}/src/resources/public/assets/fonts/example.woff2`,
+                        content(local) {
+                          const opts = { local, root, path: this.PATH, library }
+                          return zanixLibInfo.templateContent(opts)
+                        },
+                      }],
                     },
                   },
                   icons: {
@@ -99,8 +138,14 @@ export const getAppFolders = (root: string): ZanixAppSrcTree => {
                     get NAME() {
                       return getFolderName(this.FOLDER)
                     },
-                    files: {
-                      EXAMPLE: `${root}/src/resources/public/assets/icons/example.svg`,
+                    templates: {
+                      base: [{
+                        PATH: `${root}/src/resources/public/assets/icons/example.svg`,
+                        content(local) {
+                          const opts = { local, root, path: this.PATH, library }
+                          return zanixLibInfo.templateContent(opts)
+                        },
+                      }],
                     },
                   },
                   images: {
@@ -108,8 +153,14 @@ export const getAppFolders = (root: string): ZanixAppSrcTree => {
                     get NAME() {
                       return getFolderName(this.FOLDER)
                     },
-                    files: {
-                      EXAMPLE: `${root}/src/resources/public/assets/images/example.webp`,
+                    templates: {
+                      base: [{
+                        PATH: `${root}/src/resources/public/assets/images/example.webp`,
+                        content(local) {
+                          const opts = { local, root, path: this.PATH, library }
+                          return zanixLibInfo.templateContent(opts)
+                        },
+                      }],
                     },
                   },
                   videos: {
@@ -117,8 +168,14 @@ export const getAppFolders = (root: string): ZanixAppSrcTree => {
                     get NAME() {
                       return getFolderName(this.FOLDER)
                     },
-                    files: {
-                      EXAMPLE: `${root}/src/resources/public/assets/videos/example.webm`,
+                    templates: {
+                      base: [{
+                        PATH: `${root}/src/resources/public/assets/videos/example.webm`,
+                        content(local) {
+                          const opts = { local, root, path: this.PATH, library }
+                          return zanixLibInfo.templateContent(opts)
+                        },
+                      }],
                     },
                   },
                 },
@@ -128,8 +185,14 @@ export const getAppFolders = (root: string): ZanixAppSrcTree => {
                 get NAME() {
                   return getFolderName(this.FOLDER)
                 },
-                files: {
-                  EXAMPLE: `${root}/src/resources/public/scripts/example.js`,
+                templates: {
+                  base: [{
+                    PATH: `${root}/src/resources/public/scripts/example.js`,
+                    content(local) {
+                      const opts = { local, root, path: this.PATH, library }
+                      return zanixLibInfo.templateContent(opts)
+                    },
+                  }],
                 },
               },
               sitemap: {
@@ -137,9 +200,20 @@ export const getAppFolders = (root: string): ZanixAppSrcTree => {
                 get NAME() {
                   return getFolderName(this.FOLDER)
                 },
-                files: {
-                  EXAMPLE_MAIN: `${root}/src/resources/public/scripts/main.xml`,
-                  EXAMPLE_URL: `${root}/src/resources/public/scripts/urls.xml`,
+                templates: {
+                  base: [{
+                    PATH: `${root}/src/resources/public/scripts/main.xml`,
+                    content(local) {
+                      const opts = { local, root, path: this.PATH, library }
+                      return zanixLibInfo.templateContent(opts)
+                    },
+                  }, {
+                    PATH: `${root}/src/resources/public/scripts/urls.xml`,
+                    content(local) {
+                      const opts = { local, root, path: this.PATH, library }
+                      return zanixLibInfo.templateContent(opts)
+                    },
+                  }],
                 },
               },
               styles: {
@@ -147,8 +221,14 @@ export const getAppFolders = (root: string): ZanixAppSrcTree => {
                 get NAME() {
                   return getFolderName(this.FOLDER)
                 },
-                files: {
-                  fonts: `${root}/src/resources/public/styles/font.css`,
+                templates: {
+                  base: [{
+                    PATH: `${root}/src/resources/public/styles/font.css`,
+                    content(local) {
+                      const opts = { local, root, path: this.PATH, library }
+                      return zanixLibInfo.templateContent(opts)
+                    },
+                  }],
                 },
                 subfolders: {
                   apps: {
@@ -156,8 +236,14 @@ export const getAppFolders = (root: string): ZanixAppSrcTree => {
                     get NAME() {
                       return getFolderName(this.FOLDER)
                     },
-                    files: {
-                      EXAMPLE: `${root}/src/resources/public/styles/apps/example.app.css`,
+                    templates: {
+                      base: [{
+                        PATH: `${root}/src/resources/public/styles/apps/example.app.css`,
+                        content(local) {
+                          const opts = { local, root, path: this.PATH, library }
+                          return zanixLibInfo.templateContent(opts)
+                        },
+                      }],
                     },
                   },
                   global: {
@@ -165,8 +251,14 @@ export const getAppFolders = (root: string): ZanixAppSrcTree => {
                     get NAME() {
                       return getFolderName(this.FOLDER)
                     },
-                    files: {
-                      EXAMPLE: `${root}/src/resources/public/styles/global/example.css`,
+                    templates: {
+                      base: [{
+                        PATH: `${root}/src/resources/public/styles/global/example.css`,
+                        content(local) {
+                          const opts = { local, root, path: this.PATH, library }
+                          return zanixLibInfo.templateContent(opts)
+                        },
+                      }],
                     },
                   },
                 },

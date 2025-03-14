@@ -1,6 +1,8 @@
 import type { ZanixFolderTree } from 'modules/types/mod.ts'
 
+import { DISTRIBUTION_FILE, MAIN_MODULE } from 'utils/constants.ts'
 import { getFolderName } from 'modules/helpers/paths.ts'
+import zanixLibInfo from '../info.ts'
 
 let commonTree: ZanixFolderTree | undefined
 
@@ -11,9 +13,18 @@ export const getCommonTree = (root: string): ZanixFolderTree => {
     get NAME() {
       return getFolderName(this.FOLDER)
     },
-    files: {
-      MOD: `${root}mod.ts`,
-      README: `${root}README.md`,
+    templates: {
+      base: [{
+        PATH: `${root}${MAIN_MODULE}`,
+        content(local) {
+          return zanixLibInfo.templateContent({ local, root, path: this.PATH })
+        },
+      }, {
+        PATH: `${root}README.md`,
+        content(local) {
+          return zanixLibInfo.templateContent({ local, root, path: this.PATH })
+        },
+      }],
     },
     subfolders: {
       dist: {
@@ -21,16 +32,32 @@ export const getCommonTree = (root: string): ZanixFolderTree => {
         get NAME() {
           return getFolderName(this.FOLDER)
         },
-        files: { APP: `${root}.dist/app.js` },
+        templates: {
+          base: [{
+            PATH: `${root}.dist/${DISTRIBUTION_FILE}`,
+            content(local) {
+              return zanixLibInfo.templateContent({ local, root, path: this.PATH })
+            },
+          }],
+        },
       },
       docs: {
         FOLDER: `${root}docs`,
         get NAME() {
           return getFolderName(this.FOLDER)
         },
-        files: {
-          CHANGELOG: `${root}docs/CHANGELOG.md`,
-          LICENCE: `${root}docs/LICENCE`,
+        templates: {
+          base: [{
+            PATH: `${root}docs/CHANGELOG.md`,
+            content(local) {
+              return zanixLibInfo.templateContent({ local, root, path: this.PATH })
+            },
+          }, {
+            PATH: `${root}docs/LICENCE`,
+            content(local) {
+              return zanixLibInfo.templateContent({ local, root, path: this.PATH })
+            },
+          }],
         },
       },
       src: {
@@ -50,21 +77,42 @@ export const getCommonTree = (root: string): ZanixFolderTree => {
                 get NAME() {
                   return getFolderName(this.FOLDER)
                 },
-                files: { EXAMPLE: `${root}src/@tests/functional/example.test.ts` },
+                templates: {
+                  base: [{
+                    PATH: `${root}src/@tests/functional/example.test.ts`,
+                    content(local) {
+                      return zanixLibInfo.templateContent({ local, root, path: this.PATH })
+                    },
+                  }],
+                },
               },
               integration: {
                 FOLDER: `${root}src/@tests/integration`,
                 get NAME() {
                   return getFolderName(this.FOLDER)
                 },
-                files: { EXAMPLE: `${root}src/@tests/integration/example.test.ts` },
+                templates: {
+                  base: [{
+                    PATH: `${root}src/@tests/integration/example.test.ts`,
+                    content(local) {
+                      return zanixLibInfo.templateContent({ local, root, path: this.PATH })
+                    },
+                  }],
+                },
               },
               unit: {
                 FOLDER: `${root}src/@tests/unit`,
                 get NAME() {
                   return getFolderName(this.FOLDER)
                 },
-                files: { EXAMPLE: `${root}src/@tests/unit/example.test.ts` },
+                templates: {
+                  base: [{
+                    PATH: `${root}src/@tests/unit/example.test.ts`,
+                    content(local) {
+                      return zanixLibInfo.templateContent({ local, root, path: this.PATH })
+                    },
+                  }],
+                },
               },
             },
           },
@@ -80,8 +128,13 @@ export const getCommonTree = (root: string): ZanixFolderTree => {
             get NAME() {
               return getFolderName(this.FOLDER)
             },
-            files: {
-              INDEX: `${root}src/typings/index.d.ts`,
+            templates: {
+              base: [{
+                PATH: `${root}src/typings/index.d.ts`,
+                content(local) {
+                  return zanixLibInfo.templateContent({ local, root, path: this.PATH })
+                },
+              }],
             },
           },
           utils: {
@@ -89,8 +142,14 @@ export const getCommonTree = (root: string): ZanixFolderTree => {
             get NAME() {
               return getFolderName(this.FOLDER)
             },
-            files: {
-              EXAMPLE: `${root}src/utils/example.ts`,
+            templates: {
+              base: [{
+                PATH: `${root}src/utils/example.ts`,
+                content(local) {
+                  const opts = { local, root, path: this.PATH, library: '@zanix/utils' as const }
+                  return zanixLibInfo.templateContent(opts)
+                },
+              }],
             },
           },
         },

@@ -7,6 +7,10 @@ adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- Template content for Zanix files tree.
+
 ### Fixed
 
 - Zanix paths, and `regex` y `constants` documentation.
