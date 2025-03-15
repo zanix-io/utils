@@ -22,7 +22,7 @@ Deno.test('readFileFromCurrentUrl should return a url file content', async () =>
     'pre-commit.base.sh',
   )
 
-  assert(!remoteContent.includes('Not Found'))
+  assert(remoteContent !== '')
 
   const localContent = await readFileFromCurrentUrl(
     import.meta.url,

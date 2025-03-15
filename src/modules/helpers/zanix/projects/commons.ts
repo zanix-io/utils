@@ -1,21 +1,24 @@
-import type { ZanixFolderTree } from 'modules/types/mod.ts'
+import type { ZanixFolderTree, ZanixProjectsFull } from 'typings/zanix.ts'
 
-import { DISTRIBUTION_FILE, MAIN_MODULE } from 'utils/constants.ts'
+import { MAIN_MODULE } from 'utils/constants.ts'
 import { ZanixTree } from 'modules/helpers/zanix/base-tree.ts'
 
 let commonTree: ZanixFolderTree | undefined
 
-export const getCommonTree = (root: string): ZanixFolderTree => {
+export const getCommonTree = (root: string, type?: ZanixProjectsFull): ZanixFolderTree => {
   if (root === commonTree?.FOLDER) return commonTree
 
+  const mainFiles = ['README.md']
+  if (type === 'library') mainFiles.push(MAIN_MODULE)
+
   return ZanixTree.create<ZanixFolderTree>(root, {
-    templates: { base: { files: [MAIN_MODULE, 'README.md'] } },
+    templates: { base: { files: mainFiles } },
     subfolders: {
-      '.dist': { templates: { base: { files: [DISTRIBUTION_FILE] } } },
+      '.dist': {},
       docs: { templates: { base: { files: ['CHANGELOG.md', 'LICENCE'] } } },
       src: {
         subfolders: {
-          tests: {
+          '@tests': {
             subfolders: {
               integration: { templates: { base: { files: ['example.test.ts'] } } },
               unit: { templates: { base: { files: ['example.test.ts'] } } },
@@ -24,7 +27,7 @@ export const getCommonTree = (root: string): ZanixFolderTree => {
           },
           shared: { subfolders: {} },
           typings: { templates: { base: { files: ['index.d.ts'] } } },
-          utils: { templates: { base: { files: ['example.ts'], library: '@zanix/utils' } } },
+          utils: { templates: { base: { files: ['example.ts'], jsr: '@zanix/utils' } } },
         },
       },
     },

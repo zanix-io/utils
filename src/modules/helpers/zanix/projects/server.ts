@@ -5,7 +5,7 @@ import { join } from '@std/path'
 
 let serverTree: ZanixServerSrcTree | undefined
 
-const library = '@zanix/server'
+const jsr = '@zanix/server'
 
 export const getServerSrcTree = (root: string): ZanixServerSrcTree => {
   const mainRoot = join(root, 'src/server')
@@ -14,22 +14,22 @@ export const getServerSrcTree = (root: string): ZanixServerSrcTree => {
   return ZanixTree.create<ZanixServerSrcTree>(mainRoot, {
     subfolders: {
       connectors: {
-        templates: { base: { files: ['example.provider.ts', 'example.client.ts'], library } },
+        templates: { base: { files: ['example.provider.ts', 'example.client.ts'], jsr } },
       },
       handlers: {
         templates: {
           base: {
             files: ['example.controller.ts', 'example.resolver.ts', 'example.subscriber.ts'],
-            library,
+            jsr,
           },
         },
-        subfolders: { rtos: { templates: { base: { files: ['example.rto.ts'], library } } } },
+        subfolders: { rtos: { templates: { base: { files: ['example.rto.ts'], jsr } } } },
       },
-      interactors: { templates: { base: { files: ['example.service.ts'], library } } },
-      jobs: { templates: { base: { files: ['example.job.ts'], library } } },
+      interactors: { templates: { base: { files: ['example.service.ts'], jsr } } },
+      jobs: { templates: { base: { files: ['example.job.ts'], jsr } } },
       repositories: {
-        templates: { base: { files: ['example.data.ts', 'example.model.ts'], library } },
-        subfolders: { seeders: { templates: { base: { files: ['example.seeder.ts'], library } } } },
+        templates: { base: { files: ['example.data.ts', 'example.model.ts'], jsr } },
+        subfolders: { seeders: { templates: { base: { files: ['example.seeder.ts'], jsr } } } },
       },
     },
   })

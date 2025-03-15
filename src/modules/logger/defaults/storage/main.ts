@@ -2,7 +2,6 @@ import type { DefaultResponse, SaveDataFile, SaveDataFunction } from 'typings/lo
 
 import { showMessage } from 'modules/logger/base.ts'
 import { serializeError } from 'modules/errors/serialize.ts'
-import { canUseZnx } from 'modules/helpers/zanix/namespace.ts'
 import { TaskerManager } from 'modules/workers/mod.ts'
 import { cleanupExpiredLogs } from './cleanup.ts'
 import { getLogFileName } from './file.ts'
@@ -53,7 +52,7 @@ export function baseSaveData(
   saveDataFunction?: SaveDataFile | SaveDataFunction | false,
 ): SaveDataFunction {
   // Zanix libraries do not save logs if  does not have a custom saveDataFunction.
-  if (canUseZnx() && Znx.config.project === 'library' && !saveDataFunction) return () => {}
+  if (Znx.config.project === 'library' && !saveDataFunction) return () => {}
 
   let baseContext: SaveDataFile = {}
   if (typeof saveDataFunction !== 'function') {

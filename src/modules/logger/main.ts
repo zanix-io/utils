@@ -28,7 +28,7 @@ export class Logger<Return extends unknown = DefaultResponse> {
    */
   constructor(options?: LoggerFileOptions<Return>)
   constructor(options: LoggerOptions<Return> = {}) {
-    // Global assignment. Must be set before instance definition.
+    // Global assignment: This must be set before defining the instance, because of Znx use on baseSaveData
     if (!options.disableGlobalAssign) {
       Object.assign(globalThis, { logger: this })
       setGlobalZnx({ logger: this })

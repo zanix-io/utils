@@ -1,6 +1,5 @@
 import type { ConfigFile } from 'typings/config.ts'
 
-import { setGlobalZnx } from 'modules/helpers/zanix/namespace.ts'
 import { getConfigDir } from './paths.ts'
 
 let configFile: ConfigFile | null = null
@@ -27,11 +26,6 @@ export function readConfig(configPath?: string | null): ConfigFile {
 
   configFile = JSON.parse(Deno.readTextFileSync(configDir))
 
-  if (configFile?.zanix) {
-    // If the config file has a 'zanix' property, it indicates that it's a Zanix project,
-    // and configuration data is required to set it up.
-    setGlobalZnx({ config: configFile.zanix })
-  }
   return configFile as ConfigFile
 }
 

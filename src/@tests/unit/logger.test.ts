@@ -10,6 +10,12 @@ import { getLogFileName } from 'modules/logger/defaults/storage/file.ts'
 import { fileExists } from 'modules/helpers/files.ts'
 import { getISODate } from 'utils/dates.ts'
 
+const ZnxMock = () => {
+  if (typeof Znx === 'undefined') {
+    Object.assign(globalThis, { Znx: { config: {} } }) // Define Znx mock
+  }
+}
+
 Deno.test('Ensures the logger correctly outputs messages to the console', () => {
   // Data
   const dataInfo = { data: 'test-info' }
@@ -91,6 +97,8 @@ Deno.test('Validates the custom log message formatter', () => {
 })
 
 Deno.test('Validates the default save log', () => {
+  ZnxMock()
+
   const context = {
     canUseZnx: () => false,
     defaultSaveData: () => '',
@@ -109,6 +117,8 @@ Deno.test('Validates the default save log', () => {
 })
 
 Deno.test('Validates the custom save log', () => {
+  ZnxMock()
+
   const context = {
     saveDataFunction: () => '',
   }

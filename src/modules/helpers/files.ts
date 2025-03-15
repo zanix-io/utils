@@ -55,5 +55,6 @@ export async function readFileFromCurrentUrl(
   if (isFileUrl(url)) return Deno.readTextFile(currentUrl)
 
   const response = await fetch(currentUrl)
-  return response.text()
+
+  return response.ok ? response.text() : ''
 }

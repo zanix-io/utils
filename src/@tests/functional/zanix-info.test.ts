@@ -17,15 +17,14 @@ Deno.test('Fetching Zanix lates version validation', async () => {
   assertMatch(result['@zanix/tasker'].version, versionRegex)
 })
 
-Deno.test('getZanixPaths should return correct content from jsr', async () => {
+Deno.test('getZanixPaths should return correct constants content from jsr', async () => {
   const paths = getZanixPaths('library', '')
 
   paths.subfolders.src.subfolders.utils.templates.base[0].PATH = '/src/utils/constants.ts'
   const content = await paths.subfolders.src.subfolders.utils.templates.base[0].content({
     metaUrl: import.meta.url,
-    relativePath: '../../../',
   })
 
   assert(content !== '')
-  assert(!content.includes('Not Found'))
+  assert(content.includes('ZANIX_LOGO'))
 })

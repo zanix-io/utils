@@ -5,7 +5,7 @@ import { join } from '@std/path'
 
 let appTree: ZanixAppSrcTree | undefined
 
-const library = '@zanix/app'
+const jsr = '@zanix/app'
 
 export const getAppSrcTree = (root: string): ZanixAppSrcTree => {
   const mainRoot = join(root, 'src/app')
@@ -13,32 +13,32 @@ export const getAppSrcTree = (root: string): ZanixAppSrcTree => {
 
   return ZanixTree.create<ZanixAppSrcTree>(mainRoot, {
     subfolders: {
-      Components: { templates: { base: { files: ['ExampleComponent.txs'], library } } },
-      Layout: { templates: { base: { files: ['ExampleLayout.txs'], library } } },
-      Pages: { templates: { base: { files: ['ExamplePage.tsx'], library } } },
+      Components: { templates: { base: { files: ['ExampleComponent.tsx'], jsr } } },
+      Layout: { templates: { base: { files: ['ExampleLayout.tsx'], jsr } } },
+      Pages: { templates: { base: { files: ['ExamplePage.tsx'], jsr } } },
       resources: {
         subfolders: {
           intl: {
-            subfolders: { es: { templates: { base: { files: ['example.json'], library } } } },
+            subfolders: { es: { templates: { base: { files: ['example.json'], jsr } } } },
           },
           public: {
             subfolders: {
               assets: {
                 subfolders: {
-                  docs: { templates: { base: { files: ['example.md'], library } } },
-                  fonts: { templates: { base: { files: ['example.woff2'], library } } },
-                  icons: { templates: { base: { files: ['example.svg'], library } } },
-                  images: { templates: { base: { files: ['example.webp'], library } } },
-                  videos: { templates: { base: { files: ['example.webm'], library } } },
+                  docs: { templates: { base: { files: ['example.md'], jsr } } },
+                  fonts: { templates: { base: { files: ['example.woff2'], jsr } } },
+                  icons: { templates: { base: { files: ['example.svg'], jsr } } },
+                  images: { templates: { base: { files: ['example.webp'], jsr } } },
+                  videos: { templates: { base: { files: ['example.webm'], jsr } } },
                 },
               },
-              scripts: { templates: { base: { files: ['example.js'], library } } },
-              sitemap: { templates: { base: { files: ['main.xml', 'urls.xml'], library } } },
+              scripts: { templates: { base: { files: ['example.js'], jsr } } },
+              sitemap: { templates: { base: { files: ['main.xml', 'urls.xml'], jsr } } },
               styles: {
-                templates: { base: { files: ['fonts.css'], library } },
+                templates: { base: { files: ['fonts.css'], jsr } },
                 subfolders: {
-                  global: { templates: { base: { files: ['example.css'], library } } },
-                  apps: { templates: { base: { files: ['example.app.css'], library } } },
+                  global: { templates: { base: { files: ['example.css'], jsr } } },
+                  apps: { templates: { base: { files: ['example.app.css'], jsr } } },
                 },
               },
             },

@@ -15,10 +15,12 @@ export function getRootDir(): string {
 /**
  * Gets the path to the `deno.json` configuration file
  *
+ * @param root - The optional configuration file root dir.
+ *
  * @category helpers
  */
-export function getConfigDir(): string | null {
-  const rootDir = getRootDir()
+export function getConfigDir(root?: string): string | null {
+  const rootDir = root ?? getRootDir()
   const jsonFile = join(rootDir, CONFIG_FILE)
   const jsoncFile = join(rootDir, `${CONFIG_FILE}c`)
 

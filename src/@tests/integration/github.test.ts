@@ -1,6 +1,6 @@
 import { createPreCommitHook } from 'modules/helpers/github/hooks/pre-commit.ts'
 import { createPrePushHook } from 'modules/helpers/github/hooks/pre-push.ts'
-import { createPublishWorkflow } from 'modules/helpers/github/workflows/publish.ts'
+import { createGitWorkflow } from 'modules/helpers/github/workflows/publish.ts'
 import { prepareGithub } from 'modules/helpers/github/prepare.ts'
 import { createIgnoreBaseFile } from 'modules/helpers/mod.ts'
 import { getTemporaryFolder } from 'modules/helpers/paths.ts'
@@ -44,7 +44,7 @@ Deno.test('Github create pre-push hook validation', async () => {
 
 Deno.test('Github create publish workflow yaml validation', async () => {
   // Call the function passing the file type, for example 'ts'
-  const response = await createPublishWorkflow({
+  const response = await createGitWorkflow({
     baseFolder: defaultFolder,
     mainBranch: 'myCustomBranch',
   })

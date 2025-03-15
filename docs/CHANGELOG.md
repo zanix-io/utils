@@ -14,6 +14,7 @@ adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 ### Fixed
 
 - Zanix paths, and `regex` y `constants` documentation.
+- Znx initialization.
 
 ## [2.0.2] - 2025-03-13
 

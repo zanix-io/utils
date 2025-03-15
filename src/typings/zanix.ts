@@ -30,7 +30,7 @@ export type ZanixFolderOptions = {
   templates: {
     [name in ZanixTemplates]: {
       files: string[]
-      library?: keyof ZanixLibraries
+      jsr?: keyof ZanixLibraries
     }
   }
 }
@@ -59,7 +59,7 @@ export type ZanixBaseFolder<
     : never
 >
 
-export type ZanixLocalContentProps = { metaUrl: string; relativePath: string }
+export type ZanixLocalContentProps = { metaUrl: string; relativePath?: string }
 
 export type ZanixProjectsFull = ZanixProjects | 'all' | undefined
 
@@ -125,11 +125,11 @@ export type ZanixAppSrcTree = ZanixBaseFolder<{
 /** Zanix general folders */
 export type ZanixFolderTree<T extends ZanixProjectsFull = undefined> = ZanixBaseFolder<
   ZanixProjectSrc<T> & {
-    '.dist': ZanixBaseFolder
+    '.dist': ZanixBaseFolder<undefined, 'noTemplates'>
     docs: ZanixBaseFolder
     src: ZanixBaseFolder<
       ZanixSrcTree<T> & {
-        tests: ZanixBaseFolder<{
+        '@tests': ZanixBaseFolder<{
           functional: ZanixBaseFolder
           integration: ZanixBaseFolder
           unit: ZanixBaseFolder

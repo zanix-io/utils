@@ -69,19 +69,20 @@ class BaseZanixTree<S extends ZanixBaseFolder> {
    * Function to create a template
    */
   private createTemplates(
-    options: { files: string[]; folderPath: string; library?: keyof ZanixLibraries },
+    options: { files: string[]; folderPath: string; jsr?: keyof ZanixLibraries },
   ) {
-    const { files, library, folderPath } = options
+    const { files, jsr, folderPath } = options
     const root = this.root
 
     return files.map((file) => ({
       PATH: join(folderPath, file),
       NAME: file,
       content(local: ZanixLocalContentProps) {
+        const { metaUrl, relativePath = '' } = local
         return getZanixTemplateContent({
-          local,
-          path: this.PATH.replace(root, join(local.relativePath, '/')),
-          library,
+          url: metaUrl,
+          path: this.PATH.replace(root, jsr ? '/' : join(relativePath, '/')),
+          jsr,
         })
       },
     }))

@@ -12,7 +12,7 @@ import { createWorkflow } from './main.ts'
  *
  * @category helpers
  */
-export function createPublishWorkflow(
+export function createGitWorkflow(
   options: WorkflowOptions = {},
 ): Promise<boolean> {
   const { mainBranch = 'master', projectType = 'library', ...opts } = options

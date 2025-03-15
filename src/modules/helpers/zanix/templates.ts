@@ -1,4 +1,4 @@
-import type { ZanixLibraries, ZanixLocalContentProps } from 'typings/zanix.ts'
+import type { ZanixLibraries } from 'typings/zanix.ts'
 
 import { getAllZanixLibrariesInfo } from 'modules/helpers/zanix/info.ts'
 import { readFileFromCurrentUrl } from 'modules/helpers/files.ts'
@@ -7,17 +7,16 @@ import { readFileFromCurrentUrl } from 'modules/helpers/files.ts'
  * Function to get template file content
  */
 export async function getZanixTemplateContent(
-  { local, path, library }: {
-    local: ZanixLocalContentProps
+  { url, path, jsr }: {
+    url: string
     path: string
-    library?: keyof ZanixLibraries
+    jsr?: keyof ZanixLibraries
   },
 ) {
-  if (library) {
+  if (jsr) {
     const libs = await getAllZanixLibrariesInfo()
-    local.metaUrl = `https://jsr.io/${library}/${libs[library].version}/{current}`
-    local.relativePath = ''
+    url = `https://jsr.io/${jsr}/${libs[jsr].version}/{current}`
   }
 
-  return readFileFromCurrentUrl(local.metaUrl, path).catch(() => '')
+  return readFileFromCurrentUrl(url, path).catch(() => '')
 }

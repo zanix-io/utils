@@ -7,7 +7,7 @@ import { getLibrarySrcTree } from './library.ts'
 import { getAppSrcTree } from './app.ts'
 import { join } from '@std/path'
 
-const library = '@zanix/core'
+const jsr = '@zanix/core'
 
 /**
  * Zanix folders function structure for all projects
@@ -16,7 +16,7 @@ export const getZnxFolderTree = <
   T extends ZanixProjectsFull,
 >(root: string, type?: T): ZanixFolderTree<T> => {
   let ZNX_STRUCT
-  const commonTree = getCommonTree(root)
+  const commonTree = getCommonTree(root, type)
 
   if (!type) return commonTree as ZanixFolderTree<T>
   else ZNX_STRUCT = commonTree as unknown as ZanixFolderTree<'all'>
@@ -29,7 +29,7 @@ export const getZnxFolderTree = <
 
   if (type !== 'library' || isAll) {
     ZNX_STRUCT.subfolders.zanix = ZanixTree.create(join(root, 'zanix'), {
-      templates: { base: { files: ['config.ts', 'secrets.sqlite'], library } },
+      templates: { base: { files: ['config.ts', 'secrets.sqlite'], jsr } },
     })
 
     ZNX_STRUCT.subfolders.src.subfolders.shared = ZanixTree.create(
@@ -38,7 +38,7 @@ export const getZnxFolderTree = <
         subfolders: {
           middlewares: {
             templates: {
-              base: { files: ['example.pipe.ts', 'example.interceptor.ts'], library },
+              base: { files: ['example.pipe.ts', 'example.interceptor.ts'], jsr },
             },
           },
         },

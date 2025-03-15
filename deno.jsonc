@@ -1,6 +1,6 @@
 {
   "name": "@zanix/utils",
-  "version": "2.0.3-alpha3",
+  "version": "2.0.3-alpha4",
   "license": "MIT",
   "nodeModulesDir": "auto",
   "compilerOptions": {

@@ -1,3 +1,5 @@
+import { readConfig } from 'modules/helpers/config.ts'
+
 type Zanix = typeof Znx
 
 /**
@@ -10,8 +12,9 @@ type Zanix = typeof Znx
  */
 export function setGlobalZnx(data: Partial<Zanix>) {
   if (typeof Znx === 'undefined') {
+    const config = readConfig() // initialize config data
     const baseZnx: Zanix = {
-      config: {},
+      config: { ...config.zanix },
       logger: {} as Zanix['logger'],
     }
     Object.assign(globalThis, { Znx: baseZnx })
