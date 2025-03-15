@@ -31,7 +31,7 @@ export function compileAndObfuscate(
   const paths = getZanixPaths()
   const {
     inputFile = paths.FOLDER + MAIN_MODULE,
-    outputFile = paths.subfolders.dist.FOLDER + '/' + DISTRIBUTION_FILE,
+    outputFile = paths.subfolders['.dist'].FOLDER + '/' + DISTRIBUTION_FILE,
     useWorker,
     minify = true,
     bundle = true,

@@ -1,162 +1,36 @@
 import type { ZanixServerSrcTree } from 'typings/zanix.ts'
 
-import { getFolderName } from 'modules/helpers/paths.ts'
-import zanixLibInfo from '../info.ts'
+import { ZanixTree } from 'modules/helpers/zanix/base-tree.ts'
+import { join } from '@std/path'
 
 let serverTree: ZanixServerSrcTree | undefined
 
-const serverLib = '@zanix/server' as const
-const taskerLib = '@zanix/tasker' as const
-const dataLib = '@zanix/datamaster' as const
-const mqLib = '@zanix/asyncmq' as const
+const library = '@zanix/server'
 
-export const getServerFolders = (root: string): ZanixServerSrcTree => {
-  const mainFolder = `${root}/src/server`
-  if (serverTree?.FOLDER === mainFolder) return serverTree
+export const getServerSrcTree = (root: string): ZanixServerSrcTree => {
+  const mainRoot = join(root, 'src/server')
+  if (serverTree?.FOLDER === mainRoot) return serverTree
 
-  return {
-    FOLDER: `${root}/src/server`,
-    get NAME() {
-      return getFolderName(this.FOLDER)
-    },
+  return ZanixTree.create<ZanixServerSrcTree>(mainRoot, {
     subfolders: {
       connectors: {
-        FOLDER: `${root}/src/server/contectors`,
-        get NAME() {
-          return getFolderName(this.FOLDER)
-        },
-        templates: {
-          base: [{
-            PATH: `${root}/src/server/contectors/example.provider.ts`,
-            content(local) {
-              const opts = { local, root, path: this.PATH, library: serverLib }
-              return zanixLibInfo.templateContent(opts)
-            },
-          }, {
-            PATH: `${root}/src/server/contectors/example.client.ts`,
-            content(local) {
-              const opts = { local, root, path: this.PATH, library: serverLib }
-              return zanixLibInfo.templateContent(opts)
-            },
-          }],
-        },
+        templates: { base: { files: ['example.provider.ts', 'example.client.ts'], library } },
       },
       handlers: {
-        FOLDER: `${root}/src/server/handlers`,
-        get NAME() {
-          return getFolderName(this.FOLDER)
-        },
         templates: {
-          base: [
-            {
-              PATH: `${root}/src/server/handlers/example.controller.ts`,
-              content(local) {
-                const opts = { local, root, path: this.PATH, library: serverLib }
-                return zanixLibInfo.templateContent(opts)
-              },
-            },
-            {
-              PATH: `${root}/src/server/handlers/example.resolver.ts`,
-              content(local) {
-                const opts = { local, root, path: this.PATH, library: serverLib }
-                return zanixLibInfo.templateContent(opts)
-              },
-            },
-            {
-              PATH: `${root}/src/server/handlers/example.subscriber.ts`,
-              content(local) {
-                const opts = { local, root, path: this.PATH, library: mqLib }
-                return zanixLibInfo.templateContent(opts)
-              },
-            },
-          ],
-        },
-        subfolders: {
-          rtos: {
-            FOLDER: `${root}/src/server/handlers/rtos`,
-            get NAME() {
-              return getFolderName(this.FOLDER)
-            },
-            templates: {
-              base: [{
-                PATH: `${root}/src/server/handlers/rtos/example.rto.ts`,
-                content(local) {
-                  const opts = { local, root, path: this.PATH, library: serverLib }
-                  return zanixLibInfo.templateContent(opts)
-                },
-              }],
-            },
+          base: {
+            files: ['example.controller.ts', 'example.resolver.ts', 'example.subscriber.ts'],
+            library,
           },
         },
+        subfolders: { rtos: { templates: { base: { files: ['example.rto.ts'], library } } } },
       },
-      interactors: {
-        FOLDER: `${root}/src/server/interactors`,
-        get NAME() {
-          return getFolderName(this.FOLDER)
-        },
-        templates: {
-          base: [{
-            PATH: `${root}/src/server/interactors/example.service.ts`,
-            content(local) {
-              const opts = { local, root, path: this.PATH, library: serverLib }
-              return zanixLibInfo.templateContent(opts)
-            },
-          }],
-        },
-      },
-      jobs: {
-        FOLDER: `${root}/src/server/jobs`,
-        get NAME() {
-          return getFolderName(this.FOLDER)
-        },
-        templates: {
-          base: [{
-            PATH: `${root}/src/server/jobs/example.job.ts`,
-            content(local) {
-              const opts = { local, root, path: this.PATH, library: taskerLib }
-              return zanixLibInfo.templateContent(opts)
-            },
-          }],
-        },
-      },
+      interactors: { templates: { base: { files: ['example.service.ts'], library } } },
+      jobs: { templates: { base: { files: ['example.job.ts'], library } } },
       repositories: {
-        FOLDER: `${root}/src/server/repositories`,
-        get NAME() {
-          return getFolderName(this.FOLDER)
-        },
-        templates: {
-          base: [{
-            PATH: `${root}/src/server/repositories/example.data.ts`,
-            content(local) {
-              const opts = { local, root, path: this.PATH, library: dataLib }
-              return zanixLibInfo.templateContent(opts)
-            },
-          }, {
-            PATH: `${root}/src/server/repositories/example.model.ts`,
-            content(local) {
-              const opts = { local, root, path: this.PATH, library: dataLib }
-              return zanixLibInfo.templateContent(opts)
-            },
-          }],
-        },
-        subfolders: {
-          seeders: {
-            FOLDER: `${root}/src/server/repositories/seeders`,
-            get NAME() {
-              return getFolderName(this.FOLDER)
-            },
-            templates: {
-              base: [{
-                PATH: `${root}/src/server/repositories/seeders/example.seeder.ts`,
-                content(local) {
-                  const opts = { local, root, path: this.PATH, library: dataLib }
-                  return zanixLibInfo.templateContent(opts)
-                },
-              }],
-            },
-          },
-        },
+        templates: { base: { files: ['example.data.ts', 'example.model.ts'], library } },
+        subfolders: { seeders: { templates: { base: { files: ['example.seeder.ts'], library } } } },
       },
     },
-  }
+  })
 }

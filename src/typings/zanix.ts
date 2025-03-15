@@ -3,47 +3,68 @@ import type { Logger } from 'modules/logger/main.ts'
 
 type DefaultLogger = typeof Logger['prototype']
 
-type ZanixTemplates = 'base'
-type ZanixBaseFolder<
+type ZanixSrcTreeMap = {
+  server: { server: ZanixServerSrcTree }
+  app: { app: ZanixAppSrcTree }
+  library: { modules: ZanixLibrarySrcTree }
+  'app-server': { app: ZanixAppSrcTree; server: ZanixServerSrcTree }
+  all: { modules: ZanixLibrarySrcTree; app: ZanixAppSrcTree; server: ZanixServerSrcTree }
+}
+
+type ZanixSrcTree<T extends ZanixProjectsFull> = T extends keyof ZanixSrcTreeMap
+  ? ZanixSrcTreeMap[T]
+  : {}
+
+type ZanixProjectSrc<T extends ZanixProjectsFull> = T extends 'library' | undefined ? {}
+  : { zanix: ZanixBaseFolder }
+
+type ZanixSubfolderOptions<S> = S extends { subfolders: infer U }
+  ? U extends Record<string, unknown>
+    ? { subfolders: { [K in keyof U]: ZanixTreeFolderOptions<U[K]> } }
+  : object
+  : object
+
+type ZanixTemplateOptions<S> = S extends { templates: unknown } ? ZanixFolderOptions : {}
+
+export type ZanixFolderOptions = {
+  templates: {
+    [name in ZanixTemplates]: {
+      files: string[]
+      library?: keyof ZanixLibraries
+    }
+  }
+}
+
+export type ZanixTreeFolderOptions<S> = ZanixSubfolderOptions<S> & ZanixTemplateOptions<S>
+export type ZanixTemplatesRecord = Record<
+  ZanixTemplates,
+  { PATH: string; NAME: string; content(local: ZanixLocalContentProps): Promise<string> }[]
+>
+
+export type ZanixBaseFolderProps<S> = {
+  readonly FOLDER: string
+  readonly NAME: string
+  templates: ZanixTemplatesRecord
+  subfolders: S
+}
+
+export type ZanixBaseFolder<
   S extends Record<string, Partial<ZanixBaseFolder>> | undefined = undefined,
   O extends 'noTemplates' | undefined = undefined,
 > = Omit<
-  {
-    readonly FOLDER: string
-    get NAME(): string
-    templates: Record<ZanixTemplates, {
-      PATH: string
-      content(local: ZanixLocalContentProps): Promise<string>
-    }[]>
-    subfolders: S
-  },
-  O extends 'noTemplates' ? (S extends undefined ? 'subfolders' | 'templates' : 'templates')
-    : (S extends undefined ? 'subfolders' : never)
+  ZanixBaseFolderProps<S>,
+  O extends 'noTemplates' ? S extends undefined ? 'subfolders' | 'templates'
+    : 'templates'
+    : S extends undefined ? 'subfolders'
+    : never
 >
 
 export type ZanixLocalContentProps = { metaUrl: string; relativePath: string }
 
 export type ZanixProjectsFull = ZanixProjects | 'all' | undefined
 
-type ZanixSrcTree<T extends ZanixProjectsFull> = T extends 'server' ? { server: ZanixServerSrcTree }
-  : T extends 'app' ? { app: ZanixAppSrcTree }
-  : T extends 'library' ? { library: ZanixLibrarySrcTree }
-  : T extends 'app-server' ? {
-      app: ZanixAppSrcTree
-      server: ZanixServerSrcTree
-    }
-  : T extends 'all' ? {
-      library: ZanixLibrarySrcTree
-      app: ZanixAppSrcTree
-      server: ZanixServerSrcTree
-    }
-  : {}
-
-type ZanixProjectSrc<T extends ZanixProjectsFull> = T extends 'library' ? {}
-  : T extends undefined ? {}
-  : {
-    zanix: ZanixBaseFolder
-  }
+/** Zanix Templates for Automated File Generation */
+export type ZanixTemplates = 'base'
 
 /**
  * Defines the 'ZanixProjects' type, which is a reference to ZnxProjects
@@ -57,7 +78,7 @@ export type ZanixProjects = 'library' | 'server' | 'app' | 'app-server'
  */
 export type ZanixFolderGenericTree = Partial<
   ZanixBaseFolder<
-    Record<string, ZanixBaseFolder>
+    Record<string, Partial<ZanixBaseFolder>>
   >
 >
 
@@ -71,18 +92,16 @@ export type ZanixServerSrcTree = ZanixBaseFolder<{
 }, 'noTemplates'>
 
 /** Zanix Library Folder structure */
-export type ZanixLibrarySrcTree = ZanixBaseFolder<
-  { templates: ZanixBaseFolder<undefined, 'noTemplates'> }
->
+export type ZanixLibrarySrcTree = ZanixBaseFolder<undefined, 'noTemplates'>
 
 /**
  * Zanix App Folder structure
  * @experimental
  */
 export type ZanixAppSrcTree = ZanixBaseFolder<{
-  components: ZanixBaseFolder
-  layout: ZanixBaseFolder
-  pages: ZanixBaseFolder
+  Components: ZanixBaseFolder
+  Layout: ZanixBaseFolder
+  Pages: ZanixBaseFolder
   resources: ZanixBaseFolder<{
     intl: ZanixBaseFolder<{ es: ZanixBaseFolder }, 'noTemplates'>
     public: ZanixBaseFolder<{
@@ -106,7 +125,7 @@ export type ZanixAppSrcTree = ZanixBaseFolder<{
 /** Zanix general folders */
 export type ZanixFolderTree<T extends ZanixProjectsFull = undefined> = ZanixBaseFolder<
   ZanixProjectSrc<T> & {
-    dist: ZanixBaseFolder
+    '.dist': ZanixBaseFolder
     docs: ZanixBaseFolder
     src: ZanixBaseFolder<
       ZanixSrcTree<T> & {
@@ -116,9 +135,7 @@ export type ZanixFolderTree<T extends ZanixProjectsFull = undefined> = ZanixBase
           unit: ZanixBaseFolder
         }, 'noTemplates'>
         shared: ZanixBaseFolder<
-          T extends 'library' ? never : T extends undefined ? {} : {
-            middlewares: ZanixBaseFolder
-          },
+          T extends 'library' | undefined ? {} : { middlewares: ZanixBaseFolder },
           'noTemplates'
         >
         typings: ZanixBaseFolder

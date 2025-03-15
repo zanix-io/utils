@@ -51,6 +51,7 @@ export async function readFileFromCurrentUrl(
   relativeFromPath: string,
 ): Promise<string> {
   const currentUrl = getPathFromCurrent(url, relativeFromPath)
+
   if (isFileUrl(url)) return Deno.readTextFile(currentUrl)
 
   const response = await fetch(currentUrl)

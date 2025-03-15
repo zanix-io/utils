@@ -1,6 +1,4 @@
-import type { ZanixLibraries, ZanixLocalContentProps } from 'typings/zanix.ts'
-
-import { readFileFromCurrentUrl } from 'modules/helpers/files.ts'
+import type { ZanixLibraries } from 'typings/zanix.ts'
 
 const titleRegex = /<title>(v[\d\.]+)<\/title>/
 
@@ -64,28 +62,4 @@ export async function getAllZanixLibrariesInfo(): Promise<ZanixLibraries> {
     '@zanix/utils': { version: utils },
   }
   return ZNX_LIBRARIES
-}
-
-/**
- * Function to get template file content
- */
-async function getZanixTemplateContent(
-  { local, path, library, root }: {
-    local: ZanixLocalContentProps
-    root: string
-    path: string
-    library?: keyof ZanixLibraries
-  },
-) {
-  if (library) {
-    const libs = await getAllZanixLibrariesInfo()
-    local.metaUrl = `https://jsr.io/${library}/${libs[library].version}/current`
-    local.relativePath = ''
-  }
-  path = path.replace(root, local.relativePath)
-  return readFileFromCurrentUrl(local.metaUrl, path).catch(() => '')
-}
-
-export default {
-  templateContent: getZanixTemplateContent,
 }

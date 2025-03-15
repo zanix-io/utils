@@ -1,13 +1,13 @@
 import type { ZanixFolderTree, ZanixProjectsFull } from 'typings/zanix.ts'
 
-import { getFolderName } from 'modules/helpers/paths.ts'
+import { ZanixTree } from 'modules/helpers/zanix/base-tree.ts'
 import { getCommonTree } from './commons.ts'
-import { getServerFolders } from './server.ts'
-import { getLibraryFolders } from './library.ts'
-import { getAppFolders } from './app.ts'
-import zanixLibInfo from '../info.ts'
+import { getServerSrcTree } from './server.ts'
+import { getLibrarySrcTree } from './library.ts'
+import { getAppSrcTree } from './app.ts'
+import { join } from '@std/path'
 
-const library = '@zanix/core' as const
+const library = '@zanix/core'
 
 /**
  * Zanix folders function structure for all projects
@@ -24,64 +24,33 @@ export const getZnxFolderTree = <
   const isAll = type === 'all'
 
   if (type === 'library' || isAll) {
-    ZNX_STRUCT.subfolders.src.subfolders.library = getLibraryFolders(root)
+    ZNX_STRUCT.subfolders.src.subfolders.modules = getLibrarySrcTree(root)
   }
 
   if (type !== 'library' || isAll) {
-    ZNX_STRUCT.subfolders.zanix = {
-      FOLDER: `${root}zanix`,
-      get NAME() {
-        return getFolderName(this.FOLDER)
-      },
-      templates: {
-        base: [
-          {
-            PATH: `${root}zanix/config.ts`,
-            content(local) {
-              return zanixLibInfo.templateContent({ local, root, path: this.PATH, library })
-            },
-          },
-          {
-            PATH: `${root}zanix/secrets.sqlite`,
-            content(local) {
-              return zanixLibInfo.templateContent({ local, root, path: this.PATH, library })
-            },
-          },
-        ],
-      },
-    }
+    ZNX_STRUCT.subfolders.zanix = ZanixTree.create(join(root, 'zanix'), {
+      templates: { base: { files: ['config.ts', 'secrets.sqlite'], library } },
+    })
 
-    ZNX_STRUCT.subfolders.src.subfolders.shared.subfolders = {
-      middlewares: {
-        FOLDER: `${root}src/shared/middlewares`,
-        get NAME() {
-          return getFolderName(this.FOLDER)
-        },
-        templates: {
-          base: [
-            {
-              PATH: `${root}src/shared/middlewares/example.pipe.ts`,
-              content(local) {
-                return zanixLibInfo.templateContent({ local, root, path: this.PATH, library })
-              },
+    ZNX_STRUCT.subfolders.src.subfolders.shared = ZanixTree.create(
+      join(root, 'src/shared'),
+      {
+        subfolders: {
+          middlewares: {
+            templates: {
+              base: { files: ['example.pipe.ts', 'example.interceptor.ts'], library },
             },
-            {
-              PATH: `${root}src/shared/middlewares/example.interceptor.ts`,
-              content(local) {
-                return zanixLibInfo.templateContent({ local, root, path: this.PATH, library })
-              },
-            },
-          ],
+          },
         },
       },
-    }
+    )
 
     if (type === 'app' || type === 'app-server' || isAll) {
-      ZNX_STRUCT.subfolders.src.subfolders.app = getAppFolders(root)
+      ZNX_STRUCT.subfolders.src.subfolders.app = getAppSrcTree(root)
     }
 
     if (type === 'server' || type === 'app-server' || isAll) {
-      ZNX_STRUCT.subfolders.src.subfolders.server = getServerFolders(root)
+      ZNX_STRUCT.subfolders.src.subfolders.server = getServerSrcTree(root)
     }
   }
 

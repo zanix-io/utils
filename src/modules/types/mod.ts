@@ -12,6 +12,7 @@ export type {
   ZanixFolderTree,
   ZanixGlobal,
   ZanixProjects,
+  ZanixTemplates,
 } from 'typings/zanix.ts'
 
 export type {

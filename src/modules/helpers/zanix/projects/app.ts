@@ -1,266 +1,44 @@
 import type { ZanixAppSrcTree } from 'typings/zanix.ts'
 
-import { getFolderName } from 'modules/helpers/paths.ts'
-import zanixLibInfo from '../info.ts'
+import { ZanixTree } from 'modules/helpers/zanix/base-tree.ts'
+import { join } from '@std/path'
 
 let appTree: ZanixAppSrcTree | undefined
 
-const library = '@zanix/app' as const
+const library = '@zanix/app'
 
-export const getAppFolders = (root: string): ZanixAppSrcTree => {
-  const mainFolder = `${root}/src/app`
-  if (appTree?.FOLDER === mainFolder) return appTree
+export const getAppSrcTree = (root: string): ZanixAppSrcTree => {
+  const mainRoot = join(root, 'src/app')
+  if (appTree?.FOLDER === mainRoot) return appTree
 
-  return {
-    FOLDER: mainFolder,
-    get NAME() {
-      return getFolderName(this.FOLDER)
-    },
+  return ZanixTree.create<ZanixAppSrcTree>(mainRoot, {
     subfolders: {
-      components: {
-        FOLDER: `${root}/src/app/components`,
-        get NAME() {
-          return getFolderName(this.FOLDER)
-        },
-        templates: {
-          base: [{
-            PATH: `${root}/src/app/components/ExampleComponent.txs`,
-            content(local) {
-              const opts = { local, root, path: this.PATH, library }
-              return zanixLibInfo.templateContent(opts)
-            },
-          }],
-        },
-      },
-      layout: {
-        FOLDER: `${root}/src/app/layout`,
-        get NAME() {
-          return getFolderName(this.FOLDER)
-        },
-        templates: {
-          base: [{
-            PATH: `${root}/src/app/layout/ExampleLayout.txs`,
-            content(local) {
-              const opts = { local, root, path: this.PATH, library }
-              return zanixLibInfo.templateContent(opts)
-            },
-          }],
-        },
-      },
-      pages: {
-        FOLDER: `${root}/src/app/pages`,
-        get NAME() {
-          return getFolderName(this.FOLDER)
-        },
-        templates: {
-          base: [{
-            PATH: `${root}/src/app/pages/ExamplePage.tsx`,
-            content(local) {
-              const opts = { local, root, path: this.PATH, library }
-              return zanixLibInfo.templateContent(opts)
-            },
-          }],
-        },
-      },
+      Components: { templates: { base: { files: ['ExampleComponent.txs'], library } } },
+      Layout: { templates: { base: { files: ['ExampleLayout.txs'], library } } },
+      Pages: { templates: { base: { files: ['ExamplePage.tsx'], library } } },
       resources: {
-        FOLDER: `${root}/src/resources`,
-        get NAME() {
-          return getFolderName(this.FOLDER)
-        },
         subfolders: {
           intl: {
-            FOLDER: `${root}/src/resources/intl`,
-            get NAME() {
-              return getFolderName(this.FOLDER)
-            },
-            subfolders: {
-              es: {
-                FOLDER: `${root}/src/resources/intl/es`,
-                get NAME() {
-                  return getFolderName(this.FOLDER)
-                },
-                templates: {
-                  base: [{
-                    PATH: `${root}/src/resources/intl/es/example.json`,
-                    content(local) {
-                      const opts = { local, root, path: this.PATH, library }
-                      return zanixLibInfo.templateContent(opts)
-                    },
-                  }],
-                },
-              },
-            },
+            subfolders: { es: { templates: { base: { files: ['example.json'], library } } } },
           },
           public: {
-            FOLDER: `${root}/src/resources/public`,
-            get NAME() {
-              return getFolderName(this.FOLDER)
-            },
             subfolders: {
               assets: {
-                FOLDER: `${root}/src/resources/public/assets`,
-                get NAME() {
-                  return getFolderName(this.FOLDER)
-                },
                 subfolders: {
-                  docs: {
-                    FOLDER: `${root}/src/resources/public/assets/docs`,
-                    get NAME() {
-                      return getFolderName(this.FOLDER)
-                    },
-                    templates: {
-                      base: [{
-                        PATH: `${root}/src/resources/public/assets/docs/example.txt`,
-                        content(local) {
-                          const opts = { local, root, path: this.PATH, library }
-                          return zanixLibInfo.templateContent(opts)
-                        },
-                      }],
-                    },
-                  },
-                  fonts: {
-                    FOLDER: `${root}/src/resources/public/assets/fonts`,
-                    get NAME() {
-                      return getFolderName(this.FOLDER)
-                    },
-                    templates: {
-                      base: [{
-                        PATH: `${root}/src/resources/public/assets/fonts/example.woff2`,
-                        content(local) {
-                          const opts = { local, root, path: this.PATH, library }
-                          return zanixLibInfo.templateContent(opts)
-                        },
-                      }],
-                    },
-                  },
-                  icons: {
-                    FOLDER: `${root}/src/resources/public/assets/icons`,
-                    get NAME() {
-                      return getFolderName(this.FOLDER)
-                    },
-                    templates: {
-                      base: [{
-                        PATH: `${root}/src/resources/public/assets/icons/example.svg`,
-                        content(local) {
-                          const opts = { local, root, path: this.PATH, library }
-                          return zanixLibInfo.templateContent(opts)
-                        },
-                      }],
-                    },
-                  },
-                  images: {
-                    FOLDER: `${root}/src/resources/public/assets/images`,
-                    get NAME() {
-                      return getFolderName(this.FOLDER)
-                    },
-                    templates: {
-                      base: [{
-                        PATH: `${root}/src/resources/public/assets/images/example.webp`,
-                        content(local) {
-                          const opts = { local, root, path: this.PATH, library }
-                          return zanixLibInfo.templateContent(opts)
-                        },
-                      }],
-                    },
-                  },
-                  videos: {
-                    FOLDER: `${root}/src/resources/public/assets/videos`,
-                    get NAME() {
-                      return getFolderName(this.FOLDER)
-                    },
-                    templates: {
-                      base: [{
-                        PATH: `${root}/src/resources/public/assets/videos/example.webm`,
-                        content(local) {
-                          const opts = { local, root, path: this.PATH, library }
-                          return zanixLibInfo.templateContent(opts)
-                        },
-                      }],
-                    },
-                  },
+                  docs: { templates: { base: { files: ['example.md'], library } } },
+                  fonts: { templates: { base: { files: ['example.woff2'], library } } },
+                  icons: { templates: { base: { files: ['example.svg'], library } } },
+                  images: { templates: { base: { files: ['example.webp'], library } } },
+                  videos: { templates: { base: { files: ['example.webm'], library } } },
                 },
               },
-              scripts: {
-                FOLDER: `${root}/src/resources/public/scripts`,
-                get NAME() {
-                  return getFolderName(this.FOLDER)
-                },
-                templates: {
-                  base: [{
-                    PATH: `${root}/src/resources/public/scripts/example.js`,
-                    content(local) {
-                      const opts = { local, root, path: this.PATH, library }
-                      return zanixLibInfo.templateContent(opts)
-                    },
-                  }],
-                },
-              },
-              sitemap: {
-                FOLDER: `${root}/src/resources/public/sitemap`,
-                get NAME() {
-                  return getFolderName(this.FOLDER)
-                },
-                templates: {
-                  base: [{
-                    PATH: `${root}/src/resources/public/scripts/main.xml`,
-                    content(local) {
-                      const opts = { local, root, path: this.PATH, library }
-                      return zanixLibInfo.templateContent(opts)
-                    },
-                  }, {
-                    PATH: `${root}/src/resources/public/scripts/urls.xml`,
-                    content(local) {
-                      const opts = { local, root, path: this.PATH, library }
-                      return zanixLibInfo.templateContent(opts)
-                    },
-                  }],
-                },
-              },
+              scripts: { templates: { base: { files: ['example.js'], library } } },
+              sitemap: { templates: { base: { files: ['main.xml', 'urls.xml'], library } } },
               styles: {
-                FOLDER: `${root}/src/resources/public/styles`,
-                get NAME() {
-                  return getFolderName(this.FOLDER)
-                },
-                templates: {
-                  base: [{
-                    PATH: `${root}/src/resources/public/styles/font.css`,
-                    content(local) {
-                      const opts = { local, root, path: this.PATH, library }
-                      return zanixLibInfo.templateContent(opts)
-                    },
-                  }],
-                },
+                templates: { base: { files: ['fonts.css'], library } },
                 subfolders: {
-                  apps: {
-                    FOLDER: `${root}/src/resources/public/styles/apps`,
-                    get NAME() {
-                      return getFolderName(this.FOLDER)
-                    },
-                    templates: {
-                      base: [{
-                        PATH: `${root}/src/resources/public/styles/apps/example.app.css`,
-                        content(local) {
-                          const opts = { local, root, path: this.PATH, library }
-                          return zanixLibInfo.templateContent(opts)
-                        },
-                      }],
-                    },
-                  },
-                  global: {
-                    FOLDER: `${root}/src/resources/public/styles/global`,
-                    get NAME() {
-                      return getFolderName(this.FOLDER)
-                    },
-                    templates: {
-                      base: [{
-                        PATH: `${root}/src/resources/public/styles/global/example.css`,
-                        content(local) {
-                          const opts = { local, root, path: this.PATH, library }
-                          return zanixLibInfo.templateContent(opts)
-                        },
-                      }],
-                    },
-                  },
+                  global: { templates: { base: { files: ['example.css'], library } } },
+                  apps: { templates: { base: { files: ['example.app.css'], library } } },
                 },
               },
             },
@@ -268,5 +46,5 @@ export const getAppFolders = (root: string): ZanixAppSrcTree => {
         },
       },
     },
-  }
+  })
 }
