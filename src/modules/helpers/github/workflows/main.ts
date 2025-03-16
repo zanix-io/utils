@@ -1,6 +1,6 @@
 import type { WorkflowOptions, WorkFlowTypes } from 'typings/github.ts'
 
-import { readFileFromCurrentUrl } from 'modules/helpers/files.ts'
+import { fileExists, readFileFromCurrentUrl } from 'modules/helpers/files.ts'
 import { getRootDir } from 'modules/helpers/paths.ts'
 import { capitalize } from 'utils/strings.ts'
 import logger from 'modules/logger/mod.ts'
@@ -14,7 +14,7 @@ export async function createWorkflow(
   replaceContentCallback: (content: string) => string = (content) => content,
 ) {
   if (!options.filename) {
-    logger.info('No workflow YAML file found for this project, unable to create', 'noSave')
+    logger.warn('No workflow YAML file found for this project, unable to create', 'noSave')
     return false
   }
 
@@ -31,6 +31,11 @@ export async function createWorkflow(
 
     // file dir
     const baseFileDir = `${baseFolder}/${yml}.yml`
+
+    if (fileExists(baseFileDir)) {
+      logger.warn(`'${mainYamls}' YAML already exists, unable to create or update`, 'noSave')
+      return false
+    }
 
     // Write the YAML file
     await Deno.writeTextFile(baseFileDir, replaceContentCallback(hookContent))

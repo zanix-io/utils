@@ -3,6 +3,7 @@ import type { ConfigFile } from 'typings/config.ts'
 import { getConfigDir } from './paths.ts'
 
 let configFile: ConfigFile | null = null
+let currentConfigPath: string | null = null
 
 /**
  * Reads and parses the `deno` configuration file
@@ -16,9 +17,10 @@ let configFile: ConfigFile | null = null
  * @category helpers
  */
 export function readConfig(configPath?: string | null): ConfigFile {
-  if (configFile) return configFile
+  if (configFile && currentConfigPath === configPath) return configFile
 
   const configDir = configPath || getConfigDir()
+  currentConfigPath = configDir
 
   if (!configDir) {
     throw new Error(`Configuration file not found: ${configDir}`)

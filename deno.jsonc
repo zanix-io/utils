@@ -1,6 +1,6 @@
 {
   "name": "@zanix/utils",
-  "version": "2.0.3-alpha4",
+  "version": "2.0.3-alpha5",
   "license": "MIT",
   "nodeModulesDir": "auto",
   "compilerOptions": {
@@ -64,7 +64,7 @@
     "@std/fs": "jsr:@std/fs@0.224",
     "@std/path": "jsr:@std/path@0.224",
     "@std/testing": "jsr:@std/testing@1.0.9",
-    "esbuild": "npm:esbuild@0.20.2",
+    "esbuild": "https://deno.land/x/esbuild@v0.19.11/mod.js",
     "javascript-obfuscator": "npm:javascript-obfuscator@^4.0.2",
     "linter/": "./src/linter/",
     "typings/": "./src/typings/",

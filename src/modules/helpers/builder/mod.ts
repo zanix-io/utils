@@ -10,12 +10,12 @@ import { join } from '@std/path'
 /**
  * Compiles and obfuscates a TypeScript/JavaScript file using esbuild and javascript-obfuscator.
  * @param options - Configuration options for the build process.
- *    - `inputFile`: The path to the source file that will be compiled. Defaults to Zanix mod.
- *    - `outputFile`: The path where the compiled and obfuscated file will be saved. Defaults to Zanix dist.
+ *    - `inputFile`: The full path to the source file that will be compiled. Defaults to Zanix mod.
+ *    - `outputFile`: The full path where the compiled and obfuscated file will be saved. Defaults to Zanix dist file.
  *    - `obfuscate`: A flag to indicate if outputFile will be obfuscate. Defaults to `false`.
  *    - `useWorker`: A flag that determines whether a worker should be utilized for processing. Defaults to `false`.
  *    - `minify`: A flag indicating if outputFile will be minify. Defaults to `true`.
- *    - `bundle`: A flag indicating if bundle will be apply. Defaults to `true`.
+ *    - `bundle`: A flag indicating whether bundling will be applied (i.e., grouping all files into a single output). Defaults to `true`.
  *    - `callback`: Callback function to be executed when the process is complete.
  *
  * This function requires the following permissions:

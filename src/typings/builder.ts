@@ -9,7 +9,7 @@ export type CompilerOptions = {
    */
   inputFile: string
   /**
-   * The path where the compiled and obfuscated file will be saved. Defaults to Zanix dist.
+   * The path where the compiled and obfuscated file will be saved. Defaults to Zanix dist file.
    */
   outputFile: string
   /**
@@ -26,7 +26,7 @@ export type CompilerOptions = {
    */
   minify: boolean
   /**
-   * A flag indicating if bundle will be apply. Defaults to `true`.
+   * A flag indicating whether bundling will be applied (i.e., grouping all files into a single output). Defaults to `true`.
    */
   bundle: boolean
   /**

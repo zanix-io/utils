@@ -15,18 +15,22 @@ export const getCommonTree = (root: string, type?: ZanixProjectsFull): ZanixFold
     templates: { base: { files: mainFiles } },
     subfolders: {
       '.dist': {},
-      docs: { templates: { base: { files: ['CHANGELOG.md', 'LICENCE'] } } },
+      docs: { templates: { base: { files: ['CHANGELOG.md', 'LICENCE'], jsr: '@zanix/utils' } } },
       src: {
         subfolders: {
           '@tests': {
             subfolders: {
-              integration: { templates: { base: { files: ['example.test.ts'] } } },
-              unit: { templates: { base: { files: ['example.test.ts'] } } },
-              functional: { templates: { base: { files: ['example.test.ts'] } } },
+              integration: {
+                templates: { base: { files: ['example.test.ts'], jsr: '@zanix/utils' } },
+              },
+              unit: { templates: { base: { files: ['example.test.ts'], jsr: '@zanix/utils' } } },
+              functional: {
+                templates: { base: { files: ['example.test.ts'], jsr: '@zanix/utils' } },
+              },
             },
           },
           shared: { subfolders: {} },
-          typings: { templates: { base: { files: ['index.d.ts'] } } },
+          typings: { templates: { base: { files: ['index.d.ts'], jsr: '@zanix/utils' } } },
           utils: { templates: { base: { files: ['example.ts'], jsr: '@zanix/utils' } } },
         },
       },

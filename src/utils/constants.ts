@@ -9,7 +9,7 @@ export const CONFIG_FILE: string = 'deno.json'
 /**
  * Default distribution file name for compilations
  */
-export const DISTRIBUTION_FILE = 'app.js'
+export const DISTRIBUTION_FILE = 'app.mjs'
 
 /**
  * Default main module name.

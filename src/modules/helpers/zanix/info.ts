@@ -4,6 +4,15 @@ const titleRegex = /<title>(v[\d\.]+)<\/title>/
 
 let ZNX_LIBRARIES: ZanixLibraries
 
+const getShieldsDataVersion = (endpoint: string, username: string, lib: string) => {
+  return fetch(`https://img.shields.io/${endpoint}/${username}/${lib}?color=blue&&label=`)
+    .then((response) => response.text())
+    .then((html) => {
+      return html.match(titleRegex)?.[1].replace('v', '') || 'latest'
+    })
+    .catch(() => 'latest')
+}
+
 /**
  * Fetches the lates release of a repository (e.g., @zanix/utils) from Shields.io.
  * This function retrieves the version of a library by querying the Shields.io JSR badge URL.
@@ -12,15 +21,24 @@ let ZNX_LIBRARIES: ZanixLibraries
  * @param username - library username. Defaults to `zanix-io`
  * @returns x.x.x version
  *
- * This function is intended for development purposes only.
+ * This function is intended for CLI purposes only.
  */
 export function getLatestRelease(lib: string, username = 'zanix-io'): Promise<string> {
-  return fetch(`https://img.shields.io/github/v/release/${username}/${lib}?color=blue&&label=`)
-    .then((response) => response.text())
-    .then((html) => {
-      return html.match(titleRegex)?.[1].replace('v', '') || 'latest'
-    })
-    .catch(() => 'latest')
+  return getShieldsDataVersion('github/v/release', username, lib)
+}
+
+/**
+ * Fetches the lates JSR version of a repository (e.g., @zanix/utils) from Shields.io.
+ * This function retrieves the version of a library by querying the Shields.io JSR badge URL.
+ *
+ * @param lib - library name
+ * @param username - library username. Defaults to `@zanix`
+ * @returns x.x.x version
+ *
+ * This function is intended for CLI purposes only.
+ */
+export function getLatestVersion(lib: string, username = '@zanix'): Promise<string> {
+  return getShieldsDataVersion('jsr/v', username, lib)
 }
 
 /**
@@ -39,16 +57,16 @@ export function getLatestRelease(lib: string, username = 'zanix-io'): Promise<st
 export async function getAllZanixLibrariesInfo(): Promise<ZanixLibraries> {
   if (ZNX_LIBRARIES) return ZNX_LIBRARIES
   const versionPromises = [
-    getLatestRelease('app'),
-    getLatestRelease('auth'),
-    getLatestRelease('asyncmq'),
-    getLatestRelease('core'),
-    getLatestRelease('datamaster'),
-    getLatestRelease('server'),
-    getLatestRelease('tasker'),
-    getLatestRelease('utils'),
+    getLatestVersion('app'),
+    getLatestVersion('auth'),
+    getLatestVersion('asyncmq'),
+    getLatestVersion('core'),
+    getLatestVersion('datamaster'),
+    getLatestVersion('server'),
+    getLatestVersion('tasker'),
+    getLatestVersion('utils'),
   ]
-  const [app, auth, asyncmq, core, datamaster, server, tasker, utils] = await Promise.all(
+  const [app, auth, asyncmq, core, datamaster, server, tasker, _utils] = await Promise.all(
     versionPromises,
   )
   ZNX_LIBRARIES = {
@@ -59,7 +77,7 @@ export async function getAllZanixLibrariesInfo(): Promise<ZanixLibraries> {
     '@zanix/datamaster': { version: datamaster },
     '@zanix/server': { version: server },
     '@zanix/tasker': { version: tasker },
-    '@zanix/utils': { version: utils },
+    '@zanix/utils': { version: '2.0.3-alpha5' }, // TODO: remove alpha
   }
   return ZNX_LIBRARIES
 }
