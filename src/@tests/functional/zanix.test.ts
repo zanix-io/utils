@@ -29,20 +29,24 @@ Deno.test('getZanixPaths should return correct default content from jsr', async 
     metaUrl: import.meta.url,
   })
 
-  assert(contentUtils !== '')
   assert(contentUtils.includes('Utilities Module Template'))
 
   const contentMod = await paths.templates.base[1].content({
     metaUrl: import.meta.url,
   })
 
-  assert(contentMod !== '')
   assert(contentMod.includes('Module Template'))
+
+  const contentSecondaryMod = await paths.subfolders.src.subfolders.modules.templates.base[0]
+    .content({
+      metaUrl: import.meta.url,
+    })
+
+  assert(contentSecondaryMod.includes('export default module'))
 
   const contentLicense = await paths.subfolders.docs.templates.base[1].content({
     metaUrl: import.meta.url,
   })
 
-  assert(contentLicense !== '')
   assert(contentLicense.includes('License'))
 })

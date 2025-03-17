@@ -1,9 +1,6 @@
 import type { CompilerOptions } from 'typings/builder.ts'
 
-import {
-  ignoredDefaultModules,
-  ignoreDefaultModulesPlugin,
-} from './plugins/ingnore-default-modules.ts'
+import { defaultNpmModules, npmModulesPlugin } from './plugins/npm-modules.ts'
 import { denoPlugins } from '@luca/esbuild-deno-loader'
 import obfuscator from 'javascript-obfuscator'
 import logger from 'modules/logger/mod.ts'
@@ -19,11 +16,12 @@ export const mainBuilderFunction = async (
     minify,
     bundle,
     obfuscate,
-    external = '',
+    npm = '',
     callback,
     onBackground,
     plugins = () => [],
     platform = 'neutral',
+    external = [],
     ...options
   }: Omit<
     CompilerOptions & { onBackground?: boolean },
@@ -31,6 +29,8 @@ export const mainBuilderFunction = async (
   >,
 ) => {
   const result: { error?: unknown; message?: string } = {}
+  const npmExternals = npm.split(',')
+
   try {
     // Build the file using esbuild
     await build({
@@ -39,12 +39,12 @@ export const mainBuilderFunction = async (
       plugins: [
         ...denoPlugins(),
         ...plugins(),
-        ignoreDefaultModulesPlugin(),
+        npmModulesPlugin(npmExternals),
       ],
       entryPoints: [inputFile],
       outfile: outputFile,
       platform,
-      external: [...ignoredDefaultModules, ...external.split(',')],
+      external: [...defaultNpmModules, ...npmExternals, ...external],
       format: 'esm',
       ...options,
     }).finally(stop)

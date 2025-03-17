@@ -4,7 +4,7 @@ import type { BuildOptions, Plugin } from 'esbuild'
 /**
  * The builder compiler options
  */
-export type CompilerOptions = Omit<BuildOptions, 'external' | 'plugins'> & {
+export type CompilerOptions = Omit<BuildOptions, 'plugins'> & {
   /**
    * The path to the source file that will be compiled. Defaults to Zanix mod.
    */
@@ -44,7 +44,7 @@ export type CompilerOptions = Omit<BuildOptions, 'external' | 'plugins'> & {
    */
   platform?: 'node' | 'neutral' | 'browser'
   /**
-   * Libraries to exclude from the bundle.
+   * NPM libraries to exclude from the bundle and mark as external.
    */
-  external?: string
+  npm?: string
 }

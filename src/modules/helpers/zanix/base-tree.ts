@@ -14,7 +14,7 @@ import { getFolderName } from 'modules/helpers/paths.ts'
 
 class BaseZanixTree<S extends ZanixBaseFolder> {
   #baseName: string
-  constructor(private root: string) {
+  constructor(private root: string, private baseRoot: string) {
     this.#baseName = getFolderName(root)
   }
 
@@ -26,7 +26,7 @@ class BaseZanixTree<S extends ZanixBaseFolder> {
   public generateTreeFolder(tree: any, path: string): S {
     path = join(path, tree.NAME || '')
 
-    Object.assign(tree, this.createFolder({ ...tree, FOLDER: path } as never))
+    Object.assign(tree, this.createFolder({ ...tree, FOLDER: path }))
 
     if (tree.subfolders) {
       Object.entries<object>(tree.subfolders).forEach(([name, subfolder]) => {
@@ -72,16 +72,17 @@ class BaseZanixTree<S extends ZanixBaseFolder> {
     options: { files: string[]; folderPath: string; jsr?: keyof ZanixLibraries },
   ) {
     const { files, jsr, folderPath } = options
-    const root = this.root
+    const { baseRoot } = this
 
     return files.map((file) => ({
       PATH: join(folderPath, file),
       NAME: file,
       content(local: ZanixLocalContentProps) {
         const { metaUrl, relativePath = '' } = local
+        const relative = jsr ? 'src/templates/' : join(relativePath, '/')
         return getZanixTemplateContent({
           url: metaUrl,
-          path: this.PATH.replace(root, jsr ? 'src/templates/' : join(relativePath, '/')),
+          path: this.PATH.replace(baseRoot, relative),
           jsr,
         })
       },
@@ -94,9 +95,24 @@ class BaseZanixTree<S extends ZanixBaseFolder> {
  */
 export class ZanixTree {
   public static create<S extends Partial<ZanixBaseFolder>>(
-    root: string,
+    root: string | {
+      /**
+       * Specifies the main root directory to be used as a starting point.
+       * If it differs from the default value, provide the path here (e.g., if it's `src` or any subdirectory).
+       */
+      startingPoint: string
+
+      /**
+       * Path of the root directory. Used to identify the base root directory.
+       */
+      baseRoot: string
+    },
     tree: ZanixTreeFolderOptions<S>,
   ) {
-    return new BaseZanixTree(root).generateTreeFolder(tree, root) as S
+    const { startingPoint, baseRoot } = typeof root === 'string'
+      ? { startingPoint: root, baseRoot: root }
+      : root
+
+    return new BaseZanixTree(startingPoint, baseRoot).generateTreeFolder(tree, startingPoint) as S
   }
 }

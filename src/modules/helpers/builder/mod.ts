@@ -19,7 +19,7 @@ import { join } from '@std/path'
  *    - `callback`: Callback function to be executed when the process is complete.
  *    - `plugins`: Optional esbuild plugins functions.
  *    - `platform`: Optional esbuild platform. Defaults to `neutral`.
- *    - `external`: Libraries to exclude from the bundle. (e.g: esbuild,fs)
+ *    - `npm`: NPM libraries to exclude from the bundle. (e.g: library-1,library-2)
  *    - `...`: Other general builder opts.
  *
  * This function requires the following permissions:

@@ -7,7 +7,14 @@ adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-## [2.0.3] - 2025-03-17
+## [2.0.4] - 2025-03-17
+
+### Fixed
+
+- Esbuild npm external libraries compatibility
+- Zanix templates content for different startingpoint.
+
+## [2.0.3] - 2025-03-16
 
 ### Added
 

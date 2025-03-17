@@ -8,10 +8,10 @@ let serverTree: ZanixServerSrcTree | undefined
 const jsr = '@zanix/server'
 
 export const getServerSrcTree = (root: string): ZanixServerSrcTree => {
-  const mainRoot = join(root, 'src/server')
-  if (serverTree?.FOLDER === mainRoot) return serverTree
+  const startingPoint = join(root, 'src/server')
+  if (serverTree?.FOLDER === startingPoint) return serverTree
 
-  return ZanixTree.create<ZanixServerSrcTree>(mainRoot, {
+  return ZanixTree.create<ZanixServerSrcTree>({ startingPoint, baseRoot: root }, {
     subfolders: {
       connectors: {
         templates: { base: { files: ['example.provider.ts', 'example.client.ts'], jsr } },
