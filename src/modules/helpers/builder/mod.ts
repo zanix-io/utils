@@ -17,6 +17,10 @@ import { join } from '@std/path'
  *    - `minify`: A flag indicating if outputFile will be minify. Defaults to `true`.
  *    - `bundle`: A flag indicating whether bundling will be applied (i.e., grouping all files into a single output). Defaults to `true`.
  *    - `callback`: Callback function to be executed when the process is complete.
+ *    - `plugins`: Optional esbuild plugins functions.
+ *    - `platform`: Optional esbuild platform. Defaults to `neutral`.
+ *    - `external`: Libraries to exclude from the bundle. (e.g: esbuild,fs)
+ *    - `...`: Other general builder opts.
  *
  * This function requires the following permissions:
  * `allow-read`, `allow-env`, `allow-write`, `allow-run`
@@ -36,7 +40,7 @@ export function compileAndObfuscate(
     minify = true,
     bundle = true,
     callback = () => {},
-    obfuscate,
+    ...opts
   } = options
 
   if (useWorker) {
@@ -45,8 +49,8 @@ export function compileAndObfuscate(
       mainBuilderFunction,
       callback,
     )
-    return tarker.invoke({ inputFile, outputFile, minify, obfuscate, bundle, onBackground: true })
+    return tarker.invoke({ inputFile, outputFile, minify, bundle, onBackground: true, ...opts })
   } else {
-    return mainBuilderFunction({ inputFile, outputFile, minify, obfuscate, bundle, callback })
+    return mainBuilderFunction({ inputFile, outputFile, minify, bundle, callback, ...opts })
   }
 }

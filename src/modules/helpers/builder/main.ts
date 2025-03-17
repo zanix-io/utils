@@ -1,15 +1,31 @@
 import type { CompilerOptions } from 'typings/builder.ts'
 
+import {
+  ignoredDefaultModules,
+  ignoreDefaultModulesPlugin,
+} from './plugins/ingnore-default-modules.ts'
 import { denoPlugins } from '@luca/esbuild-deno-loader'
-import { build, stop } from 'esbuild'
 import obfuscator from 'javascript-obfuscator'
 import logger from 'modules/logger/mod.ts'
+import { build, stop } from 'esbuild'
 
 /**
  * Base function for worker
  */
 export const mainBuilderFunction = async (
-  { inputFile, outputFile, minify, bundle, obfuscate, callback, onBackground }: Omit<
+  {
+    inputFile,
+    outputFile,
+    minify,
+    bundle,
+    obfuscate,
+    external = '',
+    callback,
+    onBackground,
+    plugins = () => [],
+    platform = 'neutral',
+    ...options
+  }: Omit<
     CompilerOptions & { onBackground?: boolean },
     'useWorker'
   >,
@@ -20,11 +36,17 @@ export const mainBuilderFunction = async (
     await build({
       minify,
       bundle,
-      plugins: [...denoPlugins()],
+      plugins: [
+        ...denoPlugins(),
+        ...plugins(),
+        ignoreDefaultModulesPlugin(),
+      ],
       entryPoints: [inputFile],
       outfile: outputFile,
-      platform: 'node',
+      platform,
+      external: [...ignoredDefaultModules, ...external.split(',')],
       format: 'esm',
+      ...options,
     }).finally(stop)
 
     // Read the compiled file
@@ -61,7 +83,7 @@ export const mainBuilderFunction = async (
 
     return result
   } catch (error) {
-    logger.error('Error during build or obfuscation:', error, 'noSave')
+    logger.error('Error during compile:', error, 'noSave')
 
     result.error = error
     callback?.({ error })

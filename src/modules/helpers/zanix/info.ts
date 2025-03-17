@@ -66,7 +66,7 @@ export async function getAllZanixLibrariesInfo(): Promise<ZanixLibraries> {
     getLatestVersion('tasker'),
     getLatestVersion('utils'),
   ]
-  const [app, auth, asyncmq, core, datamaster, server, tasker, _utils] = await Promise.all(
+  const [app, auth, asyncmq, core, datamaster, server, tasker, utils] = await Promise.all(
     versionPromises,
   )
   ZNX_LIBRARIES = {
@@ -77,7 +77,7 @@ export async function getAllZanixLibrariesInfo(): Promise<ZanixLibraries> {
     '@zanix/datamaster': { version: datamaster },
     '@zanix/server': { version: server },
     '@zanix/tasker': { version: tasker },
-    '@zanix/utils': { version: '2.0.3-alpha5' }, // TODO: remove alpha
+    '@zanix/utils': { version: utils },
   }
   return ZNX_LIBRARIES
 }

@@ -1,9 +1,10 @@
 import type { TaskerCallback } from 'typings/workers.ts'
+import type { BuildOptions, Plugin } from 'esbuild'
 
 /**
  * The builder compiler options
  */
-export type CompilerOptions = {
+export type CompilerOptions = Omit<BuildOptions, 'external' | 'plugins'> & {
   /**
    * The path to the source file that will be compiled. Defaults to Zanix mod.
    */
@@ -34,4 +35,16 @@ export type CompilerOptions = {
    * It is invoked once the task or operation finishes successfully.
    */
   callback?: TaskerCallback
+  /**
+   * Additional Plugins
+   */
+  plugins?: () => Plugin[]
+  /**
+   * Optional builder platform. Defaults to "neutral" for Deno compatibility
+   */
+  platform?: 'node' | 'neutral' | 'browser'
+  /**
+   * Libraries to exclude from the bundle.
+   */
+  external?: string
 }

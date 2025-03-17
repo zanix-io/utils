@@ -25,7 +25,7 @@ const rules: Record<string, Deno.lint.Rule> = {
         const prevLine = (lines[index - 1] || '').trim()
         const nextLine = (lines[index + 1] || '').trim()
 
-        const exceptions = lineLength <= maxLineWidth ||
+        const exceptions = lineLength <= maxLineWidth || cleanLine.startsWith('import ') ||
           cleanLine.replace(enclosedStringRegex, '').length < 2 ||
           regex.baseLineCommentRegex.test(cleanLine) ||
           regex.baseLineCommentRegex.test(prevLine) &&

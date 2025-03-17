@@ -81,7 +81,7 @@ class BaseZanixTree<S extends ZanixBaseFolder> {
         const { metaUrl, relativePath = '' } = local
         return getZanixTemplateContent({
           url: metaUrl,
-          path: this.PATH.replace(root, jsr ? '/' : join(relativePath, '/')),
+          path: this.PATH.replace(root, jsr ? 'src/templates/' : join(relativePath, '/')),
           jsr,
         })
       },

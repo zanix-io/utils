@@ -7,6 +7,6 @@ export const getLibrarySrcTree = (root: string): ZanixLibrarySrcTree => {
   const mainRoot = join(root, 'src/modules')
 
   return ZanixTree.create<ZanixLibrarySrcTree>(mainRoot, {
-    templates: { base: { files: ['mod.ts'] } },
+    templates: { base: { files: ['mod.ts'], jsr: '@zanix/utils' } },
   })
 }

@@ -7,6 +7,8 @@ adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [2.0.3] - 2025-03-17
+
 ### Added
 
 - Template content for Zanix files tree.
@@ -15,6 +17,8 @@ adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 - Zanix paths, and `regex` y `constants` documentation.
 - Znx initialization.
+- Format linter line-width for imports.
+- Esbuild options and plugins for default modules and
 
 ## [2.0.2] - 2025-03-13
 

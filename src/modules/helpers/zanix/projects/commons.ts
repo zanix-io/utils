@@ -12,10 +12,10 @@ export const getCommonTree = (root: string, type?: ZanixProjectsFull): ZanixFold
   if (type === 'library') mainFiles.push(MAIN_MODULE)
 
   return ZanixTree.create<ZanixFolderTree>(root, {
-    templates: { base: { files: mainFiles } },
+    templates: { base: { files: mainFiles, jsr: '@zanix/utils' } },
     subfolders: {
       '.dist': {},
-      docs: { templates: { base: { files: ['CHANGELOG.md', 'LICENCE'], jsr: '@zanix/utils' } } },
+      docs: { templates: { base: { files: ['CHANGELOG.md', 'LICENSE'], jsr: '@zanix/utils' } } },
       src: {
         subfolders: {
           '@tests': {

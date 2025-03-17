@@ -92,7 +92,7 @@ export type ZanixServerSrcTree = ZanixBaseFolder<{
 }, 'noTemplates'>
 
 /** Zanix Library Folder structure */
-export type ZanixLibrarySrcTree = ZanixBaseFolder<undefined, 'noTemplates'>
+export type ZanixLibrarySrcTree = ZanixBaseFolder<undefined>
 
 /**
  * Zanix App Folder structure

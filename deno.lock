@@ -693,6 +693,7 @@
       "jsr:@std/fs@0.224",
       "jsr:@std/path@0.224",
       "jsr:@std/testing@1.0.9",
+      "npm:esbuild@0.20.2",
       "npm:javascript-obfuscator@^4.0.2"
     ]
   }
