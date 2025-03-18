@@ -1,6 +1,6 @@
 import type { BaseGithubHelperOptions } from 'typings/github.ts'
 
-import { readFileFromCurrentUrl } from 'modules/helpers/files.ts'
+import { fileExists, readFileFromCurrentUrl } from 'modules/helpers/files.ts'
 import { getRootDir } from 'modules/helpers/paths.ts'
 import logger from 'modules/logger/mod.ts'
 
@@ -8,24 +8,30 @@ import logger from 'modules/logger/mod.ts'
  * Generates a base `.gitignore` file to exclude common files and directories from being versioned in a Git repository.
  *
  * @param options The create file options.
- *   - `baseFolder`: The folder where the `.gitignore` should be created. Defaults to `root`
+ *   - `baseRoot`: The base root directory where the folder should be created. Defaults to root.
  *
  * @category helpers
  */
 export async function createIgnoreBaseFile(
-  options: BaseGithubHelperOptions = {},
+  options: Omit<BaseGithubHelperOptions, 'baseFolder'> = {},
 ): Promise<boolean> {
-  const { baseFolder = getRootDir() } = options
+  const { baseRoot = getRootDir() } = options
   try {
     // get content for the ignore base file
     const hookContent = await readFileFromCurrentUrl(import.meta.url, './ignore.base')
 
     // Create the custom base directory if it doesn't exist
-    if (options.baseFolder) {
-      await Deno.mkdir(options.baseFolder, { recursive: true })
+    if (baseRoot) {
+      await Deno.mkdir(baseRoot, { recursive: true })
     }
 
-    const fileDir = baseFolder + '/.gitignore'
+    const fileDir = baseRoot + '/.gitignore'
+
+    if (fileExists(fileDir)) {
+      logger.warn(`'gitignore' file already exists, skipping creation.`)
+
+      return false
+    }
 
     // Write the .gitignore file in root
     await Deno.writeTextFile(fileDir, hookContent)
@@ -34,7 +40,7 @@ export async function createIgnoreBaseFile(
 
     return true
   } catch (e) {
-    logger.error(`'.gitignore' file creation error in '${baseFolder}'`, e, 'noSave')
+    logger.error(`'.gitignore' file creation error in '${baseRoot}'`, e, 'noSave')
 
     return false
   }

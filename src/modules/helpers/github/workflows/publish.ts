@@ -6,7 +6,8 @@ import { createWorkflow } from './main.ts'
  * Creates a `GitHub Actions` workflow to automatically run tests during the publish process.
  *
  * @param options The options for configuring the workflow.
- *   - `baseFolder`: The directory where the workflow file should be created.
+ *   - `baseFolder`: The folder name where the workflow file should be created.
+ *   - `baseRoot`: The base root directory where the folder should be created.
  *   - `mainBranch`: The main branch that will trigger the workflow when publishing a new version.
  *   - `projectType`: Optional ZanixProject type to define correct workflow. Defaults to `library`
  *

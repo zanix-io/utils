@@ -5,6 +5,7 @@ import { getRelativePath, getRootDir } from 'modules/helpers/paths.ts'
 import { capitalize } from 'utils/strings.ts'
 import logger from 'modules/logger/mod.ts'
 import constants from 'utils/constants.ts'
+import { join } from '@std/path'
 
 /** Base function to create a hook */
 export async function createHook(
@@ -13,23 +14,30 @@ export async function createHook(
   },
   replaceContentCallback: (content: string) => string = (content) => content,
 ) {
-  const root = getRootDir()
   const {
-    baseFolder = `${root}/${constants.GITHUB_HOOKS_FOLDER}`,
+    baseFolder = constants.GITHUB_HOOKS_FOLDER,
     filename: script,
     createLink = true,
+    baseRoot = getRootDir(),
   } = options
   const mainScript = capitalize(script)
+  const dir = join(baseRoot, baseFolder)
 
   try {
     // Create content for the pre-commit hook
     const hookContent = await readFileFromCurrentUrl(import.meta.url, `./scripts/${script}.base.sh`)
 
     // Create the .github/hooks directory if it doesn't exist
-    await Deno.mkdir(baseFolder, { recursive: true })
+    await Deno.mkdir(dir, { recursive: true })
 
     // file dir
-    const baseFileDir = `${baseFolder}/${script}`
+    const baseFileDir = `${dir}/${script}`
+
+    if (fileExists(baseFileDir)) {
+      logger.warn(`${mainScript} file already exists, skipping creation.`)
+
+      return false
+    }
 
     // Write the pre-commit hook file
     await Deno.writeTextFile(baseFileDir, replaceContentCallback(hookContent))
@@ -66,12 +74,6 @@ export async function createHook(
     const fileHook = `${constants.GIT_HOOKS_FOLDER}/${script}`
 
     if (createLink) {
-      if (fileExists(fileHook)) {
-        logger.warn(`${mainScript} file already exists. Unable to create.`)
-
-        return false
-      }
-
       // Create a symbolic link in .git/hooks
       const ln = new Deno.Command('ln', {
         args: ['-s', getRelativePath(baseFileDir, fileHook).replace(/^\.\.\//, ''), fileHook],
@@ -90,7 +92,7 @@ export async function createHook(
 
     return true
   } catch (e) {
-    logger.error(`'${mainScript}' hook creation error in '${baseFolder}'`, e, 'noSave')
+    logger.error(`'${mainScript}' hook creation error in '${dir}'`, e, 'noSave')
 
     return false
   }

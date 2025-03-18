@@ -1,14 +1,15 @@
-import type { EditorOptions } from 'typings/editor.ts'
+import type { BaseEditorHelperOptions, EditorOptions } from 'typings/editor.ts'
 
 import { fileExists, readFileFromCurrentUrl } from 'modules/helpers/files.ts'
 import { getRootDir } from 'modules/helpers/paths.ts'
 import { capitalize } from 'utils/strings.ts'
 import logger from 'modules/logger/mod.ts'
 import constants from 'utils/constants.ts'
+import { join } from '@std/path'
 
 /** Base function to create main file editor config */
 export async function createEditorFileConfig(
-  { type }: EditorOptions,
+  { type, ...options }: EditorOptions & BaseEditorHelperOptions,
   replaceContentCallback: (content: string) => string = (content) => content,
 ) {
   const editorName = capitalize(type)
@@ -20,8 +21,10 @@ export async function createEditorFileConfig(
         await readFileFromCurrentUrl(import.meta.url, `./settings/${type}.json`),
       ),
     )
-    const root = getRootDir()
-    const baseFolder = `${root}/${constants.editors[type].FOLDER}`
+
+    const { baseRoot = getRootDir() } = options
+
+    const baseFolder = join(baseRoot, constants.editors[type].FOLDER)
 
     // Create the directory if it doesn't exist
     await Deno.mkdir(baseFolder, { recursive: true })

@@ -9,7 +9,8 @@ import { createHook } from './main.ts'
  * It will also add the necessary permissions to the hook and create a symbolic link to `.git/hooks/pre-push`.
  *
  * @param options The create hook options.
- *   - `baseFolder`: The folder where the hook should be created.
+ *   - `baseFolder`: The folder name where the workflow file should be created.
+ *   - `baseRoot`: The base root directory where the folder should be created.
  *   - `createLink`: A flag indicating whether a symbolic link should be created in the GitHub hooks directory.
  *
  * @category helpers

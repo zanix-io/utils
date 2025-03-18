@@ -4,6 +4,8 @@ import type { ZanixProjects } from 'typings/zanix.ts'
 export type BaseGithubHelperOptions = {
   /** The folder where the hook should be created. Defaults to '.github/hooks' */
   baseFolder?: string
+  /** The current directory */
+  baseRoot?: string
 }
 export type HookOptions = BaseGithubHelperOptions & {
   /**  A flag indicating whether a symbolic link should be created in the GitHub hooks directory. */

@@ -7,6 +7,16 @@ adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [2.0.7] - 2025-03-18
+
+### Added
+
+- New github, editor and workflow helper options.
+
+### Fixed
+
+- Github helper creation file validation when exists.
+
 ## [2.0.6] - 2025-03-17
 
 ### Added

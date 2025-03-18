@@ -19,6 +19,7 @@ Deno.test('Github create pre-commit hook validation', async () => {
   // Call the function passing the file type, for example 'ts'
   const response = await createPreCommitHook({
     baseFolder: defaultFolder,
+    baseRoot: '',
     createLink: false,
     filePatterns: {
       lint: [
@@ -35,7 +36,11 @@ Deno.test('Github create pre-commit hook validation', async () => {
 
 Deno.test('Github create pre-push hook validation', async () => {
   // Call the function passing the file type, for example 'ts'
-  const response = await createPrePushHook({ baseFolder: defaultFolder, createLink: false })
+  const response = await createPrePushHook({
+    baseFolder: defaultFolder,
+    baseRoot: '',
+    createLink: false,
+  })
   assert(response)
   assertExists(fileExists(defaultFolder + '/pre-push'))
 
@@ -46,6 +51,7 @@ Deno.test('Github create publish workflow yaml validation', async () => {
   // Call the function passing the file type, for example 'ts'
   const response = await createGitWorkflow({
     baseFolder: defaultFolder,
+    baseRoot: '',
     mainBranch: 'myCustomBranch',
   })
   assert(response)
@@ -59,7 +65,7 @@ Deno.test('Github create publish workflow yaml validation', async () => {
 
 Deno.test('Github create gitignorefile validation', async () => {
   // Call the function passing the file type, for example 'ts'
-  const response = await createIgnoreBaseFile({ baseFolder: defaultFolder })
+  const response = await createIgnoreBaseFile({ baseRoot: defaultFolder })
   assert(response)
 
   assertExists(fileExists(defaultFolder + '/.gitignore'))
@@ -71,10 +77,10 @@ Deno.test('Github prepare validation', async () => {
   const baseFolder = defaultFolder + '/prepare'
   // Call the function passing the file type, for example 'ts'
   const response = await prepareGithub({
-    preCommitHook: { baseFolder, createLink: false },
-    pushHook: { baseFolder, createLink: false },
-    publishWorkflow: { baseFolder },
-    gitIgnoreBase: { baseFolder },
+    preCommitHook: { baseFolder, baseRoot: '', createLink: false },
+    pushHook: { baseFolder, baseRoot: '', createLink: false },
+    publishWorkflow: { baseFolder, baseRoot: '' },
+    gitIgnoreBase: { baseFolder, baseRoot: '' },
   })
   assert(response)
 

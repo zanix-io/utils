@@ -9,7 +9,8 @@ import { createHook } from './main.ts'
  * It will also add the necessary permissions to the hook and create a symbolic link to `.git/hooks/pre-commit`.
  *
  * @param options The create hook options.
- *   - `baseFolder`: The folder where the hook should be created.
+ *   - `baseFolder`: The folder name where the workflow file should be created.
+ *   - `baseRoot`: The base root directory where the folder should be created.
  *   - `createLink`: A flag indicating whether a symbolic link should be created in the GitHub hooks directory.
  *   - `filePatterns` - The filePatterns property is an optional configuration object that defines the file patterns for linting and formatting operations.
  *                   Defaults to `{lint: ['ts', 'tsx', 'js', 'jsx'], fmt: ['ts', 'tsx', 'js', 'jsx', 'md', 'json']}` if not provided.
