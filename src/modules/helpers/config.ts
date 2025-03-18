@@ -1,6 +1,9 @@
 import type { ConfigFile } from 'typings/config.ts'
 
+import { CONFIG_FILE } from 'utils/constants.ts'
 import { getConfigDir } from './paths.ts'
+import { isFileUrl } from 'utils/urls.ts'
+import regex from 'utils/regex.ts'
 
 let configFile: ConfigFile | null = null
 let currentConfigPath: string | null = null
@@ -29,6 +32,39 @@ export function readConfig(configPath?: string | null): ConfigFile {
   configFile = JSON.parse(Deno.readTextFileSync(configDir))
 
   return configFile as ConfigFile
+}
+
+/**
+ * Reads and parses the runtime module `deno` configuration file
+ *
+ * @param metaUrl - The optional file config dir.
+ * @param isJsonc - The extension json type. Defaults to true.
+ *
+ * This function requires the following permissions:
+ * `allow-read` for `deno` config json file.
+ *
+ * @tags allow-read
+ * @category helpers
+ */
+export async function readModuleConfig(
+  metaUrl: string,
+  isJsonc = true,
+): Promise<ConfigFile> {
+  let configContent: string = '{}'
+  const configFile = `${CONFIG_FILE}${isJsonc ? 'c' : ''}`
+
+  if (isFileUrl(metaUrl)) {
+    configContent = await Deno.readTextFile(configFile)
+  } else {
+    const url = metaUrl.replace(regex.jsrBaseUrlRegex, '$1')
+
+    const response = await fetch(`${url}/${configFile}`)
+
+    configContent = response.ok ? await response.text() : '{}'
+  }
+  const config = JSON.parse(configContent) as ConfigFile
+
+  return config
 }
 
 /**

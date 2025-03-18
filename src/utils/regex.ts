@@ -104,5 +104,12 @@ const leftWhiteSpacesRegex = /^\s+/
 const baseLineCommentRegex = /^(\/|\*).*/
 const zanixScopeLib = /^(https?:\/\/.*)?@zanix\//
 const anyExtensionRegex = /\.[a-z]+$/
+const jsrBaseUrlRegex = /^(https:\/\/[^\/]+\/[^\/]+\/[^\/]+\/\d+\.\d+\.\d+)(\/.*)?$/
 
-export default { anyExtensionRegex, baseLineCommentRegex, leftWhiteSpacesRegex, zanixScopeLib }
+export default {
+  anyExtensionRegex,
+  baseLineCommentRegex,
+  leftWhiteSpacesRegex,
+  zanixScopeLib,
+  jsrBaseUrlRegex,
+}

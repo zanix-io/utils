@@ -1,6 +1,7 @@
+import type * as types from 'jsr:@zanix/utils/types'
+
 import { assertExists } from '@std/assert/assert-exists'
 import { assert } from '@std/assert'
-import type * as types from 'jsr:@zanix/utils/types'
 
 Deno.test('test library main module', async () => {
   const utils = await import(`jsr:@zanix/utils`)
