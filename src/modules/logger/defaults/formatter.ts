@@ -8,9 +8,7 @@ const defaultFormatter: Formatter<DefaultFormattedLog> = (level, [message, ...da
   let userId = null
   try {
     userId = Deno.uid()
-  } catch {
-    //ignore
-  }
+  } catch { /** Ignore error */ }
 
   return {
     id: generateBasicUUID(),

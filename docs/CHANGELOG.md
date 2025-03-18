@@ -7,6 +7,12 @@ adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [2.0.5] - 2025-03-17
+
+### Fixed
+
+- Zanix namespace definition without config file.
+
 ## [2.0.4] - 2025-03-17
 
 ### Fixed

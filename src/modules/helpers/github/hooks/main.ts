@@ -67,8 +67,9 @@ export async function createHook(
 
     if (createLink) {
       if (fileExists(fileHook)) {
-        logger.warn(`${mainScript} file already exists. Deleting it...`)
-        await Deno.remove(fileHook)
+        logger.warn(`${mainScript} file already exists. Unable to create.`)
+
+        return false
       }
 
       // Create a symbolic link in .git/hooks
