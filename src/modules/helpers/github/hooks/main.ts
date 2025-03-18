@@ -53,14 +53,16 @@ export async function createHook(
       throw new Error('chmod command failed. Please check your folder permissions and try again.')
     }
 
-    if (!folderExists(constants.GIT_HOOKS_FOLDER)) {
+    const baseGitFolder = join(baseRoot, constants.GIT_HOOKS_FOLDER)
+
+    if (!folderExists(baseGitFolder)) {
       logger.warn(
         `${constants.GIT_HOOKS_FOLDER} directory does not exist. Initializing Git repository...`,
       )
 
       // Execute `git init` for initializing the repo if does not exist.
       const gitInit = new Deno.Command('git', {
-        args: ['init'],
+        args: ['init', baseRoot],
       })
 
       const gitInitResult = await gitInit.output()
@@ -71,7 +73,7 @@ export async function createHook(
       }
     }
 
-    const fileHook = `${constants.GIT_HOOKS_FOLDER}/${script}`
+    const fileHook = join(baseGitFolder, script)
 
     if (createLink) {
       // Create a symbolic link in .git/hooks

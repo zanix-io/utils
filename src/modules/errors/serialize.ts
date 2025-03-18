@@ -18,13 +18,15 @@ export function serializeError(error: unknown): SerializeError {
   const isError = error instanceof Error
   try {
     const baseData = JSON.parse(JSON.stringify(error))
-    if (!isError) return baseData
-    return {
-      name: error.name,
-      message: error.message,
-      stack: error.stack,
-      ...baseData,
+    if (isError) {
+      baseData.name = baseData.name || error.name
+      baseData.message = baseData.message || error.message
+      baseData.stack = baseData.stack || error.stack
     }
+    if (Deno.env.get('ENVIRONMENT') === 'PRODUCTION') {
+      delete baseData.stack
+    }
+    return baseData
   } catch {
     return error as SerializeError
   }

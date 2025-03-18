@@ -4,7 +4,7 @@ import { createGitWorkflow } from 'modules/helpers/github/workflows/publish.ts'
 import { prepareGithub } from 'modules/helpers/github/prepare.ts'
 import { createIgnoreBaseFile } from 'modules/helpers/mod.ts'
 import { getTemporaryFolder } from 'modules/helpers/paths.ts'
-import { fileExists } from 'modules/helpers/files.ts'
+import { fileExists, folderExists } from 'modules/helpers/files.ts'
 import { assert, assertExists } from '@std/assert'
 import { stub } from '@std/testing/mock'
 
@@ -87,5 +87,17 @@ Deno.test('Github prepare validation', async () => {
   assertExists(fileExists(baseFolder + '/pre-commit'))
   assertExists(fileExists(baseFolder + '/pre-push'))
   assertExists(fileExists(baseFolder + '/publish.yml'))
+  await Deno.remove(defaultFolder, { recursive: true })
+})
+
+Deno.test('Git init should be executed', async () => {
+  const response = await createPreCommitHook({
+    baseFolder: '',
+    baseRoot: defaultFolder,
+  })
+
+  assert(response)
+  assert(folderExists(defaultFolder + '/.git'))
+
   await Deno.remove(defaultFolder, { recursive: true })
 })
