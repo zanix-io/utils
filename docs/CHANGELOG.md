@@ -7,6 +7,20 @@ adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [2.0.9] - 2025-03-20
+
+### Added
+
+- HttpError id props for trazability.
+
+### Fixed
+
+- Serialized error causes.
+
+### Removed
+
+- Remove Serialized errors for production environment.
+
 ## [2.0.8] - 2025-03-18
 
 ### Fixed

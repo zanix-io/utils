@@ -80,7 +80,7 @@ Deno.test('Github prepare validation', async () => {
     preCommitHook: { baseFolder, baseRoot: '', createLink: false },
     pushHook: { baseFolder, baseRoot: '', createLink: false },
     publishWorkflow: { baseFolder, baseRoot: '' },
-    gitIgnoreBase: { baseFolder, baseRoot: '' },
+    gitIgnoreBase: { baseRoot: baseFolder },
   })
   assert(response)
 

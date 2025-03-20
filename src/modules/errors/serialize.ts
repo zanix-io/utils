@@ -17,16 +17,14 @@ import type { SerializeError } from 'typings/errors.ts'
 export function serializeError(error: unknown): SerializeError {
   const isError = error instanceof Error
   try {
-    const baseData = JSON.parse(JSON.stringify(error))
-    if (isError) {
-      baseData.name = baseData.name || error.name
-      baseData.message = baseData.message || error.message
-      baseData.stack = baseData.stack || error.stack
+    if (!isError) return JSON.parse(JSON.stringify(error))
+    return {
+      ...error,
+      name: error.name,
+      message: error.message,
+      stack: error.stack,
+      cause: serializeError(error.cause),
     }
-    if (Deno.env.get('ENVIRONMENT') === 'PRODUCTION') {
-      delete baseData.stack
-    }
-    return baseData
   } catch {
     return error as SerializeError
   }

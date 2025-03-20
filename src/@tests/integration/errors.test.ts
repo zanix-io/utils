@@ -16,6 +16,7 @@ Deno.test('Validates throwing error and log', async () => {
     throw new HttpError('INTERNAL_SERVER_ERROR', {
       message: 'aygono',
       log: true,
+      id: 'error-context-id',
       cause: new Error('cause'),
     })
   })
@@ -26,6 +27,7 @@ Deno.test('Validates throwing error and log', async () => {
 
   assertEquals(log.level, 'error')
   assertEquals(log.message, 'aygono')
+  assertEquals(log.data[0].id, 'error-context-id')
   assertEquals(log.data[0].name, 'HttpError')
   assertEquals(log.data[0].cause.name, 'Error')
   assertEquals(log.data[0].cause.message, 'cause')

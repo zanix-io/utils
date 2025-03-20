@@ -27,6 +27,7 @@ type BaseSerializeError = Partial<{
   name: string
   message: string
   stack: string
+  cause: BaseSerializeError
 }>
 
 export type SerializeError<T extends BaseSerializeError = BaseSerializeError> = T

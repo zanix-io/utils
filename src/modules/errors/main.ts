@@ -1,7 +1,6 @@
 import type { HttpErrorCodes } from 'typings/errors.ts'
 import httpErrorStatus from 'modules/errors/http-status-codes.ts'
 import logger from 'modules/logger/mod.ts'
-import { serializeError } from 'modules/errors/serialize.ts'
 
 /**
  * A custom error class for HTTP-related `exceptions`, extending Deno's `Http` error class.
@@ -30,6 +29,7 @@ import { serializeError } from 'modules/errors/serialize.ts'
  */
 export class HttpError extends Deno.errors.Http {
   public override message: string
+  public id?: string
   public status: { code: HttpErrorCodes; value: number }
 
   /**
@@ -60,6 +60,10 @@ export class HttpError extends Deno.errors.Http {
        */
       cause?: unknown
       /**
+       * An optional identifier used to track or reference the error trace.
+       */
+      id?: string
+      /**
        * An optional cause for the error, such as an inner exception or error.
        */
       log?: boolean
@@ -68,7 +72,8 @@ export class HttpError extends Deno.errors.Http {
     super(code, { cause: options.cause })
     this.message = options.message || code
     this.name = this.constructor.name
-    this.cause = serializeError(options.cause) || this.cause
+    this.cause = options.cause || this.cause
+    this.id = options.id || this.id
     this.status = {
       code,
       value: httpErrorStatus[code],

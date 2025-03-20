@@ -47,7 +47,7 @@ export function prepareGithub(options: {
    * createIgnoreBaseFile options
    *   - `baseFolder`: The folder where the `.gitignore` should be created. Defaults to `root`
    */
-  gitIgnoreBase?: BaseGithubHelperOptions
+  gitIgnoreBase?: Omit<BaseGithubHelperOptions, 'baseFolder'>
 } = {}): Promise<boolean[]> {
   const { preCommitHook, pushHook, publishWorkflow, gitIgnoreBase } = options
   return Promise.all([
