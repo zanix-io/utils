@@ -27,3 +27,5 @@ export type { HttpErrorCodes as HttpErrors } from 'typings/errors.ts'
 export type { ConfigFile } from 'typings/config.ts'
 
 export type { Editors } from 'typings/editor.ts'
+
+export * from 'typings/validations.ts'

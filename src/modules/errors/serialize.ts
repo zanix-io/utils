@@ -18,13 +18,16 @@ export function serializeError(error: unknown): SerializeError {
   const isError = error instanceof Error
   try {
     if (!isError) return JSON.parse(JSON.stringify(error))
-    return {
+    const serielizedError = {
       ...error,
       name: error.name,
       message: error.message,
       stack: error.stack,
-      cause: serializeError(error.cause),
-    }
+    } as SerializeError
+
+    if (error.cause) serielizedError.cause = serializeError(error.cause)
+
+    return serielizedError
   } catch {
     return error as SerializeError
   }

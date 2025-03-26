@@ -36,10 +36,14 @@ export const cleanupExpiredLogs = async (logsDir: string, expirationTime: `${num
 
   const expirationDays = Number(expirationTime.charAt(0))
 
+  const deletePromises: Promise<void>[] = []
   for await (const file of files) {
-    if (file.isDirectory) return
+    if (file.isDirectory) continue // Ignore directories
     if (shouldBeDeleted(file.name, now, expirationDays)) {
-      await Deno.remove(`${logsDir}/${file.name}`) // Delete if the log file is older than expiration time
+      deletePromises.push(Deno.remove(`${logsDir}/${file.name}`)) // Collect promises
     }
   }
+
+  // Execute all deletions in parallel
+  await Promise.all(deletePromises)
 }

@@ -1,4 +1,4 @@
-import { assertMatch, assertNotMatch } from '@std/assert'
+import { assertEquals, assertMatch, assertNotMatch } from '@std/assert'
 import * as regex from 'utils/regex.ts'
 
 const {
@@ -13,7 +13,13 @@ const {
   urlRegex,
   securePasswordRegex,
   usernameRegex,
-  default: { zanixScopeLib, leftWhiteSpacesRegex, baseLineCommentRegex },
+  default: {
+    zanixScopeLib,
+    leftWhiteSpacesRegex,
+    baseLineCommentRegex,
+    keyPartsRegex,
+    keyPartsTestRegex,
+  },
 } = regex
 
 Deno.test('Validates general regex', () => {
@@ -109,4 +115,14 @@ Deno.test('Validates internal regex', () => {
   assertMatch('/', baseLineCommentRegex) // Single-line comment beginning
   assertMatch('*', baseLineCommentRegex) // Multi-line comment beginning
   assertNotMatch('This is not a comment start', baseLineCommentRegex) // Should not match normal text
+
+  /** Nested regex validations */
+  assertEquals('key[subkey]'.match(keyPartsRegex), ['key', 'subkey'])
+  assertEquals('key[subkey][subsubkey]'.match(keyPartsRegex), ['key', 'subkey', 'subsubkey'])
+  assertEquals('nosubKeys[]'.match(keyPartsRegex), ['nosubKeys'])
+  assertMatch('key[subkey]', keyPartsTestRegex) // Must match
+  assertMatch('key[subkey][subsubkey]', keyPartsTestRegex) // Must match
+  assertMatch('key[subkey][subsubkey][subsub]', keyPartsTestRegex) // Must match
+  assertNotMatch('key', keyPartsTestRegex) // Should not match
+  assertNotMatch('key[]', keyPartsTestRegex) // Should not match
 })

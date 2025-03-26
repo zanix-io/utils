@@ -34,6 +34,7 @@ Zanix Utils is a library within the **Zanix** ecosystem, a collection of tools d
   - General-purpose helpers.
 - Workers utilities.
 - Http Errors.
+- Class-validator for native ECMAScript features.
 - Logger.
 
 ## Installation
@@ -82,6 +83,9 @@ import * as zanixErrors from 'jsr:@zanix/utils@[version]/errors'
 
 // Typing
 import * as zanixTypes from 'jsr:@zanix/utils@[version]/types'
+
+// Validations module for BaseRTO-based requests, using native ECMAScript features compatible with Deno and Microsoft's Reflect Metadata API.
+import * as validator from 'jsr:@zanix/utils@[version]/validator'
 ```
 
 This provides clear instructions for installing and using the library, including importing specific plugins. Replace `[version]` with the actual version number when needed.

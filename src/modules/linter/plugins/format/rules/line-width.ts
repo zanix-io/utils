@@ -30,7 +30,8 @@ const rules: Record<string, Deno.lint.Rule> = {
           regex.baseLineCommentRegex.test(cleanLine) ||
           regex.baseLineCommentRegex.test(prevLine) &&
             (nextLine.endsWith('*/') && !commentRegex.test(prevLine) ||
-              nextLine.startsWith('*'))
+              nextLine.startsWith('*')) ||
+          cleanLine.startsWith('return')
 
         if (exceptions) return
 

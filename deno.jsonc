@@ -16,6 +16,7 @@
     "./linter/deno-zanix-plugin": "./src/modules/linter/plugins/zanix/mod.ts",
     "./constants": "./src/modules/constants/mod.ts",
     "./helpers": "./src/modules/helpers/mod.ts",
+    "./validator": "./src/modules/validations/mod.ts",
     "./logger": "./src/modules/logger/mod.ts",
     "./regex": "./src/modules/regex/mod.ts",
     "./testing": "./src/modules/testing/mod.ts",

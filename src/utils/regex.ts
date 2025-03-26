@@ -97,6 +97,11 @@ export const uuidRegex =
 export const versionRegex = /^(\d+\.\d+\.\d+(-[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)*)?|latest)$/
 
 /**
+ * Regular expression to validate numeric strings
+ */
+export const numericRegex = /^\d+(\.\d+)?$/
+
+/**
  * Available regular expressions for internal use only
  */
 
@@ -105,6 +110,8 @@ const baseLineCommentRegex = /^(\/|\*).*/
 const zanixScopeLib = /^(https?:\/\/.*)?@zanix\//
 const anyExtensionRegex = /\.[a-z]+$/
 const jsrBaseUrlRegex = /^(https:\/\/[^\/]+\/[^\/]+\/[^\/]+\/\d+\.\d+\.\d+)(\/.*)?$/
+const keyPartsRegex = /([^[\]]+)/g
+const keyPartsTestRegex = /^[a-zA-Z0-9_]+(\[[a-zA-Z0-9_]+\])+$/
 
 export default {
   anyExtensionRegex,
@@ -112,4 +119,6 @@ export default {
   leftWhiteSpacesRegex,
   zanixScopeLib,
   jsrBaseUrlRegex,
+  keyPartsRegex,
+  keyPartsTestRegex,
 }
