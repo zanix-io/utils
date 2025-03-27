@@ -115,17 +115,23 @@ Deno.test('Number validations RTO errors', async () => {
   // Escenario 6, Invalid min num
   await assertRejects(
     () =>
-      classValidation(NumbersRTO, { numberValue: '4', minNumber: '2' }).catch((err) => {
-        assertEquals(err.cause.message, 'Request validation error')
-        assertEquals(Object.keys(err.cause.properties).length, 1)
-        assertEquals(err.cause.properties.minNumber, [{
-          constraints: ["'minNumber' must be a number greater or equal than 3."],
-          value: 2,
-          plainValue: '2',
-        }])
-        assertEquals(err.cause.target, 'NumbersRTO')
-        throw err
-      }),
+      classValidation(NumbersRTO, { numberValue: '4', minNumber: '2', numbersDefault: ['2s', 1] })
+        .catch((err) => {
+          assertEquals(err.cause.message, 'Request validation error')
+          assertEquals(Object.keys(err.cause.properties).length, 2)
+          assertEquals(err.cause.properties.minNumber, [{
+            constraints: ["'minNumber' must be a number greater or equal than 3."],
+            value: 2,
+            plainValue: '2',
+          }])
+          assertEquals(err.cause.properties.numbersDefault, [{
+            constraints: ["All values of 'numbersDefault' must be numerics."],
+            value: [undefined, 1],
+            plainValue: ['2s', 1],
+          }])
+          assertEquals(err.cause.target, 'NumbersRTO')
+          throw err
+        }),
     HttpError,
     'BAD_REQUEST',
   )
@@ -135,6 +141,7 @@ Deno.test('Number validations RTO', async () => {
   // Escenario 1
   const resp1 = await classValidation(NumbersRTO, { numberValue: '5' })
 
+  assertEquals(resp1.numbersDefault, [1, 2, 3])
   assertEquals(resp1.numberValue, '5')
   assertEquals(resp1.stringNumber, '1') // Default
 
@@ -173,4 +180,9 @@ Deno.test('Number validations RTO', async () => {
   assertEquals(resp6.numberValue, '4')
   assertEquals(resp6.minNumber, 5)
   assertEquals(resp6.valueOptional, 3)
+
+  // Number arrays
+  const resp7 = await classValidation(NumbersRTO, { numberValue: '3', numbersDefault: [4, 3, 5] })
+
+  assertEquals(resp7.numbersDefault, [4, 3, 5])
 })

@@ -2,7 +2,7 @@
 
 import { classValidation } from 'modules/validations/main.ts'
 import { assertEquals, assertRejects } from '@std/assert'
-import { ValidateNestedRTO } from '../rtos/nested.ts'
+import { ValidateNestedDefaultArrayRTO, ValidateNestedRTO } from '../rtos/nested.ts'
 
 Deno.test('Nested RTO required validations errors', async () => {
   const error: any = {}
@@ -16,14 +16,50 @@ Deno.test('Nested RTO required validations errors', async () => {
 
   assertEquals(Object.keys(error.properties).length, 1)
   assertEquals(error.message, 'Request validation error')
-  assertEquals(error.properties.NumbersRequired, [{
-    constraints: [
-      "The 'NumbersRequired' nested property must be defined when validate. To make it optional, set the corresponding option to true.",
-    ],
-    value: undefined,
-    plainValue: undefined,
-  }])
+  assertEquals(error.properties.NumbersRequired, {
+    message:
+      "Nested property 'NumbersRequired' from target 'ValidateNestedRTO' must be follow validation rules.",
+    properties: {
+      NumbersRequired: [
+        {
+          constraints: ["The 'NumbersRequired' property must be defined."],
+          value: undefined,
+          plainValue: undefined,
+        },
+      ],
+    },
+  })
   assertEquals(error.target, 'ValidateNestedRTO')
+})
+
+Deno.test('Nested RTO default array validations errors', async () => {
+  const error: any = {}
+  await assertRejects(
+    () =>
+      classValidation(ValidateNestedDefaultArrayRTO, {
+        NumbersDefaultArray: [{}],
+      }).catch((err) => {
+        Object.assign(error, err.cause)
+        throw err
+      }),
+  )
+
+  assertEquals(Object.keys(error.properties).length, 1)
+  assertEquals(error.properties.NumbersDefaultArray, {
+    message:
+      "Nested property 'NumbersDefaultArray' from target 'ValidateNestedDefaultArrayRTO' must be follow validation rules.",
+    properties: {
+      numberValue: [
+        {
+          constraints: ["'numberValue' must be a valid numeric string."],
+          value: undefined,
+          plainValue: undefined,
+        },
+      ],
+    },
+  })
+  assertEquals(error.message, 'Request validation error')
+  assertEquals(error.target, 'ValidateNestedDefaultArrayRTO')
 })
 
 Deno.test('Nested RTO default validations errors', async () => {
@@ -43,7 +79,7 @@ Deno.test('Nested RTO default validations errors', async () => {
   assertEquals(error.message, 'Request validation error')
   assertEquals(error.properties.NumbersDefault, {
     message:
-      "Nested property 'NumbersDefault' from target 'NumbersRTO' must be follow validation rules.",
+      "Nested property 'NumbersDefault' from target 'ValidateNestedRTO' must be follow validation rules.",
     properties: {
       numberValue: [
         {
@@ -71,7 +107,7 @@ Deno.test('Nested RTO children validation rules', async () => {
   assertEquals(error.message, 'Request validation error')
   assertEquals(error.properties.NumbersRequired, {
     message:
-      "Nested property 'NumbersRequired' from target 'NumbersRTO' must be follow validation rules.",
+      "Nested property 'NumbersRequired' from target 'ValidateNestedRTO' must be follow validation rules.",
     properties: {
       numberValue: [{
         constraints: ["'numberValue' must be a valid numeric string."],
@@ -99,7 +135,7 @@ Deno.test('Nested RTO children validation each array', async () => {
   assertEquals(error.message, 'Request validation error')
   assertEquals(error.properties.NumbersRequired, {
     message:
-      "Nested property 'NumbersRequired' from target 'NumbersRTO' must be follow validation rules.",
+      "Nested property 'NumbersRequired' from target 'ValidateNestedRTO' must be follow validation rules.",
     properties: {
       numbers: [{
         constraints: ["All values of 'numbers' must be numerics."],
@@ -128,7 +164,7 @@ Deno.test('Nested RTO children validation empty object array', async () => {
   assertEquals(error.message, 'Request validation error')
   assertEquals(error.properties.NumbersOptionals, {
     message:
-      "Nested property 'NumbersOptionals' from target 'NumbersRTO' must be follow validation rules.",
+      "Nested property 'NumbersOptionals' from target 'ValidateNestedRTO' must be follow validation rules.",
     properties: {
       numberValue: [{
         constraints: ["'numberValue' must be a valid numeric string."],
@@ -159,7 +195,7 @@ Deno.test('Nested RTO children validation mix data', async () => {
   assertEquals(error.message, 'Request validation error')
   assertEquals(error.properties.NumbersOptionals, {
     message:
-      "Nested property 'NumbersOptionals' from target 'NumbersRTO' must be follow validation rules.",
+      "Nested property 'NumbersOptionals' from target 'ValidateNestedRTO' must be follow validation rules.",
     properties: {
       numberValue: [{
         constraints: ["'numberValue' must be a valid numeric string."],
@@ -175,7 +211,7 @@ Deno.test('Nested RTO children validation mix data', async () => {
   })
   assertEquals(error.properties.NumbersRequired, {
     message:
-      "Nested property 'NumbersRequired' from target 'NumbersRTO' must be follow validation rules.",
+      "Nested property 'NumbersRequired' from target 'ValidateNestedRTO' must be follow validation rules.",
     properties: {
       numbers: [{
         constraints: ["All values of 'numbers' must be numerics."],
@@ -202,7 +238,7 @@ Deno.test('Nested RTO multiple levels', async () => {
         minNumber: 1,
       },
       NumbersOptionals: [{ maxNumber: 9 }],
-      First: {},
+      First: { Second: [{}] },
     }).catch((err) => {
       Object.assign(error, err.cause)
       throw err
@@ -212,7 +248,7 @@ Deno.test('Nested RTO multiple levels', async () => {
   assertEquals(error.message, 'Request validation error')
   assertEquals(
     error.properties.First.message,
-    "Nested property 'First' from target 'FirstLevelRTO' must be follow validation rules.",
+    "Nested property 'First' from target 'ValidateNestedRTO' must be follow validation rules.",
   )
   assertEquals(
     error.properties.First.properties.date2,
@@ -234,7 +270,7 @@ Deno.test('Nested RTO multiple levels', async () => {
     error.properties.First.properties.Second,
     {
       message:
-        "Nested property 'Second' from target 'SecondLevelRTO' must be follow validation rules.",
+        "Nested property 'Second' from target 'FirstLevelRTO' must be follow validation rules.",
       properties: {
         stringPropExpose: [
           {

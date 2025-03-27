@@ -7,6 +7,12 @@ adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [2.1.0] - 2025-03-26
+
+### Added
+
+- Class validation module. A Validations module for BaseRTO-based requests, using native ECMAScript features.
+
 ## [2.0.9] - 2025-03-20
 
 ### Added

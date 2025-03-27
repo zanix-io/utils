@@ -22,6 +22,9 @@ export class NumbersRTO extends BaseRTO {
   @IsNumber({ each: true, optional: true })
   accessor numbers!: number[]
 
+  @IsNumber({ each: true })
+  accessor numbersDefault: number[] = [1, 2, 3]
+
   @MaxNumber(3, { optional: true })
   accessor maxNumber!: number
 

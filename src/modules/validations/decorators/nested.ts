@@ -4,6 +4,7 @@ import type {
   ValidationDecoratorDefinition,
   ValidationError,
   ValidationFunction,
+  ValidationMessage,
   ValidationOptions,
 } from 'modules/types/mod.ts'
 
@@ -34,12 +35,8 @@ export const ValidateNested: ValidationDecorator<
   Type,
   options = {},
 ): ValidationDecoratorDefinition {
-  const defaultMessage = (property: string, value: string) => {
-    if (value === undefined && !options.optional) {
-      return `The '${property}' nested property must be defined when validate. To make it optional, set the corresponding option to true.`
-    } else {
-      return `Nested property '${property}' from target '${Type.name}' must be follow validation rules.`
-    }
+  const defaultMessage: ValidationMessage = (property, _, target) => {
+    return `Nested property '${property}' from target '${target.constructor.name}' must be follow validation rules.`
   }
 
   const validation: ValidationFunction = async function (val, property) {
@@ -52,6 +49,18 @@ export const ValidateNested: ValidationDecorator<
       setNestedError: (errors: ValidationError[]) => void,
       setNestedObj: (obj: unknown) => void,
     ) => {
+      if (value === undefined && !options.optional) {
+        setNestedError([{
+          constraints: [
+            `The '${property}' property must be defined.`,
+          ],
+          target: Type.prototype,
+          property,
+          value: undefined,
+          plainValue: undefined,
+        }])
+        return false
+      }
       const { errors, obj } = await validate(Type as never, { ...value }, setup)
 
       // Delete obj metadata

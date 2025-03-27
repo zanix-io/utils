@@ -53,7 +53,13 @@ Deno.test('Expose validations strings RTO with base payload', async () => {
 
   const validatedObj = await classValidation(StringsRTO, payload.search)
 
-  assertEquals(Object.getOwnPropertyNames(validatedObj), []) // no metadata objects
+  assertEquals(Object.getOwnPropertyNames(validatedObj), [
+    'stringPropWithInizializer',
+    'stringPropExpose',
+    'stringPropWithDefaults',
+    'stringPropOptional',
+    'stringPropArray',
+  ]) // no metadata objects, only properties
 
   assertEquals(validatedObj.stringPropArray, ['value1', 'value2'])
   assertEquals(validatedObj.stringPropExpose, 'string')

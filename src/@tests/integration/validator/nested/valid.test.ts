@@ -1,5 +1,5 @@
 import { classValidation } from 'modules/validations/main.ts'
-import { ValidateNestedRTO } from '../rtos/nested.ts'
+import { ValidateNestedDefaultArrayRTO, ValidateNestedRTO } from '../rtos/nested.ts'
 import { assertEquals } from '@std/assert'
 
 Deno.test('Nested RTO first level data with defaults and array', async () => {
@@ -27,6 +27,7 @@ Deno.test('Nested RTO first level data with defaults and array', async () => {
       stringNumber: '3',
     }],
     NumbersDefault: { numberValue: '2', valueOptional: 1, stringNumber: '4' },
+    NumbersDefaultArray: [{ valueOptional: 7, numberValue: '9' }],
   })
 
   assertEquals(data2.NumbersDefault?.stringNumber, '4')
@@ -38,6 +39,8 @@ Deno.test('Nested RTO first level data with defaults and array', async () => {
   assertEquals(data2.NumbersOptionals?.[0].numberValue, '443')
   assertEquals(data2.NumbersOptionals?.[1].stringNumber, '3')
   assertEquals(data2.NumbersOptionals?.[1].numberValue, '442')
+  assertEquals(data2.NumbersDefaultArray[0].numberValue, '9')
+  assertEquals(data2.NumbersDefaultArray[0].valueOptional, 7)
 
   // Default no required
   const data3 = await classValidation(ValidateNestedRTO, {
@@ -105,4 +108,18 @@ Deno.test('Nested RTO multiple levels and full data', async () => {
   })
 
   assertEquals(data2.First?.Second[0].stringPropWithDefaults, 'altered default')
+  assertEquals(data2.NumbersDefaultArray[0].numberValue, '1')
+  assertEquals(data2.NumbersDefaultArray[1].numberValue, '2')
+})
+
+Deno.test('Nested RTO default array validations', async () => {
+  const data = await classValidation(ValidateNestedDefaultArrayRTO, {
+    NumbersDefaultArray: [{ numberValue: '3' }],
+  })
+
+  assertEquals(data.NumbersDefaultArray.length, 1)
+  assertEquals(data.NumbersDefaultArray[0].numberValue, '3')
+  assertEquals(data.NumbersDefaultArray[0].stringNumber, '1')
+  assertEquals(data.NumbersDefaultArray[0].valueOptional, 3)
+  assertEquals(data.NumbersDefaultArray[0].numbersDefault, [1, 2, 3])
 })

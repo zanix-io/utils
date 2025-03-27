@@ -27,4 +27,18 @@ export class ValidateNestedRTO extends BaseRTO {
 
   @ValidateNested(NumbersRTO)
   accessor NumbersRequired!: NumbersRTO
+
+  @ValidateNested(NumbersRTO, { each: true })
+  accessor NumbersDefaultArray: NumbersRTO[] = [
+    new NumbersRTO({ numberValue: '1' }),
+    new NumbersRTO({ numberValue: '2' }),
+  ]
+}
+
+export class ValidateNestedDefaultArrayRTO extends BaseRTO {
+  @ValidateNested(NumbersRTO, { each: true })
+  accessor NumbersDefaultArray: NumbersRTO[] = [
+    new NumbersRTO({ numberValue: '1' }),
+    new NumbersRTO({ numberValue: '2' }),
+  ]
 }
