@@ -28,4 +28,11 @@ export type { ConfigFile } from 'typings/config.ts'
 
 export type { Editors } from 'typings/editor.ts'
 
-export * from 'typings/validations.ts'
+export type {
+  RtoTypes,
+  ValidationDecorator,
+  ValidationDecoratorDefinition,
+  ValidationError,
+  ValidationFunction,
+  ValidationOptions,
+} from 'typings/validations.ts'

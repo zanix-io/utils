@@ -105,6 +105,7 @@ Deno.test('Nested RTO children validation rules', async () => {
       }),
   )
   assertEquals(error.message, 'Request validation error')
+  assertEquals(Object.keys(error.properties).length, 1)
   assertEquals(error.properties.NumbersRequired, {
     message:
       "Nested property 'NumbersRequired' from target 'ValidateNestedRTO' must be follow validation rules.",
@@ -275,7 +276,7 @@ Deno.test('Nested RTO multiple levels', async () => {
         stringPropExpose: [
           {
             constraints: [
-              "The 'stringPropExpose' property must be defined when exposed. To make it optional, set the corresponding option to true.",
+              "The 'stringPropExpose' property must be defined.",
               "costomized string message for stringPropExpose with value undefined and ctx 'undefined'",
             ],
             value: undefined,

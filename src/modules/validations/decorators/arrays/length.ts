@@ -7,7 +7,7 @@ import type {
 import { defineValidationDecorator } from 'modules/validations/base/definitions/decorators.ts'
 
 /**
- * has valid length
+ * Validate if has valid length
  *
  * @param value
  * @param min

@@ -20,24 +20,27 @@ export type RtoTypes<
   S extends BaseRTO = BaseRTO,
 > = {
   /**
-   * Defines the DTO for the request body.
+   * Defines the RTO for the request body.
    * This should be a class constructor that extends BaseRTO.
    */
-  Body?: new () => B
+  Body?: new (...args: any[]) => B
 
   /**
-   * Defines the DTO for the route parameters.
+   * Defines the RTO for the route parameters.
    * This should be a class constructor that extends BaseRTO.
    */
-  Params?: new () => P
+  Params?: new (...args: any[]) => P
 
   /**
-   * Defines the DTO for the query string parameters.
+   * Defines the RTO for the query string parameters.
    * This should be a class constructor that extends BaseRTO.
    */
-  Search?: new () => S
+  Search?: new (...args: any[]) => S
 }
 
+/**
+ * Represents an error that occurs during validation.
+ */
 export interface ValidationError {
   /**
    * Object that was validated.

@@ -1,11 +1,7 @@
 // deno-lint-ignore-file no-explicit-any
-import type {
-  ValidationError,
-  ValidationFunction,
-  ValidationMessage,
-  ValidationOptions,
-} from 'modules/types/mod.ts'
+import type { ValidationError, ValidationFunction, ValidationOptions } from 'modules/types/mod.ts'
 import type { BaseRTO } from 'modules/validations/base/rto.ts'
+import type { ValidationMessage } from 'typings/validations.ts'
 
 import { validationInstance } from './instances.ts'
 import validationsMetadata from '../metadata.ts'

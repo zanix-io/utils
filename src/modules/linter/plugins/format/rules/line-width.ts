@@ -31,7 +31,7 @@ const rules: Record<string, Deno.lint.Rule> = {
           regex.baseLineCommentRegex.test(prevLine) &&
             (nextLine.endsWith('*/') && !commentRegex.test(prevLine) ||
               nextLine.startsWith('*')) ||
-          cleanLine.startsWith('return')
+          cleanLine.startsWith('return') || cleanLine.startsWith('`')
 
         if (exceptions) return
 

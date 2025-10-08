@@ -12,7 +12,7 @@ Deno.test('ExposeRTO validation errors', async () => {
         assertEquals(Object.keys(err.cause.properties).length, 2)
         assertEquals(err.cause.properties.value, [{
           constraints: [
-            "The 'value' property must be defined when exposed. To make it optional, set the corresponding option to true.",
+            "The 'value' property must be defined.",
             "'value' must be a valid string.",
           ],
           value: undefined,
@@ -20,7 +20,7 @@ Deno.test('ExposeRTO validation errors', async () => {
         }])
         assertEquals(err.cause.properties.test, [{
           constraints: [
-            "The 'test' property must be defined when exposed. To make it optional, set the corresponding option to true.",
+            "The 'test' property must be defined.",
           ],
           value: undefined,
           plainValue: undefined,

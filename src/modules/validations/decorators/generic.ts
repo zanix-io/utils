@@ -59,8 +59,7 @@ import { defineValidationDecorator } from 'modules/validations/base/definitions/
 export const Expose = function (
   options?: Pick<ValidationOptions, 'message' | 'optional' | 'transform'>,
 ): ValidationDecoratorDefinition {
-  const defaultMessage = (property: string) =>
-    `The '${property}' property must be defined when exposed. To make it optional, set the corresponding option to true.`
+  const defaultMessage = (property: string) => `The '${property}' property must be defined.`
   return defineValidationDecorator(() => true, {
     expose: true,
     message: defaultMessage,

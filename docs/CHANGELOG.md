@@ -7,6 +7,23 @@ adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [2.1.1] - 2025-04-11
+
+### Added
+
+- Recursive file reader function `collectFiles`.
+- Generate hash helper `generateHashHex`.
+
+### Fixed
+
+- Format linter Max line width for string templates.
+- RTO types.
+
+### Removed
+
+- Zanix Flags constants.
+- Zanix Flags linter rules.
+
 ## [2.1.0] - 2025-03-26
 
 ### Added

@@ -179,6 +179,6 @@ export type ZanixLibraries = {
   '@zanix/core': ZanixBaseLibraryInfo
   '@zanix/datamaster': ZanixBaseLibraryInfo
   '@zanix/server': ZanixBaseLibraryInfo
-  '@zanix/tasker': ZanixBaseLibraryInfo
+  '@zanix/worker': ZanixBaseLibraryInfo
   '@zanix/utils': ZanixBaseLibraryInfo
 }

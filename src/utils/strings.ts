@@ -28,3 +28,29 @@ export function capitalizeWords(str: string): string {
     .map((word) => capitalize(word)) // Capitaliza cada palabra
     .join(' ') // Une las palabras nuevamente con espacios
 }
+
+/**
+ * Generate hash hex using Deno crypto
+ * @param text
+ *
+ * @example
+ * ```ts
+ * generateHashHex("hello world"), 'SHA-512');
+ * ```
+ * @returns
+ */
+export async function generateHashHex(
+  text: string,
+  algorithm: AlgorithmIdentifier = 'SHA-256',
+): Promise<string> {
+  const encoder = new TextEncoder()
+  const data = encoder.encode(text)
+
+  const hashBuffer = await crypto.subtle.digest(algorithm, data)
+
+  const hashArray = new Uint8Array(hashBuffer)
+
+  const hashHex = Array.from(hashArray).map((byte) => byte.toString(16).padStart(2, '0')).join('')
+
+  return hashHex
+}

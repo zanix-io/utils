@@ -1,10 +1,10 @@
 import type { BaseRTO } from 'modules/validations/mod.ts'
+import type { ValidationMessage } from 'typings/validations.ts'
 import type {
   ValidationDecorator,
   ValidationDecoratorDefinition,
   ValidationError,
   ValidationFunction,
-  ValidationMessage,
   ValidationOptions,
 } from 'modules/types/mod.ts'
 

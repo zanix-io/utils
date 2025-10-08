@@ -7,7 +7,6 @@
  * \_____/ \__,_||_| |_||_|/_/\_\
  */
 
-import zanixFlags from './rules/zanix-flags.ts'
 import zanixLogger from './rules/zanix-logger.ts'
 import zanixImports from './rules/zanix-imports.ts'
 import formatPlugin from '../format/mod.ts'
@@ -50,7 +49,6 @@ import testPlugin from '../test/mod.ts'
 const plugin: Deno.lint.Plugin = {
   name: 'deno-zanix-plugin',
   rules: {
-    ...zanixFlags,
     ...zanixLogger,
     ...zanixImports,
     ...testPlugin.rules,

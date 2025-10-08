@@ -19,7 +19,7 @@ Deno.test('Fetching Zanix lates release validation', async () => {
   assertMatch(result['@zanix/core'].version, versionRegex)
   assertMatch(result['@zanix/datamaster'].version, versionRegex)
   assertMatch(result['@zanix/server'].version, versionRegex)
-  assertMatch(result['@zanix/tasker'].version, versionRegex)
+  assertMatch(result['@zanix/worker'].version, versionRegex)
 })
 
 Deno.test('getZanixPaths should return correct default content from jsr', async () => {

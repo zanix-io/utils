@@ -13,7 +13,7 @@ Deno.test('Expose validations strings RTO with empty object', async () => {
         assertEquals(err.cause.message, 'Request validation error')
         assertEquals(err.cause.properties.stringPropExpose, [{
           constraints: [
-            "The 'stringPropExpose' property must be defined when exposed. To make it optional, set the corresponding option to true.",
+            "The 'stringPropExpose' property must be defined.",
             `costomized string message for stringPropExpose with value undefined and ctx 'stringPropExpose context'`,
           ],
           value: undefined,
