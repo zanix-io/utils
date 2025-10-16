@@ -7,6 +7,16 @@ adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [2.1.2] - 2025-04-11
+
+### Fixed
+
+- Read config file from jsonc
+
+### Added
+
+- Pre commit framework support
+
 ## [2.1.1] - 2025-04-11
 
 ### Added

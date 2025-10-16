@@ -4,6 +4,7 @@ import { CONFIG_FILE } from 'utils/constants.ts'
 import { getConfigDir } from './paths.ts'
 import { isFileUrl } from 'utils/urls.ts'
 import regex from 'utils/regex.ts'
+import { stripComments } from 'utils/strings.ts'
 
 let configFile: ConfigFile | null = null
 let currentConfigPath: string | null = null
@@ -29,7 +30,7 @@ export function readConfig(configPath?: string | null): ConfigFile {
     throw new Error(`Configuration file not found: ${configDir}`)
   }
 
-  configFile = JSON.parse(Deno.readTextFileSync(configDir))
+  configFile = JSON.parse(stripComments(Deno.readTextFileSync(configDir)))
 
   return configFile as ConfigFile
 }
@@ -62,7 +63,7 @@ export async function readModuleConfig(
 
     configContent = response.ok ? await response.text() : '{}'
   }
-  const config = JSON.parse(configContent) as ConfigFile
+  const config = JSON.parse(stripComments(configContent)) as ConfigFile
 
   return config
 }

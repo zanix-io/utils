@@ -1,4 +1,4 @@
-import type * as types from 'jsr:@zanix/utils/types'
+import type * as types from '@zanix/utils/types'
 
 import { assertExists } from '@std/assert/assert-exists'
 import { assert } from '@std/assert'

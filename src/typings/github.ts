@@ -14,11 +14,6 @@ export type HookOptions = BaseGithubHelperOptions & {
 
 export type PreCommitHookOptions = HookOptions & {
   /**
-   * An array of file extensions to be linted.
-   * @deprecated Use filePatterns instead.
-   */
-  fileType?: LinterAvailableFiles[]
-  /**
    * The filePatterns property is an optional configuration object that defines the file patterns for linting and formatting operations.
    */
   filePatterns?: {
