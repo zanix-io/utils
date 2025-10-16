@@ -1,0 +1,11 @@
+- id: pre-commit
+  name: Run Zanix pre commit lint staged
+  entry: bash .github/hooks/pre-commit
+  language: system
+  stages: [pre-commit]
+
+- id: pre-push
+  name: Run Zanix pre push tests
+  entry: bash .github/hooks/pre-push
+  language: system
+  stages: [pre-push]

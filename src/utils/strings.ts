@@ -54,3 +54,20 @@ export async function generateHashHex(
 
   return hashHex
 }
+
+/**
+ * Strips // line comments and /* block comments *\/ from a JSONC string.
+ * This does not remove comment-like content inside string values.
+ * Use with care for trusted input.
+ */
+export function stripComments(value: string): string {
+  return value
+    // Remove block comments (/* ... */)
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    // Remove line comments (//...)
+    .replace(/^\s*\/\/.*$/gm, '')
+    // Remove trailing line comments (after code)
+    .replace(/([^:]\/\/.*)/g, (_, group) => {
+      return group.startsWith('"') ? group : '' // keep if inside a string
+    })
+}

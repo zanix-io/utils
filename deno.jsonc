@@ -46,7 +46,10 @@
       ]
     },
     "exclude": [".dist/"],
-    "plugins": ["./src/modules/linter/plugins/zanix/mod.ts"],
+    "plugins": [
+      // TODO: review this local because does not work "./src/modules/linter/plugins/zanix/mod.ts",
+      "jsr:@zanix/utils/linter/deno-zanix-plugin"
+    ],
     "report": "pretty"
   },
   "fmt": {
