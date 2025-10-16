@@ -5,7 +5,7 @@ import { prepareGithub } from 'modules/helpers/github/prepare.ts'
 import { createIgnoreBaseFile } from 'modules/helpers/mod.ts'
 import { getTemporaryFolder } from 'modules/helpers/paths.ts'
 import { fileExists, folderExists } from 'modules/helpers/files.ts'
-import { assert, assertExists } from '@std/assert'
+import { assert } from '@std/assert'
 import { stub } from '@std/testing/mock'
 
 const defaultFolder = getTemporaryFolder(import.meta.url) + '/github'
@@ -29,7 +29,7 @@ Deno.test('Github create pre-commit hook validation', async () => {
     },
   })
   assert(response)
-  assertExists(fileExists(defaultFolder + '/pre-commit'))
+  assert(fileExists(defaultFolder + '/pre-commit'))
 
   await Deno.remove(defaultFolder, { recursive: true })
 })
@@ -42,7 +42,7 @@ Deno.test('Github create pre-push hook validation', async () => {
     createLink: false,
   })
   assert(response)
-  assertExists(fileExists(defaultFolder + '/pre-push'))
+  assert(fileExists(defaultFolder + '/pre-push'))
 
   await Deno.remove(defaultFolder, { recursive: true })
 })
@@ -68,25 +68,41 @@ Deno.test('Github create gitignorefile validation', async () => {
   const response = await createIgnoreBaseFile({ baseRoot: defaultFolder })
   assert(response)
 
-  assertExists(fileExists(defaultFolder + '/.gitignore'))
+  assert(fileExists(defaultFolder + '/.gitignore'))
 
   await Deno.remove(defaultFolder, { recursive: true })
 })
 
-Deno.test('Github prepare validation', async () => {
+Deno.test('Github prepare validation with legacy hooks', async () => {
   const baseFolder = defaultFolder + '/prepare'
   // Call the function passing the file type, for example 'ts'
   const response = await prepareGithub({
-    preCommitHook: { baseFolder, baseRoot: '', createLink: false },
-    pushHook: { baseFolder, baseRoot: '', createLink: false },
+    legacyHooks: {
+      preCommit: { baseFolder, baseRoot: '', createLink: false },
+      prePush: { baseFolder, baseRoot: '', createLink: false },
+    },
     publishWorkflow: { baseFolder, baseRoot: '' },
     gitIgnoreBase: { baseRoot: baseFolder },
   })
   assert(response)
 
-  assertExists(fileExists(baseFolder + '/pre-commit'))
-  assertExists(fileExists(baseFolder + '/pre-push'))
-  assertExists(fileExists(baseFolder + '/publish.yml'))
+  assert(fileExists(baseFolder + '/pre-commit'))
+  assert(fileExists(baseFolder + '/pre-push'))
+  assert(fileExists(baseFolder + '/publish.yml'))
+  await Deno.remove(defaultFolder, { recursive: true })
+})
+
+Deno.test('Github prepare validation with pre commit framework', async () => {
+  const baseFolder = defaultFolder + '/prepare'
+  // Call the function passing the file type, for example 'ts'
+  const response = await prepareGithub({
+    usePrecommit: { baseRoot: baseFolder },
+    publishWorkflow: { baseFolder, baseRoot: '' },
+    gitIgnoreBase: { baseRoot: baseFolder },
+  })
+  assert(response)
+
+  assert(fileExists(baseFolder + '/.pre-commit-config.yaml'))
   await Deno.remove(defaultFolder, { recursive: true })
 })
 

@@ -22,9 +22,8 @@ export function createPreCommitHook(
 ): Promise<boolean> {
   const filename = 'pre-commit'
   const {
-    fileType,
     filePatterns: {
-      lint = fileType || ['ts', 'tsx', 'js', 'jsx'],
+      lint = ['ts', 'tsx', 'js', 'jsx'],
       fmt = [...lint, 'md', 'json'],
     } = {},
     ...opts

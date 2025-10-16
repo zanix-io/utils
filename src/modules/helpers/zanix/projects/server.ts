@@ -14,22 +14,22 @@ export const getServerSrcTree = (root: string): ZanixServerSrcTree => {
   return ZanixTree.create<ZanixServerSrcTree>({ startingPoint, baseRoot: root }, {
     subfolders: {
       connectors: {
-        templates: { base: { files: ['example.provider.ts', 'example.client.ts'], jsr } },
+        templates: { base: { files: ['example.connector.ts'], jsr } },
       },
       handlers: {
         templates: {
           base: {
-            files: ['example.controller.ts', 'example.resolver.ts', 'example.subscriber.ts'],
+            files: ['example.handler.ts'],
             jsr,
           },
         },
         subfolders: { rtos: { templates: { base: { files: ['example.rto.ts'], jsr } } } },
       },
-      interactors: { templates: { base: { files: ['example.service.ts'], jsr } } },
-      jobs: { templates: { base: { files: ['example.job.ts'], jsr } } },
+      interactors: { templates: { base: { files: ['service.interactor.ts'], jsr } } },
+      jobs: { templates: { base: { files: ['job.hoc.ts'], jsr } } },
       repositories: {
-        templates: { base: { files: ['example.data.ts', 'example.model.ts'], jsr } },
-        subfolders: { seeders: { templates: { base: { files: ['example.seeder.ts'], jsr } } } },
+        templates: { base: { files: ['model.hoc.ts'], jsr } },
+        subfolders: { seeders: { templates: { base: { files: ['seeder.hoc.ts'], jsr } } } },
       },
     },
   })

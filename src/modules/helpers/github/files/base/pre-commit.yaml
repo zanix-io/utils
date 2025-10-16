@@ -1,0 +1,8 @@
+repos:
+  - repo: local
+    hooks:
+      - id: pre-push-check
+        name: Chequeos antes del push
+        entry: bash .github/hooks/pre-push
+        language: system
+        stages: [pre-push]
