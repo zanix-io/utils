@@ -69,11 +69,15 @@ export function prepareGithub(options: Options = {}): Promise<boolean[]> {
   const { legacyHooks = {}, publishWorkflow, gitIgnoreBase, usePrecommit } = options
   const promises = [createGitWorkflow(publishWorkflow), createIgnoreBaseFile(gitIgnoreBase)]
 
+  let createLink
+
   if (usePrecommit) {
     promises.push(createPreCommitYaml(typeof usePrecommit !== 'boolean' ? usePrecommit : undefined))
-  } else {
-    promises.push(createPreCommitHook(legacyHooks.preCommit))
-    promises.push(createPrePushHook(legacyHooks.prePush))
+    createLink = false
   }
+
+  promises.push(createPreCommitHook({ ...legacyHooks.preCommit, createLink }))
+  promises.push(createPrePushHook({ ...legacyHooks.prePush, createLink }))
+
   return Promise.all(promises)
 }

@@ -104,6 +104,9 @@ Deno.test('Github prepare validation with pre commit framework', async () => {
 
   assert(fileExists(baseFolder + '/.pre-commit-config.yaml'))
   await Deno.remove(defaultFolder, { recursive: true })
+  await new Deno.Command('pre-commit', {
+    args: ['uninstall'],
+  }).output()
 })
 
 Deno.test('Git init should be executed', async () => {

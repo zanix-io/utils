@@ -1,8 +1,6 @@
 repos:
-  - repo: local
+  - repo: https://github.com/zanix-io/utils
+    rev: 'v2.1.2'
     hooks:
-      - id: pre-push-check
-        name: Chequeos antes del push
-        entry: bash .github/hooks/pre-push
-        language: system
-        stages: [pre-push]
+      - id: pre-commit
+      - id: pre-push

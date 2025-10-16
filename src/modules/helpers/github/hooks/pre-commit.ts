@@ -18,7 +18,7 @@ import { createHook } from './main.ts'
  * @category helpers
  */
 export function createPreCommitHook(
-  options: PreCommitHookOptions = {},
+  options: PreCommitHookOptions,
 ): Promise<boolean> {
   const filename = 'pre-commit'
   const {
