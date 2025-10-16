@@ -1,5 +1,5 @@
 - id: pre-commit
   name: Run Zanix pre commit lint staged
-  entry: bash src/modules/helpers/github/hooks/scripts/pre-commit.base.sh
+  entry: bash src/modules/helpers/github/hooks/scripts/pre-commit.sh
   language: system
   stages: [pre-commit]
