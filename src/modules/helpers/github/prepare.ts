@@ -62,9 +62,6 @@ type Options = {
  *
  * @category helpers
  */
-
-export function prepareGithub(options: Omit<Options, 'legacyHooks'>): Promise<boolean[]>
-export function prepareGithub(options: Omit<Options, 'usePrecommit'>): Promise<boolean[]>
 export function prepareGithub(options: Options = {}): Promise<boolean[]> {
   const { legacyHooks = {}, publishWorkflow, gitIgnoreBase, usePrecommit } = options
   const promises = [createGitWorkflow(publishWorkflow), createIgnoreBaseFile(gitIgnoreBase)]
