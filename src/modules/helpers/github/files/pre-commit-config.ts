@@ -1,6 +1,6 @@
 import type { BaseGithubHelperOptions } from 'typings/github.ts'
 import { createBaseFile } from './base.ts'
-import logger from '@zanix/utils/logger'
+import logger from 'modules/logger/mod.ts'
 
 /**
  * Sets up a `pre-commit-config.yaml` to to execute base hooks using pre-commit-framework.
