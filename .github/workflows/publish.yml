@@ -23,6 +23,11 @@ jobs:
         with:
           deno-version: v2.x
 
+      - name: Install pre-commit
+        run: |
+          python3 -m pip install --upgrade pip
+          pip install pre-commit
+
       - name: Run tests
         run: deno test --allow-all
 
