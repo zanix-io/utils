@@ -10,6 +10,7 @@ import { createPreCommitHook } from 'modules/helpers/github/hooks/pre-commit.ts'
 import { createGitWorkflow } from 'modules/helpers/github/workflows/publish.ts'
 import { createIgnoreBaseFile } from 'modules/helpers/github/files/main.ts'
 import { createPreCommitYaml } from 'modules/helpers/github/files/pre-commit-config.ts'
+import { gitInitialization } from './hooks/main.ts'
 
 type Options = {
   /**
@@ -62,8 +63,11 @@ type Options = {
  *
  * @category helpers
  */
-export function prepareGithub(options: Options = {}): Promise<boolean[]> {
-  const { legacyHooks = {}, publishWorkflow, gitIgnoreBase, usePrecommit } = options
+export async function prepareGithub(options: Options & { root?: string } = {}): Promise<boolean[]> {
+  const { legacyHooks = {}, root, publishWorkflow, gitIgnoreBase, usePrecommit } = options
+
+  await gitInitialization(root)
+
   const promises = [createGitWorkflow(publishWorkflow), createIgnoreBaseFile(gitIgnoreBase)]
 
   let createLink

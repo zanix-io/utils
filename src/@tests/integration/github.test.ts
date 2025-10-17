@@ -5,8 +5,9 @@ import { prepareGithub } from 'modules/helpers/github/prepare.ts'
 import { createIgnoreBaseFile } from 'modules/helpers/mod.ts'
 import { getTemporaryFolder } from 'modules/helpers/paths.ts'
 import { fileExists, folderExists } from 'modules/helpers/files.ts'
-import { assert } from '@std/assert'
+import { assert, assertEquals } from '@std/assert'
 import { stub } from '@std/testing/mock'
+import { gitInitialization } from 'modules/helpers/github/hooks/main.ts'
 
 const defaultFolder = getTemporaryFolder(import.meta.url) + '/github'
 
@@ -16,6 +17,7 @@ stub(console, 'error')
 stub(console, 'warn')
 
 Deno.test('Github create pre-commit hook validation', async () => {
+  await gitInitialization(defaultFolder)
   // Call the function passing the file type, for example 'ts'
   const response = await createPreCommitHook({
     baseFolder: defaultFolder,
@@ -35,6 +37,7 @@ Deno.test('Github create pre-commit hook validation', async () => {
 })
 
 Deno.test('Github create pre-push hook validation', async () => {
+  await gitInitialization(defaultFolder)
   // Call the function passing the file type, for example 'ts'
   const response = await createPrePushHook({
     baseFolder: defaultFolder,
@@ -48,6 +51,7 @@ Deno.test('Github create pre-push hook validation', async () => {
 })
 
 Deno.test('Github create publish workflow yaml validation', async () => {
+  await gitInitialization(defaultFolder)
   // Call the function passing the file type, for example 'ts'
   const response = await createGitWorkflow({
     baseFolder: defaultFolder,
@@ -77,18 +81,20 @@ Deno.test('Github prepare validation with legacy hooks', async () => {
   const baseFolder = defaultFolder + '/prepare'
   // Call the function passing the file type, for example 'ts'
   const response = await prepareGithub({
+    root: defaultFolder,
     legacyHooks: {
       preCommit: { baseFolder, baseRoot: '', createLink: false },
       prePush: { baseFolder, baseRoot: '', createLink: false },
     },
-    publishWorkflow: { baseFolder, baseRoot: '' },
+    publishWorkflow: { baseFolder: defaultFolder, baseRoot: '' },
     gitIgnoreBase: { baseRoot: baseFolder },
   })
-  assert(response)
+
+  assert(response && response.length && !response.includes(false))
 
   assert(fileExists(baseFolder + '/pre-commit'))
   assert(fileExists(baseFolder + '/pre-push'))
-  assert(fileExists(baseFolder + '/publish.yml'))
+  assert(fileExists(defaultFolder + '/publish.yml'))
   await Deno.remove(defaultFolder, { recursive: true })
 })
 
@@ -96,13 +102,22 @@ Deno.test('Github prepare validation with pre commit framework', async () => {
   const baseFolder = defaultFolder + '/prepare'
   // Call the function passing the file type, for example 'ts'
   const response = await prepareGithub({
+    root: defaultFolder,
     usePrecommit: { baseRoot: baseFolder },
-    publishWorkflow: { baseFolder, baseRoot: '' },
+    legacyHooks: {
+      preCommit: { baseFolder, baseRoot: '', createLink: false },
+      prePush: { baseFolder, baseRoot: '', createLink: false },
+    },
+    publishWorkflow: { baseFolder: defaultFolder, baseRoot: '' },
     gitIgnoreBase: { baseRoot: baseFolder },
   })
-  assert(response)
+
+  assert(response && response.length && !response.includes(false))
 
   assert(fileExists(baseFolder + '/.pre-commit-config.yaml'))
+  assert(fileExists(baseFolder + '/pre-commit'))
+  assert(fileExists(baseFolder + '/pre-push'))
+  assert(fileExists(defaultFolder + '/publish.yml'))
   await Deno.remove(defaultFolder, { recursive: true })
   await new Deno.Command('pre-commit', {
     args: ['uninstall'],
@@ -110,12 +125,7 @@ Deno.test('Github prepare validation with pre commit framework', async () => {
 })
 
 Deno.test('Git init should be executed', async () => {
-  const response = await createPreCommitHook({
-    baseFolder: '',
-    baseRoot: defaultFolder,
-  })
-
-  assert(response)
+  assertEquals(await gitInitialization(defaultFolder), defaultFolder + '/.git/hooks')
   assert(folderExists(defaultFolder + '/.git'))
 
   await Deno.remove(defaultFolder, { recursive: true })

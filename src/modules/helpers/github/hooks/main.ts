@@ -7,6 +7,35 @@ import logger from 'modules/logger/mod.ts'
 import constants from 'utils/constants.ts'
 import { join } from '@std/path'
 
+let baseGitFolder: string
+
+/** Base git init function */
+export async function gitInitialization(baseRoot: string = getRootDir()) {
+  const gitFolder = join(baseRoot, constants.GIT_HOOKS_FOLDER)
+
+  if (!folderExists(gitFolder)) {
+    logger.warn(
+      `${constants.GIT_HOOKS_FOLDER} directory does not exist. Initializing Git repository...`,
+    )
+
+    // Execute `git init` for initializing the repo if does not exist.
+    const gitInit = new Deno.Command('git', {
+      args: ['init', baseRoot],
+    })
+
+    const gitInitResult = await gitInit.output()
+    if (!gitInitResult.success) {
+      throw new Error(
+        'Git initialization failed. Please check your Git installation and try again `git init` command.',
+      )
+    }
+  }
+
+  baseGitFolder = gitFolder
+
+  return baseGitFolder
+}
+
 /** Base function to create a hook */
 export async function createHook(
   options: HookOptions & {
@@ -53,24 +82,10 @@ export async function createHook(
       throw new Error('chmod command failed. Please check your folder permissions and try again.')
     }
 
-    const baseGitFolder = join(baseRoot, constants.GIT_HOOKS_FOLDER)
-
-    if (!folderExists(baseGitFolder)) {
-      logger.warn(
-        `${constants.GIT_HOOKS_FOLDER} directory does not exist. Initializing Git repository...`,
+    if (!baseGitFolder) {
+      throw new Error(
+        'Please verify your Git initialization and try running the znx prepare command again.',
       )
-
-      // Execute `git init` for initializing the repo if does not exist.
-      const gitInit = new Deno.Command('git', {
-        args: ['init', baseRoot],
-      })
-
-      const gitInitResult = await gitInit.output()
-      if (!gitInitResult.success) {
-        throw new Error(
-          'Git initialization failed. Please check your Git installation and try again.',
-        )
-      }
     }
 
     const fileHook = join(baseGitFolder, script)
