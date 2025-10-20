@@ -7,7 +7,7 @@ import logger from 'modules/logger/mod.ts'
 import constants from 'utils/constants.ts'
 import { join } from '@std/path'
 
-let baseGitFolder: string
+let baseGitHooksFolder: string
 
 /** Base git init function */
 export async function gitInitialization(baseRoot: string = getRootDir()) {
@@ -31,9 +31,9 @@ export async function gitInitialization(baseRoot: string = getRootDir()) {
     }
   }
 
-  baseGitFolder = gitFolder
+  baseGitHooksFolder = gitFolder
 
-  return baseGitFolder
+  return baseGitHooksFolder
 }
 
 /** Base function to create a hook */
@@ -82,13 +82,13 @@ export async function createHook(
       throw new Error('chmod command failed. Please check your folder permissions and try again.')
     }
 
-    if (!baseGitFolder) {
+    if (!baseGitHooksFolder) {
       throw new Error(
         'Please verify your Git initialization and try running the znx prepare command again.',
       )
     }
 
-    const fileHook = join(baseGitFolder, script)
+    const fileHook = join(baseGitHooksFolder, script)
 
     if (createLink) {
       // Create a symbolic link in .git/hooks

@@ -1,4 +1,9 @@
-import { capitalize, capitalizeWords, generateHashHex } from 'utils/strings.ts'
+import {
+  capitalize,
+  capitalizeWords,
+  stringToUint8Array,
+  uint8ArrayToBase64,
+} from 'utils/strings.ts'
 import { assertEquals } from '@std/assert'
 
 Deno.test('capitalize should capitalize the first character of a string', () => {
@@ -14,9 +19,9 @@ Deno.test('capitalizeWords should capitalize the first letter of each word', () 
   assertEquals(capitalizeWords(''), '') // Empty string should return empty string
 })
 
-Deno.test('generate hash', async () => {
-  assertEquals(
-    await generateHashHex('text value'),
-    'ffabc3fe711165f0a9acd034603b7c4dace74cbe643409a89ab62c9c3a87c4a8',
-  )
+Deno.test('array buffer encoding and decoding', () => {
+  const exampleArrayBuffer = stringToUint8Array('Hello, world!')
+  const resultString = atob(uint8ArrayToBase64(exampleArrayBuffer))
+
+  assertEquals(resultString, 'Hello, world!')
 })

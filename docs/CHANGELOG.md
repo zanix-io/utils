@@ -7,6 +7,19 @@ adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [2.1.5] - 2025-10-20
+
+### Added
+
+- Symmetric and asymmetric encryption.
+- Masking.
+- Unidirectional encryption.
+- Signing.
+
+### Fixed
+
+- Connectors URI
+
 ## [2.1.4] - 2025-10-17
 
 ### Fixed

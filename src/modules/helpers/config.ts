@@ -36,7 +36,7 @@ export function readConfig(configPath?: string | null): ConfigFile {
 }
 
 /**
- * Reads and parses the runtime module `deno` configuration file
+ * Reads and parses the library module `deno` configuration file
  *
  * @param metaUrl - The optional file config dir.
  * @param isJsonc - The extension json type. Defaults to true.
