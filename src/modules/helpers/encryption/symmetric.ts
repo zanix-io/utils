@@ -101,7 +101,7 @@ export function encryptAES<T extends string | string[]>(
  *
  * @example
  * ```ts
- * const decrypted = await decryptAES("hello world", key);
+ * const decrypted = await decryptAES(encrypted, key);
  * console.log(decrypted); // Decrypted message
  * ```
  *

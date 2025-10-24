@@ -7,10 +7,11 @@ import { generateHash, validateHash } from './unidirectional.ts'
  *
  * @param {string | string[]} message - The text to be encrypted.
  * @param {string} key - The encryption AES key or the RSA Private Key.
+ * @param {'RSA' | 'AES'} type - 'AES' or 'RSA' types
  *
  * @example
  * ```ts
- * const encrypted = await encryptAES("hello world", key);
+ * const encrypted = await encrypt("hello world", key);
  * console.log(encrypted); // Base64 encrypted message
  * ```
  *
@@ -18,10 +19,13 @@ import { generateHash, validateHash } from './unidirectional.ts'
  */
 export function encrypt(
   message: string | string[],
-  key: string | CryptoKey,
+  key: string,
+  type?: 'RSA' | 'AES',
 ): Promise<string | string[]> {
-  if (typeof key === 'string') return encryptAES(message, key)
-  return encryptRSA(message, key)
+  if (type === 'RSA' || key.startsWith('-----BEGIN')) {
+    return encryptRSA(message, key)
+  }
+  return encryptAES(message, key)
 }
 
 /**
@@ -29,21 +33,25 @@ export function encrypt(
  *
  * @param {string | string[]} encryptedMessage - The text to be decrypted.
  * @param {string} key - The encryption AES key or the RSA Public Key.
+ * @param {'RSA' | 'AES'} type - 'AES' or 'RSA' types
  *
  * @example
  * ```ts
- * const encrypted = await encryptAES("hello world", key);
- * console.log(encrypted); // Base64 encrypted message
+ * const decrypted = await decrypt(encrypted, key);
+ * console.log(decrypted); // decrypted message
  * ```
  *
  * @returns {Promise<string | string[]>} The decrypted message
  */
 export function decrypt(
   encryptedMessage: string | string[],
-  key: string | CryptoKey,
+  key: string,
+  type?: 'RSA' | 'AES',
 ): Promise<string | string[]> {
-  if (typeof key === 'string') return decryptAES(encryptedMessage, key)
-  return decryptRSA(encryptedMessage, key)
+  if (type === 'RSA' || key.startsWith('-----BEGIN')) {
+    return decryptRSA(encryptedMessage, key)
+  }
+  return decryptAES(encryptedMessage, key)
 }
 
 export {

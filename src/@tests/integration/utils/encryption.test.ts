@@ -207,7 +207,7 @@ Deno.test('General encryption and decryption should works correctly', async () =
 Deno.test('RSA sign should works correctly', async () => {
   const message = 'Este es un mensaje importante'
 
-  const { privateKey, publicKey } = await generateRSAKeys({ algorithm: 'RSASSA-PKCS1-v1_5' })
+  const { privateKey, publicKey } = await generateRSAKeys({ algorithm: 'RSA-PSS' })
 
   const signedData = await signRSA(message, privateKey)
   const verifiedData = await verifyRSA(message, signedData, publicKey)

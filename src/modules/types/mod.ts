@@ -36,3 +36,5 @@ export type {
   ValidationFunction,
   ValidationOptions,
 } from 'typings/validations.ts'
+
+export type { MaskingBaseOptions } from 'typings/masking.ts'

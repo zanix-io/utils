@@ -12,10 +12,10 @@ export type ValidRSAModulusLength = 1024 | 2048 | 3072 | 4096
 export type ValidRSAKeysOptions<T extends HashAlgorithm> = {
   /**
    * The encryption or signing RSA algorithm.
-   * Using 'RSA-OAEP' algorithm for encryption and 'RSASSA-PKCS1-v1_5' for signing.
+   * Using 'RSA-OAEP' algorithm for encryption and 'RSA-PSS' for signing.
    * Defaults to 'RSA-OAEP'
    */
-  algorithm?: 'RSA-OAEP' | 'RSASSA-PKCS1-v1_5'
+  algorithm?: 'RSA-OAEP' | 'RSA-PSS'
   /**
    * The encryption or signing RSA algorithm hash. Defaults to 'SHA-256'
    */

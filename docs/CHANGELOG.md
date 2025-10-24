@@ -7,6 +7,12 @@ adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [2.1.6] - 2025-10-24
+
+### Changed
+
+- Encryption keys to use string keys allways
+
 ## [2.1.5] - 2025-10-20
 
 ### Added
@@ -15,10 +21,6 @@ adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 - Masking.
 - Unidirectional encryption.
 - Signing.
-
-### Fixed
-
-- Connectors URI
 
 ## [2.1.4] - 2025-10-17
 
