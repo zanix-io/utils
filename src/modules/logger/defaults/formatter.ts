@@ -1,6 +1,6 @@
 import type { DefaultFormattedLog, Formatter } from 'typings/logger.ts'
 
-import { generateBasicUUID } from 'utils/identifiers.ts'
+import { generateUUID } from 'utils/identifiers.ts'
 import { showMessage } from 'modules/logger/base.ts'
 
 const defaultFormatter: Formatter<DefaultFormattedLog> = (level, [message, ...data]) => {
@@ -11,7 +11,7 @@ const defaultFormatter: Formatter<DefaultFormattedLog> = (level, [message, ...da
   } catch { /** Ignore error */ }
 
   return {
-    id: generateBasicUUID(),
+    id: generateUUID(),
     level,
     message,
     timestamp,

@@ -7,6 +7,12 @@ adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [2.1.7] - 2025-10-26
+
+### Changed
+
+- UUID basic reeplaced by v4
+
 ## [2.1.6] - 2025-10-24
 
 ### Changed

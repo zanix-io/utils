@@ -1,8 +1,11 @@
 import { assert, assertEquals, assertNotEquals } from '@std/assert'
 import { mask, unmask } from 'modules/helpers/masking/mod.ts'
 import { MASKING_SEPARATOR } from 'modules/helpers/masking/base.ts'
+import { stub } from '@std/testing/mock'
 
 const separator = MASKING_SEPARATOR
+
+stub(console, 'warn')
 
 Deno.test('Masking and unmasking should works', () => {
   const key = '$$c0e3053bd41a8005aa719657786945f'
