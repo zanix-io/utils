@@ -22,7 +22,7 @@ export type {
 
 export type { TaskerCallback as WorkerTaskerCallback } from 'typings/workers.ts'
 
-export type { HttpErrorCodes as HttpErrors } from 'typings/errors.ts'
+export type { ErrorOptions, HttpErrorCodes as HttpErrors } from 'typings/errors.ts'
 
 export type { ConfigFile } from 'typings/config.ts'
 

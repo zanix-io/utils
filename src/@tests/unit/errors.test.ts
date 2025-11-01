@@ -1,32 +1,60 @@
-import type { HttpErrorCodes } from 'typings/errors.ts'
+import type { ErrorOptions, HttpErrorCodes } from 'typings/errors.ts'
 
 import { assertEquals, assertExists } from '@std/assert'
-import { HttpError } from 'modules/errors/main.ts'
+import { HttpError, InternalError } from 'modules/errors/main.ts'
 import httpErrorStates from 'modules/errors/http-status-codes.ts'
 import { serializeError, serializeMultipleErrors } from 'modules/errors/serialize.ts'
 
-const validateCommonError = (
+const validateHttpError = (
   code: HttpErrorCodes,
-  options?: { message?: string | undefined; cause?: unknown },
+  options?: ErrorOptions,
 ) => {
   const error = new HttpError(code, options)
   assertEquals(error.message, options?.message || code)
   assertEquals(error.status, { code: code, value: httpErrorStates[code] })
   assertExists(error.stack)
-  assertEquals(options?.cause, error.cause)
+  assertEquals(error.cause, options?.cause)
+  assertEquals(error.meta, options?.meta)
+  assertEquals(error.code, options?.code)
+}
+
+const validateInternalError = (
+  message: string,
+  options?: Omit<ErrorOptions, 'message'>,
+) => {
+  const error = new InternalError(message, options)
+  assertEquals(error.message, message)
+  assertExists(error.stack)
+  assertEquals(error.cause, options?.cause)
+  assertEquals(error.meta, options?.meta)
+  assertEquals(error.code, options?.code)
 }
 
 Deno.test('Validates http error instances', () => {
   // Basic error validation
   Object.keys(httpErrorStates).forEach((key) => {
-    validateCommonError(key as HttpErrorCodes)
+    validateHttpError(key as HttpErrorCodes)
   })
 
   // Custom message error validation
-  validateCommonError('CONFLICT', { message: 'My Custom Message' })
+  validateHttpError('CONFLICT', { message: 'My Custom Message' })
 
   // Custom message error validation with some cause
-  validateCommonError('BAD_GATEWAY', { message: 'My Custom Message', cause: 'unknown' })
+  validateHttpError('BAD_GATEWAY', { message: 'My Custom Message', cause: 'unknown' })
+
+  // Error with code and meta options
+  validateHttpError('CONFLICT', { code: 'ERROR_CODE', meta: { data: 'informative' } })
+})
+
+Deno.test('Validates internal error instances', () => {
+  // Custom message error validation
+  validateInternalError('My Custom Message')
+
+  // Custom message error validation with some cause
+  validateInternalError('My Custom Message', { cause: 'unknown' })
+
+  // Error with code and meta options
+  validateInternalError('An error ocurred', { code: 'ERROR_CODE', meta: { data: 'informative' } })
 })
 
 Deno.test('Validates error serialization', () => {

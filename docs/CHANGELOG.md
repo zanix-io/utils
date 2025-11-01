@@ -7,6 +7,18 @@ adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [2.1.8] - 2025-11-01
+
+### Added
+
+- Internal code and meta options to httpError
+- Internal error class
+- Error types
+
+### Fixed
+
+- encrypt and mask generic types
+
 ## [2.1.7] - 2025-10-26
 
 ### Changed

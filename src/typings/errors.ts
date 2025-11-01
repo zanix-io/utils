@@ -31,3 +31,33 @@ type BaseSerializeError = Partial<{
 }>
 
 export type SerializeError<T extends BaseSerializeError = BaseSerializeError> = T
+
+/**
+ * Error options to identify Custom Errors
+ */
+export type ErrorOptions = {
+  /**
+   * An optional custom message describing the error. If not provided, the error code is used as the message.
+   */
+  message?: string
+  /**
+   * An optional cause for the error, such as an inner exception or error.
+   */
+  cause?: unknown
+  /**
+   * An optional identifier used to track or reference the error trace.
+   */
+  id?: string
+  /**
+   * An optional code identifier for internal use.
+   */
+  code?: string
+  /**
+   * An optional internal used meta info
+   */
+  meta?: Record<string, unknown>
+  /**
+   * An optional flag that determines whether the error should be logged.
+   */
+  log?: boolean
+}

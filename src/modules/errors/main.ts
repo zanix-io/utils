@@ -1,6 +1,58 @@
-import type { HttpErrorCodes } from 'typings/errors.ts'
+import type { ErrorOptions, HttpErrorCodes } from 'typings/errors.ts'
 import httpErrorStatus from 'modules/errors/http-status-codes.ts'
 import logger from 'modules/logger/mod.ts'
+
+/**
+ * A custom error class for runtime server `exceptions`, extending Deno's `Interrupted` error class.
+ *
+ * This class allows for more detailed and structured error handling, including associating
+ * error codes with their corresponding internal server codes and providing customizable error messages.
+ * It is particularly useful for throwing and catching general server errors.
+ *
+ * @example
+ * ```ts
+ *  const error = new InternalError({
+ *    message: 'Invalid input provided.',
+ *  });
+ *  console.log(error.message);  // "Invalid input provided."
+ * ```
+ *
+ * @category errors
+ */
+export class InternalError extends Deno.errors.Interrupted {
+  public override message: string
+  public id?: string
+  public code?: string
+  public meta?: Record<string, unknown>
+
+  /**
+   * Creates an instance of the `InternalError` class.
+   *
+   * This constructor takes an options object, allowing for customization
+   * of the error message and the optional cause of the erro
+   *
+   * @param {string} [message] - The main error message
+   * @param {Object} options - Options to customize the error message and cause. This is optional.
+   * @param {boolean} [options.log] - To track the error
+   * @param {Record<string, unknown>} [options.meta] - The meta options for internal use
+   * @param {string} [options.code] - The error code for internal use
+   * @param {unknown} [options.cause]
+   */
+  constructor(
+    message: string,
+    options: Omit<ErrorOptions, 'message'> = {},
+  ) {
+    super(message, { cause: options.cause })
+    this.message = message
+    this.name = this.constructor.name
+    this.cause = options.cause || this.cause
+    this.id = options.id || this.id
+    this.code = options.code
+    this.meta = options.meta
+
+    if (options.log) logger.error(this.message, this)
+  }
+}
 
 /**
  * A custom error class for HTTP-related `exceptions`, extending Deno's `Http` error class.
@@ -30,6 +82,8 @@ import logger from 'modules/logger/mod.ts'
 export class HttpError extends Deno.errors.Http {
   public override message: string
   public id?: string
+  public code?: string
+  public meta?: Record<string, unknown>
   public status: { code: HttpErrorCodes; value: number }
 
   /**
@@ -42,32 +96,15 @@ export class HttpError extends Deno.errors.Http {
    *
    * @param {HttpErrorCodes} code - The error code (e.g., 'BAD_REQUEST', 'NOT_FOUND') that defines the type of error.
    * @param {Object} options - Options to customize the error message and cause. This is optional.
-   * @param {string} [options.message]
-   * @param {unknown} [options.log]
+   * @param {string} [options.message] - The main error message
+   * @param {boolean} [options.log] - To track the error
+   * @param {Record<string, unknown>} [options.meta] - The meta options for internal use
+   * @param {string} [options.code] - The error code for internal use
    * @param {unknown} [options.cause]
-   *
-   * @throws {TypeError} If the provided error code does not exist in `httpErrorStatus`.
    */
   constructor(
     code: HttpErrorCodes,
-    options: {
-      /**
-       * An optional custom message describing the error. If not provided, the error code is used as the message.
-       */
-      message?: string
-      /**
-       * An optional flag that determines whether the error should be logged.
-       */
-      cause?: unknown
-      /**
-       * An optional identifier used to track or reference the error trace.
-       */
-      id?: string
-      /**
-       * An optional cause for the error, such as an inner exception or error.
-       */
-      log?: boolean
-    } = {},
+    options: ErrorOptions = {},
   ) {
     super(code, { cause: options.cause })
     this.message = options.message || code
@@ -78,6 +115,8 @@ export class HttpError extends Deno.errors.Http {
       code,
       value: httpErrorStatus[code],
     }
+    this.code = options.code
+    this.meta = options.meta
 
     if (options.log) logger.error(this.message, this)
   }

@@ -17,15 +17,15 @@ import { generateHash, validateHash } from './unidirectional.ts'
  *
  * @returns {Promise<string | string[]>} A base64 string containing the encripted message.
  */
-export function encrypt(
-  message: string | string[],
+export function encrypt<T extends string | string[]>(
+  message: T,
   key: string,
   type?: 'RSA' | 'AES',
-): Promise<string | string[]> {
+): Promise<T> {
   if (type === 'RSA' || key.startsWith('-----BEGIN')) {
-    return encryptRSA(message, key)
+    return encryptRSA<T>(message, key)
   }
-  return encryptAES(message, key)
+  return encryptAES<T>(message, key)
 }
 
 /**
@@ -43,15 +43,15 @@ export function encrypt(
  *
  * @returns {Promise<string | string[]>} The decrypted message
  */
-export function decrypt(
-  encryptedMessage: string | string[],
+export function decrypt<T extends string | string[]>(
+  encryptedMessage: T,
   key: string,
   type?: 'RSA' | 'AES',
-): Promise<string | string[]> {
+): Promise<T> {
   if (type === 'RSA' || key.startsWith('-----BEGIN')) {
-    return decryptRSA(encryptedMessage, key)
+    return decryptRSA<T>(encryptedMessage, key)
   }
-  return decryptAES(encryptedMessage, key)
+  return decryptAES<T>(encryptedMessage, key)
 }
 
 export {
