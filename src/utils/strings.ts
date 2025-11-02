@@ -79,8 +79,8 @@ export function uint8ArrayToString(value: Uint8Array<ArrayBuffer>, encode = 'utf
  */
 export function uint8ArrayToBase64(uint8Array: Uint8Array): string {
   let binaryString = ''
-  for (const byte of uint8Array) {
-    binaryString += String.fromCharCode(byte)
+  for (let i = 0; i < uint8Array.length; i++) {
+    binaryString += String.fromCharCode(uint8Array[i])
   }
   return btoa(binaryString)
 }
@@ -91,8 +91,7 @@ export function uint8ArrayToBase64(uint8Array: Uint8Array): string {
  * @returns - uint8Array encoded
  */
 export function uint8ArrayToHEX(uint8Array: Uint8Array): string {
-  const hashArray = Array.from(uint8Array)
-  return hashArray.map((byte) => byte.toString(16).padStart(2, '0')).join('')
+  return [...uint8Array].map((byte) => byte.toString(16).padStart(2, '0')).join('')
 }
 
 /**

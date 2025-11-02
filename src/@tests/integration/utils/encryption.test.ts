@@ -63,6 +63,13 @@ Deno.test('Unidirectional encryption or hash generation works correctly', async 
   assert(await validateHash('other message', newHashWithOtherSalt, 'low') === false)
 })
 
+Deno.test('Verifying case sensitive encryption', async () => {
+  const message = 'Este es un mensaje importante'
+
+  const hash = await generateHash(message)
+  assert(await validateHash('este es un mensaje importante', hash) === false)
+})
+
 Deno.test('Asymmetric RSA encryption and decryption should works correctly', async () => {
   const message = 'Este es un mensaje importante'
 

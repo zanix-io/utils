@@ -65,7 +65,7 @@ export async function generateHash(
     const salt = typeof useSalt === 'number' ? generateSalt(useSalt) : useSalt
 
     dataToEncrypt = new Uint8Array(data.length + salt.length)
-    dataToEncrypt.set(dataToEncrypt)
+    dataToEncrypt.set(data)
     dataToEncrypt.set(salt, data.length)
     saltPrefix = `${uint8ArrayToHEX(salt)}$`
   }
