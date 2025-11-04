@@ -1,7 +1,7 @@
 import type { BaseMaskingFunction, MaskingBaseOptions } from 'typings/masking.ts'
-import { stringToUint8Array, uint8ArrayToHEX } from 'utils/strings.ts'
 
-export const MASKING_SEPARATOR = uint8ArrayToHEX(stringToUint8Array('${{zanix}}$')) + '$'
+export const ZANIX_PREFIX = 'Zx'
+export const MASKING_SEPARATOR = 'z7b7a6e787dx'
 
 /**
  * Text masking process.

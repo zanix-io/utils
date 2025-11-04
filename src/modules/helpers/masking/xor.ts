@@ -2,10 +2,12 @@ import type { MaskingFunction } from 'typings/masking.ts'
 
 import {
   hexToUint8Array,
+  isZanixHex,
   stringToUint8Array,
   uint8ArrayToHEX,
   uint8ArrayToString,
 } from 'utils/strings.ts'
+import { ZANIX_PREFIX } from './base.ts'
 
 /**
  * XOR masking function
@@ -34,7 +36,7 @@ function xorMasking(inputBuffer: Uint8Array<ArrayBuffer>, mask: string): Uint8Ar
 export const xorMask: MaskingFunction = (input, mask) => {
   const inputBuffer = stringToUint8Array(input)
   const result = xorMasking(inputBuffer, mask)
-  return uint8ArrayToHEX(result)
+  return ZANIX_PREFIX + uint8ArrayToHEX(result)
 }
 
 /**
@@ -44,6 +46,10 @@ export const xorMask: MaskingFunction = (input, mask) => {
  * @returns
  */
 export const xorUnmask: MaskingFunction = (maskedInput, mask) => {
+  if (!isZanixHex(maskedInput)) return maskedInput
+
+  maskedInput = maskedInput.slice(2)
+
   const maskedBuffer = hexToUint8Array(maskedInput) as Uint8Array<ArrayBuffer>
 
   const result = xorMasking(maskedBuffer, mask)
