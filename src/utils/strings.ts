@@ -138,4 +138,4 @@ export function base64ToUint8Array(base64: string): Uint8Array<ArrayBuffer> {
 }
 
 /** Check if is valid ZanixHex */
-export const isZanixHex = (str: string) => /^Zx[0-9a-fA-F]+$/.test(str)
+export const isZanixHex: (str: string) => boolean = (str: string) => /^Zx[0-9a-fA-F]+$/.test(str)
