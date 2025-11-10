@@ -29,24 +29,27 @@ Deno.test(
       },
     })
 
-    const returned = await logger.debug('test message', { data: 'data debug' })
+    const debugData = await logger.debug('test message', { data: 'data debug' })
+    assert(!debugData)
+
+    const returned = await logger.warn('test message', { data: 'data warn' })
 
     assertExists(returned)
     assertMatch(returned.id, uuidRegex)
     assertMatch(returned.timestamp, isoDatetimeRegex)
-    assertEquals(returned.level, 'debug')
+    assertEquals(returned.level, 'warn')
     assertEquals(returned.message, 'test message')
-    assertEquals(returned.data, [{ data: 'data debug' }])
+    assertEquals(returned.data, [{ data: 'data warn' }])
 
     const globalZnxLogger = await logger.info('info message')
     assertExists(globalZnxLogger)
-    assert(!globalZnxLogger.data.length)
+    assert(!globalZnxLogger.data)
     assertEquals(globalZnxLogger.level, 'info')
     assertEquals(globalZnxLogger.message, 'info message')
 
     const globalSelfLogger = await logger.error('this is an error')
     assertExists(globalSelfLogger)
-    assert(!globalSelfLogger.data.length)
+    assert(!globalSelfLogger.data)
     assertEquals(globalSelfLogger.level, 'error')
     assertEquals(globalSelfLogger.message, 'this is an error')
 
@@ -88,7 +91,7 @@ Deno.test(
 
     assertEquals(log[1].level, 'info')
     assertEquals(log[1].message, 'this is an info test')
-    assert(!log[1].data.length)
+    assert(!log[1].data)
 
     await Deno.remove(customFolder, { recursive: true })
   },
@@ -118,7 +121,7 @@ Deno.test('Testing disable saving', async () => {
   // Instantiate the logger with custom storage configuration.
   new Logger({ storage: false })
 
-  await Znx.logger.debug('test debug')
+  await Znx.logger.info('test info')
 
   const file = '.logs/' + getLogFileName()
   assert(!fileExists(file))
@@ -127,12 +130,12 @@ Deno.test('Testing disable saving', async () => {
   Znx.config.project = 'app' // simulating app project to save logs
 
   new Logger()
-  await Znx.logger.debug('Some debug information without saving') // Save
+  await Znx.logger.info('Some info information without saving') // Save
 
   assert(fileExists(file))
   await Deno.remove(file)
 
-  await Znx.logger.debug('Some debug information without saving', 'noSave')
+  await Znx.logger.info('Some info information without saving', 'noSave')
 
   assert(!fileExists(file))
 
@@ -140,7 +143,7 @@ Deno.test('Testing disable saving', async () => {
   Znx.config.project = 'library'
 
   new Logger()
-  await Znx.logger.debug('Some debug information without saving')
+  await Znx.logger.info('Some info information without saving')
 
   assert(!fileExists(file))
 })

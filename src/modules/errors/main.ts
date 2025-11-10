@@ -1,6 +1,25 @@
 import type { ErrorOptions, HttpErrorCodes } from 'typings/errors.ts'
 import httpErrorStatus from 'modules/errors/http-status-codes.ts'
 import logger from 'modules/logger/mod.ts'
+import { generateUUID } from 'utils/identifiers.ts'
+
+/**
+ * Function to process and sanitize external error data
+ * @param this - The error instance
+ * @param options - Options to customize the error.
+ */
+function processExtraData(this: {
+  id?: string
+  code?: string
+  meta?: Record<string, unknown>
+}, options: ErrorOptions) {
+  this.id = options.id || generateUUID()
+  if (options.code) this.code = options.code
+  else delete this.code
+
+  if (options.meta) this.meta = options.meta
+  else delete this.meta
+}
 
 /**
  * A custom error class for runtime server `exceptions`, extending Deno's `Interrupted` error class.
@@ -33,7 +52,7 @@ export class InternalError extends Deno.errors.Interrupted {
    *
    * @param {string} [message] - The main error message
    * @param {Object} options - Options to customize the error message and cause. This is optional.
-   * @param {boolean} [options.log] - To track the error
+   * @param {boolean} [options.shouldLog] - Whether to log this error using the system logger.
    * @param {Record<string, unknown>} [options.meta] - The meta options for internal use
    * @param {string} [options.code] - The error code for internal use
    * @param {unknown} [options.cause]
@@ -46,11 +65,10 @@ export class InternalError extends Deno.errors.Interrupted {
     this.message = message
     this.name = this.constructor.name
     this.cause = options.cause || this.cause
-    this.id = options.id || this.id
-    this.code = options.code
-    this.meta = options.meta
 
-    if (options.log) logger.error(this.message, this)
+    processExtraData.call(this, options)
+
+    if (options.shouldLog) logger.error(this.message, this)
   }
 }
 
@@ -97,7 +115,7 @@ export class HttpError extends Deno.errors.Http {
    * @param {HttpErrorCodes} code - The error code (e.g., 'BAD_REQUEST', 'NOT_FOUND') that defines the type of error.
    * @param {Object} options - Options to customize the error message and cause. This is optional.
    * @param {string} [options.message] - The main error message
-   * @param {boolean} [options.log] - To track the error
+   * @param {boolean} [options.shouldLog] - Whether to log this error using the system logger.
    * @param {Record<string, unknown>} [options.meta] - The meta options for internal use
    * @param {string} [options.code] - The error code for internal use
    * @param {unknown} [options.cause]
@@ -110,14 +128,13 @@ export class HttpError extends Deno.errors.Http {
     this.message = options.message || code
     this.name = this.constructor.name
     this.cause = options.cause || this.cause
-    this.id = options.id || this.id
     this.status = {
       code,
       value: httpErrorStatus[code],
     }
-    this.code = options.code
-    this.meta = options.meta
 
-    if (options.log) logger.error(this.message, this)
+    processExtraData.call(this, options)
+
+    if (options.shouldLog) logger.error(this.message, this)
   }
 }

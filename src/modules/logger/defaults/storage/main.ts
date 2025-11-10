@@ -2,7 +2,7 @@ import type { DefaultResponse, SaveDataFile, SaveDataFunction } from 'typings/lo
 
 import { showMessage } from 'modules/logger/base.ts'
 import { serializeError } from 'modules/errors/serialize.ts'
-import { TaskerManager } from 'modules/workers/mod.ts'
+import { WorkerManager } from 'modules/workers/mod.ts'
 import { cleanupExpiredLogs } from './cleanup.ts'
 import { getLogFileName } from './file.ts'
 import { join } from '@std/path'
@@ -13,20 +13,27 @@ import { join } from '@std/path'
 export const defaultSaveData: SaveDataFunction<
   DefaultResponse,
   SaveDataFile & { _fmtLog?: unknown }
-> = async (
-  context,
-) => {
-  // Workers adaptation
+> = async (context) => {
+  // Adaptation for worker-based execution.
+  // If `useWorker` is enabled, extract the callback from the context and prepare the formatted logger.
+  // The callback is removed from the context to avoid duplication.
   if (context.useWorker) {
     const { callback } = context
     delete context.callback
     const _fmtLog = context.getFmtLog()
-    return new TaskerManager(import.meta.url, defaultSaveData, callback).invoke({
-      ...context,
-      getFmtLog: undefined as never,
-      useWorker: false,
-      _fmtLog,
+    const worker = new WorkerManager()
+
+    return worker.task(defaultSaveData, {
+      metaUrl: import.meta.url,
+      onFinish: callback,
+      autoClose: true,
     })
+      .invoke({
+        ...context,
+        getFmtLog: undefined as never,
+        useWorker: false, // ensure 'false' to avoid loops
+        _fmtLog,
+      })
   }
 
   const data = context._fmtLog || context.getFmtLog()
@@ -51,7 +58,8 @@ export const defaultSaveData: SaveDataFunction<
 export function baseSaveData(
   saveDataFunction?: SaveDataFile | SaveDataFunction | false,
 ): SaveDataFunction {
-  // Zanix libraries do not save logs if  does not have a custom saveDataFunction.
+  // Zanix libraries won't save logs unless a custom `saveDataFunction` is provided.
+  // If this is a library project and no function is set, exit early with a no-op.
   if (Znx.config.project === 'library' && !saveDataFunction) return () => {}
 
   let baseContext: SaveDataFile = {}

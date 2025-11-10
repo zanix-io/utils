@@ -29,6 +29,7 @@ export async function createPreCommitYaml(
   if (!install.success) {
     logger.warn(
       'It seems pre-commit is not installed. Please install pre-commit and run the following commands: `pre-commit install` and `pre-commit autoupdate` to properly set up your environment.',
+      'noSave',
     )
   } else {
     // 2. pre-commit autoupdate

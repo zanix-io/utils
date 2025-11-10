@@ -7,6 +7,18 @@ adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [2.2.0] - 2025-11-05
+
+### Changed
+
+- `TaskerManager` has been replaced with the new `WorkerManager`, providing an improved API and extended usage options.
+
+### Added
+
+- Support for different worker execution modes (e.g., auto-closing, background execution).
+- Simplified task invocation with new helper methods.
+- Improved error handling and lifecycle management for worker tasks.
+
 ## [2.1.10] - 2025-11-02
 
 ### Fixed

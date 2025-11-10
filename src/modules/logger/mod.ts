@@ -95,8 +95,16 @@ import { Logger as LoggerMainClass } from 'modules/logger/main.ts'
  *
  * #### 5. Prevent Log Saving
  *
- * By default, logs are saved as files in the default folder. To prevent saving, set `storage: false` or
- * pass a special flag to stop saving the log.
+ * Logs are saved according to the configured storage strategy.
+ * If no specific strategy is defined, logs will be saved to the `.logs` folder.
+ *
+ * Note that `debug` and `success` logs are excluded from persistence,
+ * as they typically generate high volume and do not provide critical information,
+ * being mainly intended for local debugging or informational purposes.
+ *
+ * To prevent saving a specific log, either:
+ *  - set `storage: false`, or
+ *  - pass the special flag `noSave` when logging.
  *
  * ```ts
  * logger.debug('Some debug information without saving', 'noSave'); // The system recognizes 'noSave' as a flag to prevent saving.

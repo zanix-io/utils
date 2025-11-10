@@ -28,11 +28,19 @@ export class Logger<Return extends unknown = DefaultResponse> {
    */
   constructor(options?: LoggerFileOptions<Return>)
   constructor(options: LoggerOptions<Return> = {}) {
-    // Global assignment: This must be set before defining the instance, because of Znx use on baseSaveData
+    const globals: Partial<typeof Znx> = {}
+
+    // Assign the logger globally before instance creation unless disabled.
+    // Skipped if disableGlobalAssign is true.
     if (!options.disableGlobalAssign) {
-      Object.assign(globalThis, { logger: this })
-      setGlobalZnx({ logger: this })
+      globals.logger = this
+      Object.assign(globalThis, { logger: globals.logger })
     }
+
+    // Initialize global configuration for Znx.
+    // This ensures Znx's `baseSaveData` method has the necessary global configuration.
+    setGlobalZnx(globals)
+
     if (options.storage !== false) {
       const { storage = {} } = options
       this.#formatter = baseFormatter(storage.formatter)
@@ -40,14 +48,14 @@ export class Logger<Return extends unknown = DefaultResponse> {
     }
   }
 
-  #log(type: LoggerMethods, ...console: LoggerData): Return | undefined {
-    if (console[console.length - 1] === 'noSave') {
-      console.length = console.length - 1
-      showMessage(type, ...console)
+  #log(type: LoggerMethods, ...data: LoggerData): Return | undefined {
+    if (data[data.length - 1] === 'noSave') {
+      data.length = data.length - 1
+      showMessage(type, ...data)
       return undefined
     }
-    showMessage(type, ...console)
-    return this.#storage(type, console) as Return
+    showMessage(type, ...data)
+    return this.#storage(type, data) as Return
   }
 
   #storage(type: LoggerMethods, log: LoggerData) {
@@ -58,46 +66,42 @@ export class Logger<Return extends unknown = DefaultResponse> {
 
   /**
    * Logs a debug message along with additional parameters.
-   * @param message - The primary debug message.
    * @param data - Values to be printed to the console.
    */
-  public debug(...console: LoggerData<'debug'>): Return | undefined {
-    return this.#log('debug', ...console)
+  public debug(...data: LoggerData<'debug'>): Return | undefined {
+    return this.#log('debug', ...data, 'noSave')
   }
 
   /**
    * Logs an error message with additional parameters.
-   * @param message - The primary error message.
    * @param data - Values to be printed to the console.
    */
-  public error(...[message, ...console]: LoggerData<'error'>): Return | undefined {
-    const args: LoggerData = [message, ...serializeMultipleErrors(console)]
-    return this.#log('error', ...args)
+  public error(...data: LoggerData<'error'>): Return | undefined {
+    const [message, ...rest] = data
+    return this.#log('error', message, ...serializeMultipleErrors(rest))
   }
 
   /**
    * Logs a info message with additional parameters.
-   * @param message - The primary info message.
    * @param data - Values to be printed to the console.
    */
-  public info(...console: LoggerData<'info'>): Return | undefined {
-    return this.#log('info', ...console)
+  public info(...data: LoggerData<'info'>): Return | undefined {
+    return this.#log('info', ...data)
   }
 
   /**
    * Logs a success message
-   * @param message - The primary message.
+   * @param data - The primary message.
    */
-  public success(...console: LoggerData<'success'>): Return | undefined {
-    return this.#log('success', ...console)
+  public success(message: LoggerData<'success'>): Return | undefined {
+    return this.#log('success', message, 'noSave')
   }
 
   /**
    * Logs a warning message with additional parameters.
-   * @param message - The primary warning message.
    * @param data - Values to be printed to the console.
    */
-  public warn(...console: LoggerData<'warn'>): Return | undefined {
-    return this.#log('warn', ...console)
+  public warn(...data: LoggerData<'warn'>): Return | undefined {
+    return this.#log('warn', ...data)
   }
 }

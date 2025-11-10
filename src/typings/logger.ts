@@ -1,4 +1,4 @@
-import type { TaskerCallback } from 'typings/workers.ts'
+import type { TaskCallback } from 'typings/workers.ts'
 
 type Console = typeof console
 
@@ -11,8 +11,7 @@ type ConsoleInfo<Method extends BaseMethods> = Console[Method]
 export type LoggerMethods = 'info' | 'error' | 'warn' | 'debug' | 'success'
 
 /** The Logger data to be shown */
-export type LoggerData<Method extends LoggerMethods = 'info'> = Method extends 'success'
-  ? [message: string, noSave?: 'noSave']
+export type LoggerData<Method extends LoggerMethods = 'info'> = Method extends 'success' ? string
   : [
     message: string,
     ...data: [...Parameters<ConsoleInfo<Exclude<Method, 'success'>>>, noSave?: 'noSave'],
@@ -32,7 +31,7 @@ export type DefaultFormattedLog = {
   message: string
   data: LoggerData[1][]
   context: {
-    userId: number | null
+    processId: number | null
   }
 }
 
@@ -94,21 +93,24 @@ export type SaveDataFile =
   }
   & ({
     /**
-     * A flag that determines whether a worker should be used for processing.
-     * Only set to true when necessary, as using workers can add overhead.
+     * Determines whether a worker should be used to save log data.
+     * Enable only for heavy or resource-intensive log storage operations,
+     * since using a worker adds extra overhead to the process.
      */
     useWorker?: false
   } | {
     /**
-     * A flag that determines whether a worker should be used for processing.
-     * Only set to true when necessary, as using workers can add overhead.
+     * Determines whether a worker should be used to save log data.
+     * Enable only for heavy or resource-intensive log storage operations,
+     * since using a worker adds extra overhead to the process.
      */
     useWorker?: true
     /**
-     * Callback function to be executed when the process completes.
-     * It is recommended to use this only when `useWorker` is set to `true`.
+     * Callback function executed when the worker finishes processing.
+     * Should be used only if `useWorker` is `true`, as it handles post-processing
+     * or cleanup after the log-saving task completes.
      */
-    callback?: TaskerCallback
+    callback?: TaskCallback
   })
 
 /** The save log data options as a file */

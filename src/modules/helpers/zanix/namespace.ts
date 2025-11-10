@@ -18,9 +18,10 @@ export function setGlobalZnx(data: Partial<Zanix>) {
     try {
       config.zanix = readConfig().zanix // initialize config data
     } catch { /** ignore error */ }
+
     const baseZnx: Zanix = {
-      config: { ...config.zanix },
-      logger: {} as Zanix['logger'],
+      config: { ...config.zanix, ...data.config },
+      logger: { ...data.logger } as Zanix['logger'],
     }
     Object.assign(globalThis, { Znx: baseZnx })
   }

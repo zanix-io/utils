@@ -12,7 +12,7 @@ Deno.test('test library main module', async () => {
   assertExists(utils.regex)
   assertExists(utils.validator)
   assertExists(utils.HttpError)
-  assertExists(utils.TaskerManager)
+  assertExists(utils.WorkerManager)
   // Some utils
   assertExists(utils.createPrePushHook)
   assertExists(utils.compileAndObfuscate)
@@ -60,7 +60,7 @@ Deno.test('validates library logger module', async () => {
 Deno.test('validates library workers module', async () => {
   const workers = await import(`jsr:@zanix/utils/workers`)
 
-  assertExists(workers.TaskerManager)
+  assertExists(workers.WorkerManager)
 })
 
 Deno.test('validates library testing module', async () => {

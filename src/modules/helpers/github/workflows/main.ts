@@ -43,7 +43,7 @@ export async function createWorkflow(
     // Write the YAML file
     await Deno.writeTextFile(baseFileDir, replaceContentCallback(hookContent))
 
-    logger.success(`'${mainYamls}' YAML created successfully!`, 'noSave')
+    logger.success(`'${mainYamls}' YAML created successfully!`)
 
     return true
   } catch (e) {

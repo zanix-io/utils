@@ -40,7 +40,7 @@ export async function createEditorFileConfig(
     // Write the config file
     await Deno.writeTextFile(baseFileDir, JSON.stringify(configContent, null, 2))
 
-    logger.success(`'${editorName}' configuration file created successfully!`, 'noSave')
+    logger.success(`'${editorName}' configuration file created successfully!`)
 
     return true
   } catch (e) {

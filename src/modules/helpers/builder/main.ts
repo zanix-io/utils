@@ -75,7 +75,6 @@ export const mainBuilderFunction = async (
 
     logger.success(
       `Build and obfuscation completed ${onBackground ? 'on background' : ''}: ${outputFile}`,
-      'noSave',
     )
 
     result.message = 'Build completed'
@@ -86,7 +85,7 @@ export const mainBuilderFunction = async (
     logger.error('Error during compile:', error, 'noSave')
 
     result.error = error
-    callback?.({ error })
+    callback?.(result)
   }
 
   return result

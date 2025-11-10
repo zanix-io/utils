@@ -5,21 +5,24 @@ import { showMessage } from 'modules/logger/base.ts'
 
 const defaultFormatter: Formatter<DefaultFormattedLog> = (level, [message, ...data]) => {
   const timestamp = new Date().toISOString()
-  let userId = null
+  let processId = null
   try {
-    userId = Deno.uid()
+    processId = Deno.uid()
   } catch { /** Ignore error */ }
 
-  return {
+  const formatted = {
     id: generateUUID(),
     level,
     message,
     timestamp,
-    data,
     context: {
-      userId,
+      processId,
     },
-  }
+  } as DefaultFormattedLog
+
+  if (data.length) formatted.data = data
+
+  return formatted
 }
 
 // The default logs formatter

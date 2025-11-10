@@ -1,9 +1,8 @@
 import type { CompilerOptions } from 'typings/builder.ts'
-import type { TaskerCalbackArgs } from 'typings/workers.ts'
 
 import { DISTRIBUTION_FILE, MAIN_MODULE } from 'utils/constants.ts'
 import { getZanixPaths } from 'modules/helpers/zanix/tree.ts'
-import { TaskerManager } from 'modules/workers/tasker.ts'
+import { WorkerManager } from '../../workers/manager.ts'
 import { mainBuilderFunction } from './main.ts'
 import { join } from '@std/path'
 
@@ -31,25 +30,27 @@ import { join } from '@std/path'
  */
 export function compileAndObfuscate(
   options: Partial<CompilerOptions> = {},
-): void | Promise<TaskerCalbackArgs> {
+): void | Promise<{ error?: unknown; message?: string }> {
   const paths = getZanixPaths()
   const {
     inputFile = paths.FOLDER + MAIN_MODULE,
     outputFile = paths.subfolders['.dist'].FOLDER + '/' + DISTRIBUTION_FILE,
     useWorker,
+    callback = () => {},
     minify = true,
     bundle = true,
-    callback = () => {},
     ...opts
   } = options
 
   if (useWorker) {
-    const tarker = new TaskerManager(
-      join(import.meta.url, '../main.ts'),
-      mainBuilderFunction,
-      callback,
-    )
-    return tarker.invoke({ inputFile, outputFile, minify, bundle, onBackground: true, ...opts })
+    const worker = new WorkerManager()
+
+    return worker.task(mainBuilderFunction, {
+      metaUrl: join(import.meta.url, '../main.ts'),
+      onFinish: ({ error, response: { message, error: runtimeError }, ..._args }) =>
+        callback({ error: runtimeError || error, message, ..._args }),
+      autoClose: true,
+    }).invoke({ inputFile, outputFile, minify, bundle, onBackground: true, ...opts })
   } else {
     return mainBuilderFunction({ inputFile, outputFile, minify, bundle, callback, ...opts })
   }

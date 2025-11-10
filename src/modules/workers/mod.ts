@@ -7,4 +7,4 @@
  * \_____/ \__,_||_| |_||_|/_/\_\
  */
 
-export * from 'modules/workers/tasker.ts'
+export * from './manager.ts'

@@ -57,7 +57,7 @@ export type ErrorOptions = {
    */
   meta?: Record<string, unknown>
   /**
-   * An optional flag that determines whether the error should be logged.
+   * An optional flag that determines whether to log the error using the system logger.
    */
-  log?: boolean
+  shouldLog?: boolean
 }

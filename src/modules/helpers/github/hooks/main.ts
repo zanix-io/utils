@@ -16,6 +16,7 @@ export async function gitInitialization(baseRoot: string = getRootDir()) {
   if (!folderExists(gitFolder)) {
     logger.warn(
       `${constants.GIT_HOOKS_FOLDER} directory does not exist. Initializing Git repository...`,
+      'noSave',
     )
 
     // Execute `git init` for initializing the repo if does not exist.
@@ -63,7 +64,7 @@ export async function createHook(
     const baseFileDir = `${dir}/${script}`
 
     if (fileExists(baseFileDir)) {
-      logger.warn(`${mainScript} file already exists, skipping creation.`)
+      logger.warn(`${mainScript} file already exists, skipping creation.`, 'noSave')
 
       return false
     }
@@ -105,7 +106,7 @@ export async function createHook(
       }
     }
 
-    logger.success(`'${mainScript}' hook created successfully!`, 'noSave')
+    logger.success(`'${mainScript}' hook created successfully!`)
 
     return true
   } catch (e) {

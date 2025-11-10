@@ -1,4 +1,3 @@
-import type { TaskerCallback } from 'typings/workers.ts'
 import type { BuildOptions, Plugin } from 'esbuild'
 
 /**
@@ -34,7 +33,7 @@ export type CompilerOptions = Omit<BuildOptions, 'plugins'> & {
    * Callback function to be executed when the process is complete.
    * It is invoked once the task or operation finishes successfully.
    */
-  callback?: TaskerCallback
+  callback?: (response: { error?: unknown; message?: string }) => void
   /**
    * Additional Plugins
    */

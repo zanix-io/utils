@@ -31,7 +31,7 @@ export async function createBaseFile(
     const fileDir = join(baseRoot, filename)
 
     if (fileExists(fileDir)) {
-      logger.warn(`'${filename}' file already exists, skipping creation.`)
+      logger.warn(`'${filename}' file already exists, skipping creation.`, 'noSave')
 
       return false
     }
@@ -39,7 +39,7 @@ export async function createBaseFile(
     // Write the file in root
     await Deno.writeTextFile(fileDir, fileContent)
 
-    logger.success(`'${filename}' file created successfully!`, 'noSave')
+    logger.success(`'${filename}' file created successfully!`)
 
     return true
   } catch (e) {

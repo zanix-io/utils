@@ -20,7 +20,7 @@ export type {
   SaveDataFunction as LoggerSaveData,
 } from 'typings/logger.ts'
 
-export type { TaskerCallback as WorkerTaskerCallback } from 'typings/workers.ts'
+export type { TaskCallback } from 'typings/workers.ts'
 
 export type { ErrorOptions, HttpErrorCodes as HttpErrors } from 'typings/errors.ts'
 
