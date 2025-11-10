@@ -107,12 +107,12 @@ Deno.test('Define a custom log formatter to modify how the logs are saved', asyn
     },
   })
 
-  await self.logger.success('success message')
+  await self.logger.info('info message')
 
   const file = '.logs/' + getLogFileName()
   const log = JSON.parse(await Deno.readTextFile(file))
 
-  assertEquals(log[0], { level: 'success', data: ['success message'] })
+  assertEquals(log[0], { level: 'info', data: ['info message'] })
 
   await Deno.remove(file, { recursive: true })
 })
@@ -164,7 +164,7 @@ Deno.test('Define a save logger in file using a worker', async () => {
       },
     })
 
-    self.logger.success('success message')
+    self.logger.info('info message')
   })
 
   assertExists(result._wasWorkerThread)
