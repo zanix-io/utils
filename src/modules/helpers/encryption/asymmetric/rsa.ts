@@ -1,17 +1,26 @@
 import type { HashAlgorithm, ValidRSAKeysOptions } from 'typings/encryption.ts'
 
-import { base64ToUint8Array, stringToUint8Array, uint8ArrayToBase64 } from 'utils/strings.ts'
-import { baseEncrypt } from './base.ts'
+import { base64ToUint8Array, stringToUint8Array, uint8ArrayToBase64 } from 'utils/encoders.ts'
+import { baseEncrypt } from '../base.ts'
+
+function encodeRsaKey(pem: string) {
+  return Uint8Array.from(
+    atob(pem.replace(/-----(BEGIN|END) (PUBLIC|PRIVATE) KEY-----/g, '').trim()),
+    (c) => c.charCodeAt(0),
+  )
+}
 
 function importRSAKey(
   pem: string,
   type: 'public' | 'private',
-  algorithm: ValidRSAKeysOptions<never>['algorithm'] = 'RSA-OAEP',
+  options: {
+    algorithm?: ValidRSAKeysOptions<never>['algorithm']
+    hash?: Exclude<HashAlgorithm, 'SHA-1'>
+  } = {},
 ) {
-  const binary = Uint8Array.from(
-    atob(pem.replace(/-----(BEGIN|END) (PUBLIC|PRIVATE) KEY-----/g, '').trim()),
-    (c) => c.charCodeAt(0),
-  )
+  const { algorithm = 'RSA-OAEP', hash = 'SHA-256' } = options
+
+  const binary = encodeRsaKey(pem)
 
   const format = type === 'public' ? 'spki' : 'pkcs8' as const
   const usages: KeyUsage[] = type === 'public'
@@ -20,7 +29,7 @@ function importRSAKey(
     ? ['decrypt']
     : ['sign']
 
-  return crypto.subtle.importKey(format, binary, { name: algorithm, hash: 'SHA-256' }, true, usages)
+  return crypto.subtle.importKey(format, binary, { name: algorithm, hash }, false, usages)
 }
 
 async function exportRSAKey(key: CryptoKey, type: 'spki' | 'pkcs8') {
@@ -90,72 +99,8 @@ export function encryptRSA<T extends string | string[]>(message: T, publicKey: s
       encodedValue,
     )
 
-    return uint8ArrayToBase64(new Uint8Array(encrypted)) as T
+    return uint8ArrayToBase64(new Uint8Array(encrypted))
   }) as Promise<T>
-}
-
-/**
- * Signs a message using an RSA private key.
- *
- * Uses the `RSA-PSS` algorithm to create a digital signature of the given message.
- * This signature can be verified later using the corresponding public key.
- *
- * @param {string | string[]} message - The text to be encrypted.
- * @param {string} privateKey - The encryption private RSA key.
- *
- * @example
- * ```ts
- * const signed = await signRSA("hello world", privateKey);
- * console.log(signed); // Base64 signed message
- * ```
- *
- * @returns {Promise<string | string[]>} A base64 string containing the signed message.
- */
-export function signRSA<T extends string | string[]>(message: T, privateKey: string): Promise<T> {
-  return baseEncrypt(message, async (input) => {
-    const encoded = stringToUint8Array(input)
-    const algoritm = 'RSA-PSS'
-    const key = await importRSAKey(privateKey, 'private', algoritm)
-    const signature = await crypto.subtle.sign(
-      { name: algoritm, saltLength: 32 },
-      key,
-      encoded,
-    )
-
-    return uint8ArrayToBase64(new Uint8Array(signature)) as T
-  }) as Promise<T>
-}
-
-/**
- * Verifies an RSA signature using the corresponding public key.
- *
- * Uses the `RSA-PSS` algorithm to check if the given signature is valid
- * for the provided message and public key.
- *
- * @param {string | string[]} message - The original message that was signed.
- * @param {string} signatureBase64 - The base64-encoded signature to verify.
- * @param {string} publicKey - The RSA public key used to verify the signature.
- * @returns {Promise<boolean>} - `true` if the signature is valid, `false` otherwise.
- *
- * @throws {DOMException} - If the key is invalid or does not allow verification.
- */
-export function verifyRSA<T extends string | string[]>(
-  message: T,
-  signatureBase64: string,
-  publicKey: string,
-): Promise<boolean> {
-  return baseEncrypt(message, async (input) => {
-    const encoded = stringToUint8Array(input)
-    const signature = base64ToUint8Array(signatureBase64)
-    const algoritm = 'RSA-PSS'
-    const key = await importRSAKey(publicKey, 'public', algoritm)
-    return crypto.subtle.verify(
-      { name: algoritm, saltLength: 32 },
-      key,
-      signature,
-      encoded,
-    )
-  }) as Promise<boolean>
 }
 
 /**
@@ -184,6 +129,73 @@ export function decryptRSA<T extends string | string[]>(
       base64ToUint8Array(input),
     )
 
-    return atob(uint8ArrayToBase64(new Uint8Array(decrypted))) as T
+    return atob(uint8ArrayToBase64(new Uint8Array(decrypted)))
   }) as Promise<T>
+}
+
+/**
+ * Signs a message using an RSA private key.
+ *
+ * Uses the `RSA-PSS` algorithm to create a digital signature of the given message.
+ * This signature can be verified later using the corresponding public key.
+ *
+ * @param {string | string[]} message - The text to be encrypted.
+ * @param {string} privateKey - The encryption private RSA key (base64).
+ * @param {Exclude<HashAlgorithm, 'SHA-1'>} [hash='SHA-256'] - The hash algorithm to use with HMAC (e.g., 'SHA-256', 'SHA-384'). Default is 'SHA-256'.
+ *
+ * @example
+ * ```ts
+ * const signed = await signRSA("hello world", privateKey);
+ * console.log(signed); // Base64 signed message
+ * ```
+ *
+ * @returns {Promise<Uint8Array>} A Uint8Array containing the signed message.
+ */
+export async function signRSA(
+  message: string,
+  privateKey: string,
+  hash: Exclude<HashAlgorithm, 'SHA-1'> = 'SHA-256',
+): Promise<Uint8Array<ArrayBuffer>> {
+  const encoded = stringToUint8Array(message)
+  const algorithm = 'RSA-PSS'
+  const key = await importRSAKey(privateKey, 'private', { algorithm, hash })
+  const signature = await crypto.subtle.sign(
+    { name: algorithm, saltLength: 32 },
+    key,
+    encoded,
+  )
+
+  return new Uint8Array(signature)
+}
+
+/**
+ * Verifies an RSA signature using the corresponding public key.
+ *
+ * Uses the `RSA-PSS` algorithm to check if the given signature is valid
+ * for the provided message and public key.
+ *
+ * @param {string} message - The original message that was signed.
+ * @param {string} signature - The encoded signature to verify.
+ * @param {string} publicKey - The RSA public key used to verify the signature (base64).
+ * @param {Exclude<HashAlgorithm, 'SHA-1'>} [hash='SHA-256'] - The hash algorithm to use with HMAC (e.g., 'SHA-256', 'SHA-384'). Default is 'SHA-256'.
+ *
+ * @returns {Promise<boolean>} - `true` if the signature is valid, `false` otherwise.
+ *
+ * @throws {DOMException} - If the key is invalid or does not allow verification.
+ */
+export async function verifyRSA(
+  message: string,
+  signature: Uint8Array<ArrayBuffer>,
+  publicKey: string,
+  hash: Exclude<HashAlgorithm, 'SHA-1'> = 'SHA-256',
+): Promise<boolean> {
+  const encoded = stringToUint8Array(message)
+  const algorithm = 'RSA-PSS'
+  const key = await importRSAKey(publicKey, 'public', { algorithm, hash })
+  return crypto.subtle.verify(
+    { name: algorithm, saltLength: 32 },
+    key,
+    signature,
+    encoded,
+  )
 }

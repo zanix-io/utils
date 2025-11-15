@@ -6,7 +6,7 @@ import {
   stringToUint8Array,
   uint8ArrayToHEX,
   uint8ArrayToString,
-} from 'utils/strings.ts'
+} from 'utils/encoders.ts'
 import { ZANIX_PREFIX } from './base.ts'
 
 /**

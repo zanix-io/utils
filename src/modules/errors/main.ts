@@ -22,6 +22,56 @@ function processExtraData(this: {
 }
 
 /**
+ * A custom error class for runtime server `exceptions`, extending Deno's `PermissionDenied` error class.
+ *
+ * This class allows for more detailed and structured error handling, including associating
+ * error codes with their corresponding internal server codes and providing customizable error messages.
+ * It is particularly useful for throwing and catching general server errors.
+ *
+ * @example
+ * ```ts
+ *  const error = new PermissionDenied({
+ *    message: 'No token provided.',
+ *  });
+ * ```
+ *
+ * @category errors
+ */
+export class PermissionDenied extends Deno.errors.PermissionDenied {
+  public override message: string
+  public id?: string
+  public code?: string
+  public meta?: Record<string, unknown>
+
+  /**
+   * Creates an instance of the `PermissionDenied` class.
+   *
+   * This constructor takes an options object, allowing for customization
+   * of the error message and the optional cause of the erro
+   *
+   * @param {string} [message] - The main error message
+   * @param {Object} options - Options to customize the error message and cause. This is optional.
+   * @param {boolean} [options.shouldLog] - Whether to log this error using the system logger.
+   * @param {Record<string, unknown>} [options.meta] - The meta options for internal use
+   * @param {string} [options.code] - The error code for internal use
+   * @param {unknown} [options.cause]
+   */
+  constructor(
+    message: string,
+    options: Omit<ErrorOptions, 'message'> = {},
+  ) {
+    super(message, { cause: options.cause })
+    this.message = message
+    this.name = this.constructor.name
+    this.cause = options.cause || this.cause
+
+    processExtraData.call(this, options)
+
+    if (options.shouldLog) logger.error(this.message, this)
+  }
+}
+
+/**
  * A custom error class for runtime server `exceptions`, extending Deno's `Interrupted` error class.
  *
  * This class allows for more detailed and structured error handling, including associating

@@ -6,13 +6,27 @@ import {
   stringToUint8Array,
   uint8ArrayToBase64,
   uint8ArrayToHEX,
-} from 'utils/strings.ts'
+} from 'utils/encoders.ts'
 import { baseEncrypt } from './base.ts'
 
-function importAESKey(key: string, exports: boolean = true) {
+const AES_LENGTHS = [16, 24, 32]
+
+async function importAESKey(key: string, exports: boolean = false) {
+  let secretBuffer
+  try {
+    secretBuffer = base64ToUint8Array(key).buffer
+    if (!AES_LENGTHS.includes(secretBuffer.byteLength)) {
+      const { buffer } = await generateCustomAESKey(key, false)
+      secretBuffer = buffer
+    }
+  } catch {
+    const { buffer } = await generateCustomAESKey(key, false)
+    secretBuffer = buffer
+  }
+
   return crypto.subtle.importKey(
     'raw',
-    base64ToUint8Array(key).buffer,
+    secretBuffer,
     { name: 'AES-GCM' },
     exports, // Whether the key can be exported
     ['encrypt', 'decrypt'], // Key usages (encryption and decryption)
@@ -38,28 +52,34 @@ export async function generateAESKey(length: AESLength = 128): Promise<string> {
 
 /**
  *  A function to generate a custom base64 key for AES.
- * @param secret - Secret for AES. Max length: 32.
- * @returns {string}
+ * @param secret - Secret for custom AES.
+ * @param toString - If `true` converts UintArray into base64 string, else returns a Uint8Array.
+ *                   Defaults `true`
+ *
+ * @returns {Promise<string | Uint8Array<ArrayBuffer>>}
  */
-export function generateCustomAESKey(secret: string): string {
+export async function generateCustomAESKey<S extends boolean = true>(
+  secret: string,
+  toString: S = true as S,
+): Promise<false extends S ? Uint8Array<ArrayBuffer> : string> {
   const keyBuffer = stringToUint8Array(secret)
 
-  const lengths = [16, 24, 32]
+  const adjustedLength = AES_LENGTHS.find((length) => keyBuffer.length <= length) || 32
 
-  const adjustedLength = lengths.find((length) => keyBuffer.length <= length) || 32
+  const hashBuffer = new Uint8Array(await crypto.subtle.digest('SHA-256', keyBuffer))
 
-  // Creamos el ArrayBuffer adecuado (rellenado o truncado)
-  const adjustedKey = new Uint8Array(adjustedLength)
-  adjustedKey.set(keyBuffer.slice(0, adjustedLength)) // Rellenamos o truncamos según sea necesario
+  // Create the ArrayBuffer
+  const adjustedBuffer = new Uint8Array(adjustedLength)
+  adjustedBuffer.set(hashBuffer.slice(0, adjustedLength))
 
-  return uint8ArrayToBase64(adjustedKey)
+  return (toString ? uint8ArrayToBase64(adjustedBuffer) : adjustedBuffer) as never
 }
 
 /**
  * Encrypt a message using 'AES-GCM' as `symmetric` encryption.
  *
  * @param {string | string[]} message - The text to be encrypted.
- * @param {string} key - The base64 encryption AES key.
+ * @param {string} key - The encryption secret key.
  * @param {number} ivLength - The iv length (12 or 16). Defaults to 12
  *
  * @example
@@ -89,7 +109,7 @@ export function encryptAES<T extends string | string[]>(
       encodedMessage,
     )
 
-    return `${uint8ArrayToHEX(iv)}$${uint8ArrayToBase64(new Uint8Array(encrypted))}` as T
+    return `${uint8ArrayToHEX(iv)}$${uint8ArrayToBase64(new Uint8Array(encrypted))}`
   }) as Promise<T>
 }
 
@@ -97,7 +117,7 @@ export function encryptAES<T extends string | string[]>(
  * Decrypt a message using 'AES-GCM' as `symmetric` encryption.
  *
  * @param {string | string[]} encryptedData - The  base64 text to be decrypted.
- * @param {string} key - The base64 encryption AES key.
+ * @param {string} key - The encryption secret key.
  *
  * @example
  * ```ts
@@ -124,6 +144,6 @@ export function decryptAES<T extends string | string[]>(
       base64ToUint8Array(base64Ciphertext),
     )
 
-    return atob(uint8ArrayToBase64(new Uint8Array(decrypted))) as T
+    return atob(uint8ArrayToBase64(new Uint8Array(decrypted)))
   }) as Promise<T>
 }

@@ -5,7 +5,7 @@ import {
   stringToUint8Array,
   uint8ArrayToBase64,
   uint8ArrayToHEX,
-} from 'utils/strings.ts'
+} from 'utils/encoders.ts'
 
 async function* iterateAsync(iterations: number) {
   for (let i = 0; i < iterations; i++) {
@@ -37,7 +37,11 @@ const encriptionLevel: Record<EncryptionLevel, { algorithm: HashAlgorithm; itera
 }
 
 /**
- * Generates a base64 SHA hash. Used for `unidirectional` encryption.
+ * Generates a SHA hash and returns it as a Base64-encoded string.
+ *
+ * Optionally, a salt can be included and concatenated before encoding.
+ * This function is intended for use in **unidirectional encryption** or
+ * secure hashing where the original value cannot be recovered.
  *
  * @param {string} message - The text to be encrypted.
  * @param {EncryptionLevel} [level='medium'] - The encryption strength level. Can be 'low', 'medium', or 'high'. Default is 'medium'

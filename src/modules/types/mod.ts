@@ -38,3 +38,5 @@ export type {
 } from 'typings/validations.ts'
 
 export type { MaskingBaseOptions } from 'typings/masking.ts'
+
+export type { HashAlgorithm } from 'typings/encryption.ts'

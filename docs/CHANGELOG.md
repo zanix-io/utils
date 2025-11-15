@@ -7,6 +7,19 @@ adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [2.2.1] - 2025-11-14
+
+### Added
+
+- **New asymmetric HMAC signing**: Introduced support for asymmetric HMAC signing, allowing for enhanced security with keys for signature generation and verification.
+
+- **New error handling**: Introduced new custom error types for better error
+  management.
+
+### Changed
+
+- **AES Encryption**: Added support for generating AES keys and performing AES encryption with any key type.
+
 ## [2.2.0] - 2025-11-05
 
 ### Changed

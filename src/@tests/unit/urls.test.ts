@@ -1,5 +1,45 @@
-import { searchParamsPropertyDescriptor } from 'utils/urls.ts'
+import { getProcessedParams, searchParamsPropertyDescriptor } from 'utils/urls.ts'
 import { assertEquals } from '@std/assert'
+
+Deno.test('getProcessedParams - simple key-value pairs', () => {
+  const searchParams = new URLSearchParams('?keyA=a&keyB=b')
+  const result = getProcessedParams(searchParams)
+
+  assertEquals(result, { keyA: 'a', keyB: 'b' })
+})
+
+Deno.test('getProcessedParams - duplicate keys', () => {
+  const searchParams = new URLSearchParams('?keyA=a&keyA=b')
+  const result = getProcessedParams(searchParams)
+
+  assertEquals(result, { keyA: ['a', 'b'] })
+})
+
+Deno.test('getProcessedParams - nested key structure', () => {
+  const searchParams = new URLSearchParams(
+    'keyA[subKeyA]=a&keyA[subKeyB]=b&keyB[subKeyA]=c&keyB[subKeyB]=d',
+  )
+  const result = getProcessedParams(searchParams)
+
+  assertEquals(result, {
+    keyA: { subKeyA: 'a', subKeyB: 'b' },
+    keyB: { subKeyA: 'c', subKeyB: 'd' },
+  })
+})
+
+Deno.test('getProcessedParams - handles empty params', () => {
+  const searchParams = new URLSearchParams('')
+  const result = getProcessedParams(searchParams)
+
+  assertEquals(result, {})
+})
+
+Deno.test('getProcessedParams - single nested key', () => {
+  const searchParams = new URLSearchParams('keyA[subKeyA]=a')
+  const result = getProcessedParams(searchParams)
+
+  assertEquals(result, { keyA: { subKeyA: 'a' } })
+})
 
 Deno.test('computedSearchParams should process urlsearch params', () => {
   const context = { _computedSearch: null }

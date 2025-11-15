@@ -2,7 +2,7 @@ import type { BaseEditorHelperOptions, EditorOptions } from 'typings/editor.ts'
 
 import { fileExists, readFileFromCurrentUrl } from 'modules/helpers/files.ts'
 import { getRootDir } from 'modules/helpers/paths.ts'
-import { capitalize } from 'utils/strings.ts'
+import { capitalize } from 'utils/encoders.ts'
 import logger from 'modules/logger/mod.ts'
 import constants from 'utils/constants.ts'
 import { join } from '@std/path'

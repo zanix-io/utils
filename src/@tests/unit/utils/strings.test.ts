@@ -1,10 +1,13 @@
 import {
+  base64UrlDecode,
+  base64UrlEncode,
   capitalize,
   capitalizeWords,
   stringToUint8Array,
   uint8ArrayToBase64,
-} from 'utils/strings.ts'
-import { assertEquals } from '@std/assert'
+  uint8ArrayToString,
+} from 'utils/encoders.ts'
+import { assertEquals, assertNotEquals } from '@std/assert'
 
 Deno.test('capitalize should capitalize the first character of a string', () => {
   assertEquals(capitalize('hello'), 'Hello')
@@ -24,4 +27,17 @@ Deno.test('array buffer encoding and decoding', () => {
   const resultString = atob(uint8ArrayToBase64(exampleArrayBuffer))
 
   assertEquals(resultString, 'Hello, world!')
+})
+
+Deno.test('base64 url encode should encode and decode correctly', () => {
+  const input = 'Hello, world!'
+  const resultString = base64UrlEncode(input)
+  const decoded = base64UrlDecode(resultString)
+
+  assertNotEquals(resultString, input)
+  assertEquals(input, uint8ArrayToString(decoded))
+
+  const stringDecoded = base64UrlDecode(resultString, true)
+
+  assertEquals(input, stringDecoded)
 })

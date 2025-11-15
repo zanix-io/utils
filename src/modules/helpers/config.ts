@@ -4,7 +4,7 @@ import { CONFIG_FILE } from 'utils/constants.ts'
 import { getConfigDir } from './paths.ts'
 import { isFileUrl } from 'utils/urls.ts'
 import regex from 'utils/regex.ts'
-import { stripComments } from 'utils/strings.ts'
+import { stripComments } from 'utils/encoders.ts'
 
 let configFile: ConfigFile | null = null
 let currentConfigPath: string | null = null

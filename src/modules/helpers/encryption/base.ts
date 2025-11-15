@@ -4,9 +4,9 @@
  * @param callback
  * @returns
  */
-export function baseEncrypt<T extends string | string[]>(
+export function baseEncrypt<T extends string | string[], R>(
   message: T,
-  callback: (input: string) => Promise<T | boolean>,
+  callback: (input: string) => Promise<R>,
 ) {
   if (typeof message === 'string') return callback(message)
 

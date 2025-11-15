@@ -11,12 +11,14 @@ import {
   decryptRSA,
   encryptRSA,
   generateRSAKeys,
+  signHMAC,
   signRSA,
+  verifyHMAC,
   verifyRSA,
-} from 'modules/helpers/encryption/asymmetric.ts'
-import { base64ToUint8Array, uint8ArrayToHEX } from 'utils/strings.ts'
-import { assertNotEquals } from '@std/assert'
+} from 'modules/helpers/encryption/asymmetric/mod.ts'
+import { base64ToUint8Array, uint8ArrayToHEX } from 'utils/encoders.ts'
 import { decrypt, encrypt } from 'modules/helpers/encryption/mod.ts'
+import { assertFalse, assertNotEquals } from '@std/assert'
 
 Deno.test('Unidirectional encryption or hash generation works correctly', async () => {
   const message = 'Este es un mensaje importante'
@@ -157,7 +159,7 @@ Deno.test('Symmetric AES encryption and decryption should works correctly', asyn
   assertEquals(message, decryptedData4)
 
   //custom key
-  const key5 = generateCustomAESKey('my secret')
+  const key5 = await generateCustomAESKey('my secret')
   assertEquals(atob(key5).length, 16)
   const encryptedData5 = await encryptAES(message, key5)
   const decryptedData5 = await decryptAES(encryptedData5, key5)
@@ -165,15 +167,19 @@ Deno.test('Symmetric AES encryption and decryption should works correctly', asyn
   assert(message !== encryptedData5)
   assertEquals(message, decryptedData5)
 
-  const key6 = generateCustomAESKey('my secret custom key')
+  const key6 = await generateCustomAESKey('my secret custom key')
   assertEquals(atob(key6).length, 24)
   const encryptedData6 = await encryptAES(message, key6)
   const decryptedData6 = await decryptAES(encryptedData6, key6)
-
   assert(message !== encryptedData6)
   assertEquals(message, decryptedData6)
 
-  const key7 = generateCustomAESKey('my secret custom key value for 32 key len')
+  const encryptedDataCustom = await encryptAES(message, 'my custom secret')
+  const decryptedDataCustom = await decryptAES(encryptedDataCustom, 'my custom secret')
+  assert(message !== encryptedDataCustom)
+  assertEquals(message, decryptedDataCustom)
+
+  const key7 = await generateCustomAESKey('my secret custom key value for 32 key len')
   assertEquals(atob(key7).length, 32)
   const encryptedData7 = await encryptAES(message, key7)
   const decryptedData7 = await decryptAES(encryptedData7, key7)
@@ -220,7 +226,44 @@ Deno.test('RSA sign should works correctly', async () => {
   const verifiedData = await verifyRSA(message, signedData, publicKey)
   const unverifiedData = await verifyRSA('other message', signedData, publicKey)
 
-  assert(message !== signedData)
   assert(verifiedData)
   assert(!unverifiedData)
+})
+
+Deno.test('generate HMAC Signature with SHA-256', async () => {
+  const data = 'header.payload'
+  const secret = 'my-secret-key'
+  const expectedSignature = 'ce52b6b70da7de15cfc573f6e48f9b11b8845919cbff5fef21854b37628fe446'
+
+  const signature = await signHMAC(data, secret)
+
+  // Compare the generated signature with the expected one
+  assertEquals(uint8ArrayToHEX(signature), expectedSignature)
+})
+
+Deno.test('generate HMAC Signature with SHA-512', async () => {
+  const data = 'header.payload'
+  const secret = 'my-secret-key'
+  const expectedSignature =
+    '206bbd581794f3a1224d9547b2ef82262ba8b29c8df1af43c8cd72427415196becb392558ed8506727c17cf026342498bc5a8a2ddfd305735b5e454ea30f1320'
+
+  const signature = await signHMAC(data, secret, 'SHA-512')
+
+  // Compare the generated signature with the expected one
+  assertEquals(uint8ArrayToHEX(signature), expectedSignature)
+})
+
+Deno.test('Verify HMAC signature', async () => {
+  const data = 'header.payload'
+  const secret = 'my-secret-key'
+
+  const signature = await signHMAC(data, secret)
+
+  const resultFalse = await verifyHMAC(data, signature, secret, 'SHA-512')
+  const resultFalse2 = await verifyHMAC(data, signature, 'secret', 'SHA-256')
+  const resultTrue = await verifyHMAC(data, signature, secret, 'SHA-256')
+
+  assertFalse(resultFalse)
+  assertFalse(resultFalse2)
+  assert(resultTrue)
 })

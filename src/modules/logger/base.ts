@@ -2,7 +2,7 @@ import type { LoggerMethods } from 'typings/logger.ts'
 
 import * as colors from '@std/fmt/colors'
 import { getLocalTime } from 'utils/dates.ts'
-import { capitalize } from 'utils/strings.ts'
+import { capitalize } from 'utils/encoders.ts'
 import { readConfig } from 'modules/helpers/config.ts'
 
 type ChalkColors = 'blue' | 'green' | 'red' | 'yellow' | 'white'

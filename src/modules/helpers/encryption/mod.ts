@@ -1,6 +1,14 @@
-import { decryptRSA, encryptRSA, generateRSAKeys, signRSA, verifyRSA } from './asymmetric.ts'
 import { decryptAES, encryptAES, generateAESKey, generateCustomAESKey } from './symmetric.ts'
 import { generateHash, validateHash } from './unidirectional.ts'
+import {
+  decryptRSA,
+  encryptRSA,
+  generateRSAKeys,
+  signHMAC,
+  signRSA,
+  verifyHMAC,
+  verifyRSA,
+} from './asymmetric/mod.ts'
 
 /**
  * Encrypt a message using 'AES-GCM' or 'RSA-OAEP' as `symmetric` and `asymmetric` encryption.
@@ -63,7 +71,9 @@ export {
   generateCustomAESKey,
   generateHash,
   generateRSAKeys,
+  signHMAC,
   signRSA,
   validateHash,
+  verifyHMAC,
   verifyRSA,
 }
