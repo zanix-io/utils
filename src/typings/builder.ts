@@ -1,9 +1,7 @@
-import type { BuildOptions, Plugin } from 'esbuild'
-
 /**
  * The builder compiler options
  */
-export type CompilerOptions = Omit<BuildOptions, 'plugins'> & {
+export type CompilerOptions = Omit<import('npm:esbuild@0.20.2').BuildOptions, 'plugins'> & {
   /**
    * The path to the source file that will be compiled. Defaults to Zanix mod.
    */
@@ -37,7 +35,7 @@ export type CompilerOptions = Omit<BuildOptions, 'plugins'> & {
   /**
    * Additional Plugins
    */
-  plugins?: () => Plugin[]
+  plugins?: () => import('npm:esbuild@0.20.2').Plugin[]
   /**
    * Optional builder platform. Defaults to "neutral" for Deno compatibility
    */

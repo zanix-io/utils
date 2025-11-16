@@ -1,4 +1,4 @@
-import type { OnResolveArgs, Plugin } from 'esbuild'
+import type { OnResolveArgs, Plugin } from 'npm:esbuild@0.20.2'
 
 /**
  * esbuild plugin to ignore resolution errors for npm modules.

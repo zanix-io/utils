@@ -1,10 +1,8 @@
 import type { CompilerOptions } from 'typings/builder.ts'
 
+import { denoPlugins } from 'jsr:@luca/esbuild-deno-loader@~0.11.1'
 import { defaultNpmModules, npmModulesPlugin } from './plugins/npm-modules.ts'
-import { denoPlugins } from '@luca/esbuild-deno-loader'
-import obfuscator from 'javascript-obfuscator'
 import logger from 'modules/logger/mod.ts'
-import { build, stop } from 'esbuild'
 
 /**
  * Base function for worker
@@ -31,6 +29,8 @@ export const mainBuilderFunction = async (
   const result: { error?: unknown; message?: string } = {}
   const npmExternals = npm.split(',')
 
+  const { build, stop } = await import('npm:esbuild@0.20.2')
+
   try {
     // Build the file using esbuild
     await build({
@@ -51,6 +51,8 @@ export const mainBuilderFunction = async (
 
     // Read the compiled file
     const appContent = await Deno.readTextFile(outputFile)
+
+    const { default: obfuscator } = await import('npm:javascript-obfuscator@^4.0.2')
 
     // Obfuscate the built file
     const finalCode = obfuscate
