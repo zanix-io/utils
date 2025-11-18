@@ -40,7 +40,7 @@ Deno.test('Validates throwing error and log', async () => {
 Deno.test('Validate error id generation and no undefined values', () => {
   const error = new HttpError('CONFLICT')
   assert(isUUID(error.id))
-  assertEquals(Object.keys(error), ['message', 'name', 'id', 'status', 'cause'])
+  assertEquals(Object.keys(error), ['message', 'name', 'id', 'status'])
 
   const internal = new InternalError('CONFLICT')
   assert(isUUID(internal.id))

@@ -7,6 +7,12 @@ adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [2.2.3] - 2025-11-17
+
+### Added
+
+- **New helper TTL**: Introduced helper for parsing TTL.
+
 ## [2.2.2] - 2025-11-15
 
 ### Changed

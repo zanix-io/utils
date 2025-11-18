@@ -11,14 +11,15 @@ import { generateUUID } from 'utils/identifiers.ts'
 function processExtraData(this: {
   id?: string
   code?: string
+  cause?: unknown
   meta?: Record<string, unknown>
 }, options: ErrorOptions) {
   this.id = options.id || generateUUID()
   if (options.code) this.code = options.code
   else delete this.code
-
   if (options.meta) this.meta = options.meta
   else delete this.meta
+  if (options.cause) this.cause = options.cause
 }
 
 /**
@@ -63,7 +64,6 @@ export class PermissionDenied extends Deno.errors.PermissionDenied {
     super(message, { cause: options.cause })
     this.message = message
     this.name = this.constructor.name
-    this.cause = options.cause || this.cause
 
     processExtraData.call(this, options)
 
@@ -114,7 +114,6 @@ export class InternalError extends Deno.errors.Interrupted {
     super(message, { cause: options.cause })
     this.message = message
     this.name = this.constructor.name
-    this.cause = options.cause || this.cause
 
     processExtraData.call(this, options)
 
@@ -177,7 +176,6 @@ export class HttpError extends Deno.errors.Http {
     super(code, { cause: options.cause })
     this.message = options.message || code
     this.name = this.constructor.name
-    this.cause = options.cause || this.cause
     this.status = {
       code,
       value: httpErrorStatus[code],
