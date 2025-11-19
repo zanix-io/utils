@@ -26,10 +26,10 @@ export const getServerSrcTree = (root: string): ZanixServerSrcTree => {
         subfolders: { rtos: { templates: { base: { files: ['example.rto.ts'], jsr } } } },
       },
       interactors: { templates: { base: { files: ['service.interactor.ts'], jsr } } },
-      jobs: { templates: { base: { files: ['job.hoc.ts'], jsr } } },
+      jobs: { templates: { base: { files: ['job.defs.ts'], jsr } } },
       repositories: {
-        templates: { base: { files: ['model.hoc.ts'], jsr } },
-        subfolders: { seeders: { templates: { base: { files: ['seeder.hoc.ts'], jsr } } } },
+        templates: { base: { files: ['model.defs.ts'], jsr } },
+        subfolders: { seeders: { templates: { base: { files: ['seeder.ts'], jsr } } } },
       },
     },
   })

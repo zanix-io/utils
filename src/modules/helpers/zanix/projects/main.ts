@@ -38,7 +38,7 @@ export const getZnxFolderTree = <
         subfolders: {
           middlewares: {
             templates: {
-              base: { files: ['pipe.hoc.ts', 'interceptor.hoc.ts'], jsr },
+              base: { files: ['pipe.defs.ts', 'interceptor.defs.ts'], jsr },
             },
           },
         },
