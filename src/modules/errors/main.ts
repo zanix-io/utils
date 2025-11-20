@@ -20,6 +20,14 @@ function processExtraData(this: {
   if (options.meta) this.meta = options.meta
   else delete this.meta
   if (options.cause) this.cause = options.cause
+
+  // Add it to the error instance in a controlled way
+  Object.defineProperty(this, '_logged', {
+    get: function () {
+      return !!options.shouldLog
+    },
+    enumerable: false, // This ensures it's not visible when printing the error
+  })
 }
 
 /**
@@ -43,16 +51,18 @@ export class PermissionDenied extends Deno.errors.PermissionDenied {
   public id?: string
   public code?: string
   public meta?: Record<string, unknown>
+  // Define the type for the private properties
+  private _logged: boolean = false
 
   /**
    * Creates an instance of the `PermissionDenied` class.
    *
    * This constructor takes an options object, allowing for customization
-   * of the error message and the optional cause of the erro
+   * of the error message and the optional cause of the error
    *
    * @param {string} [message] - The main error message
    * @param {Object} options - Options to customize the error message and cause. This is optional.
-   * @param {boolean} [options.shouldLog] - Whether to log this error using the system logger.
+   * @param {boolean} [options.shouldLog] - Whether to log this error using the system logger. Defaults to `false`.
    * @param {Record<string, unknown>} [options.meta] - The meta options for internal use
    * @param {string} [options.code] - The error code for internal use
    * @param {unknown} [options.cause]
@@ -93,6 +103,8 @@ export class InternalError extends Deno.errors.Interrupted {
   public id?: string
   public code?: string
   public meta?: Record<string, unknown>
+  // Define the type for the private properties
+  private _logged: boolean = false
 
   /**
    * Creates an instance of the `InternalError` class.
@@ -102,7 +114,7 @@ export class InternalError extends Deno.errors.Interrupted {
    *
    * @param {string} [message] - The main error message
    * @param {Object} options - Options to customize the error message and cause. This is optional.
-   * @param {boolean} [options.shouldLog] - Whether to log this error using the system logger.
+   * @param {boolean} [options.shouldLog] - Whether to log this error using the system logger. Defaults to `false`.
    * @param {Record<string, unknown>} [options.meta] - The meta options for internal use
    * @param {string} [options.code] - The error code for internal use
    * @param {unknown} [options.cause]
@@ -152,6 +164,8 @@ export class HttpError extends Deno.errors.Http {
   public code?: string
   public meta?: Record<string, unknown>
   public status: { code: HttpErrorCodes; value: number }
+  // Define the type for the private properties
+  private _logged: boolean = false
 
   /**
    * Creates an instance of the `HttpError` class.
@@ -164,7 +178,7 @@ export class HttpError extends Deno.errors.Http {
    * @param {HttpErrorCodes} code - The error code (e.g., 'BAD_REQUEST', 'NOT_FOUND') that defines the type of error.
    * @param {Object} options - Options to customize the error message and cause. This is optional.
    * @param {string} [options.message] - The main error message
-   * @param {boolean} [options.shouldLog] - Whether to log this error using the system logger.
+   * @param {boolean} [options.shouldLog] - Whether to log this error using the system logger. Defaults to `false`.
    * @param {Record<string, unknown>} [options.meta] - The meta options for internal use
    * @param {string} [options.code] - The error code for internal use
    * @param {unknown} [options.cause]

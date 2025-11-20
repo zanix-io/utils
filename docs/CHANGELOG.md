@@ -7,6 +7,16 @@ adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [2.2.5] - 2025-11-19
+
+### Added
+
+- Errors now support private fields, including `_logged`, for better error tracking and management.
+
+### Changed
+
+- Serialized errors can now include or exclude the stack trace based on the user's selection.
+
 ## [2.2.4] - 2025-11-19
 
 ### Changed

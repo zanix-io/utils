@@ -1,6 +1,6 @@
 import type { ErrorOptions, HttpErrorCodes } from 'typings/errors.ts'
 
-import { assertEquals, assertExists } from '@std/assert'
+import { assert, assertEquals, assertExists, assertFalse } from '@std/assert'
 import { HttpError, InternalError } from 'modules/errors/main.ts'
 import httpErrorStates from 'modules/errors/http-status-codes.ts'
 import { serializeError, serializeMultipleErrors } from 'modules/errors/serialize.ts'
@@ -64,4 +64,19 @@ Deno.test('Validates error serialization', () => {
   const result = serializeMultipleErrors([error])
   delete result[0].stack
   assertEquals(result[0], serialized)
+})
+
+Deno.test('Validates private fields', () => {
+  console.error = () => {}
+  const error = new HttpError('BAD_GATEWAY')
+  const serialized = serializeError(error)
+  assertFalse('_logged' in serialized)
+  assert('_logged' in error)
+})
+
+Deno.test('Validates serialization without stack trace', () => {
+  console.error = () => {}
+  const error = new HttpError('BAD_GATEWAY')
+  const serialized = serializeError(error, { withStackTrace: false })
+  assertFalse('stack' in serialized)
 })

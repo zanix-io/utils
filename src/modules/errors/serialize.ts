@@ -9,12 +9,19 @@ import type { SerializeError } from 'typings/errors.ts'
  *
  * In case of an error during serialization, the function returns the original input.
  *
- * @param error - The error (or unknown value) to serialize.
+ * @param {unknown} error - The error (or unknown value) to serialize.
+ * @param {boolean} [options.withStackTrace] - A boolean that indicates whether the stack trace should be included in the serialized error.
+ *                    Defaults to `true`.
  * @returns A plain object representing the serialized error or the original input if serialization fails.
  *
  * @category errors
  */
-export function serializeError(error: unknown): SerializeError {
+export function serializeError(
+  error: unknown,
+  options: { withStackTrace?: boolean } = {},
+): SerializeError {
+  const { withStackTrace = true } = options
+
   const isError = error instanceof Error
   try {
     if (!isError) return JSON.parse(JSON.stringify(error))
@@ -22,9 +29,9 @@ export function serializeError(error: unknown): SerializeError {
       ...error,
       name: error.name,
       message: error.message,
-      stack: error.stack,
     } as SerializeError
 
+    if (withStackTrace) serielizedError.stack = error.stack
     if (error.cause) serielizedError.cause = serializeError(error.cause)
 
     return serielizedError
