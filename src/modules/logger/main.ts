@@ -78,7 +78,10 @@ export class Logger<Return extends unknown = DefaultResponse> {
    */
   public error(...data: LoggerData<'error'>): Return | undefined {
     const [message, ...rest] = data
-    return this.#log('error', message, ...serializeMultipleErrors(rest))
+    const errors = serializeMultipleErrors(rest)
+
+    if (!errors.length && rest.length) return
+    return this.#log('error', message, ...errors)
   }
 
   /**

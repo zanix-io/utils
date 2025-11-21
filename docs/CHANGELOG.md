@@ -7,14 +7,17 @@ adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-## [2.2.5] - 2025-11-19
+## [2.2.6] - 2025-11-19
 
 ### Added
 
-- Errors now support private fields, including `_logged`, for better error tracking and management.
+- **Private fields support in error classes**: Errors now support private fields, including a new `_logged` field, to improve error tracking and management. This allows better control over whether an error has been logged, preventing duplicate logs.
+
+- **`ApplicationError` class enhancement**: The `ApplicationError` class has been extended to include additional flexibility, improving the structure for handling application-level errors. This allows custom errors to integrate seamlessly with error logging systems and better track error states.
 
 ### Changed
 
+- Updated internal error classes to make use of private fields for tracking error states more effectively.
 - Serialized errors can now include or exclude the stack trace based on the user's selection.
 
 ## [2.2.4] - 2025-11-19

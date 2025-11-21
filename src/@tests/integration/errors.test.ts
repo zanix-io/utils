@@ -7,9 +7,11 @@ import { assertEquals } from '@std/assert/assert-equals'
 import { assert } from '@std/assert'
 import { isUUID } from 'modules/validations/decorators/strings/is-uuid.ts'
 import { InternalError } from '@zanix/utils/errors'
+import logger from '@zanix/utils/logger'
 
 // Disable logs by testing
-stub(console, 'error')
+console.error = () => {}
+stub(console, 'warn')
 
 Deno.test('Validates throwing error and log', async () => {
   const folder = '.logs/errorLogs'
@@ -44,11 +46,20 @@ Deno.test('Validate error id generation and no undefined values', () => {
 
   const internal = new InternalError('CONFLICT')
   assert(isUUID(internal.id))
-  assertEquals(Object.keys(internal), ['message', 'name', 'id'])
+  assertEquals(Object.keys(internal), ['message', 'id', 'name'])
 
   const customId = new InternalError('message', { id: 'my error id' })
   assertEquals(customId.id, 'my error id')
 
   const customHttpId = new HttpError('BAD_GATEWAY', { id: 'my error id' })
   assertEquals(customHttpId.id, 'my error id')
+})
+
+Deno.test('Validate preventing duplicate logs', () => {
+  const error = new HttpError('CONFLICT')
+  const errorSpy = stub(console, 'error')
+  logger.error('my error', error)
+  logger.error('my error', error)
+
+  assert(errorSpy.calls.length === 1)
 })

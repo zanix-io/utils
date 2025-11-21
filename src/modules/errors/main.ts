@@ -1,25 +1,25 @@
 import type { ErrorOptions, HttpErrorCodes } from 'typings/errors.ts'
+
 import httpErrorStatus from 'modules/errors/http-status-codes.ts'
-import logger from 'modules/logger/mod.ts'
 import { generateUUID } from 'utils/identifiers.ts'
+import logger from 'modules/logger/mod.ts'
 
 /**
  * Function to process and sanitize external error data
  * @param this - The error instance
  * @param options - Options to customize the error.
  */
-function processExtraData(this: {
-  id?: string
-  code?: string
-  cause?: unknown
-  meta?: Record<string, unknown>
-}, options: ErrorOptions) {
+function processError(this: ApplicationError | HttpError, options: ErrorOptions) {
   this.id = options.id || generateUUID()
+  this.name = this.constructor.name
+
   if (options.code) this.code = options.code
   else delete this.code
   if (options.meta) this.meta = options.meta
   else delete this.meta
   if (options.cause) this.cause = options.cause
+
+  if (options.shouldLog) logger.error(this.message, this)
 
   // Add it to the error instance in a controlled way
   Object.defineProperty(this, '_logged', {
@@ -28,109 +28,6 @@ function processExtraData(this: {
     },
     enumerable: false, // This ensures it's not visible when printing the error
   })
-}
-
-/**
- * A custom error class for runtime server `exceptions`, extending Deno's `PermissionDenied` error class.
- *
- * This class allows for more detailed and structured error handling, including associating
- * error codes with their corresponding internal server codes and providing customizable error messages.
- * It is particularly useful for throwing and catching general server errors.
- *
- * @example
- * ```ts
- *  const error = new PermissionDenied({
- *    message: 'No token provided.',
- *  });
- * ```
- *
- * @category errors
- */
-export class PermissionDenied extends Deno.errors.PermissionDenied {
-  public override message: string
-  public id?: string
-  public code?: string
-  public meta?: Record<string, unknown>
-  // Define the type for the private properties
-  private _logged: boolean = false
-
-  /**
-   * Creates an instance of the `PermissionDenied` class.
-   *
-   * This constructor takes an options object, allowing for customization
-   * of the error message and the optional cause of the error
-   *
-   * @param {string} [message] - The main error message
-   * @param {Object} options - Options to customize the error message and cause. This is optional.
-   * @param {boolean} [options.shouldLog] - Whether to log this error using the system logger. Defaults to `false`.
-   * @param {Record<string, unknown>} [options.meta] - The meta options for internal use
-   * @param {string} [options.code] - The error code for internal use
-   * @param {unknown} [options.cause]
-   */
-  constructor(
-    message: string,
-    options: Omit<ErrorOptions, 'message'> = {},
-  ) {
-    super(message, { cause: options.cause })
-    this.message = message
-    this.name = this.constructor.name
-
-    processExtraData.call(this, options)
-
-    if (options.shouldLog) logger.error(this.message, this)
-  }
-}
-
-/**
- * A custom error class for runtime server `exceptions`, extending Deno's `Interrupted` error class.
- *
- * This class allows for more detailed and structured error handling, including associating
- * error codes with their corresponding internal server codes and providing customizable error messages.
- * It is particularly useful for throwing and catching general server errors.
- *
- * @example
- * ```ts
- *  const error = new InternalError({
- *    message: 'Invalid input provided.',
- *  });
- *  console.log(error.message);  // "Invalid input provided."
- * ```
- *
- * @category errors
- */
-export class InternalError extends Deno.errors.Interrupted {
-  public override message: string
-  public id?: string
-  public code?: string
-  public meta?: Record<string, unknown>
-  // Define the type for the private properties
-  private _logged: boolean = false
-
-  /**
-   * Creates an instance of the `InternalError` class.
-   *
-   * This constructor takes an options object, allowing for customization
-   * of the error message and the optional cause of the erro
-   *
-   * @param {string} [message] - The main error message
-   * @param {Object} options - Options to customize the error message and cause. This is optional.
-   * @param {boolean} [options.shouldLog] - Whether to log this error using the system logger. Defaults to `false`.
-   * @param {Record<string, unknown>} [options.meta] - The meta options for internal use
-   * @param {string} [options.code] - The error code for internal use
-   * @param {unknown} [options.cause]
-   */
-  constructor(
-    message: string,
-    options: Omit<ErrorOptions, 'message'> = {},
-  ) {
-    super(message, { cause: options.cause })
-    this.message = message
-    this.name = this.constructor.name
-
-    processExtraData.call(this, options)
-
-    if (options.shouldLog) logger.error(this.message, this)
-  }
 }
 
 /**
@@ -178,10 +75,10 @@ export class HttpError extends Deno.errors.Http {
    * @param {HttpErrorCodes} code - The error code (e.g., 'BAD_REQUEST', 'NOT_FOUND') that defines the type of error.
    * @param {Object} options - Options to customize the error message and cause. This is optional.
    * @param {string} [options.message] - The main error message
-   * @param {boolean} [options.shouldLog] - Whether to log this error using the system logger. Defaults to `false`.
+   * @param {boolean} [options.shouldLog] - Whether to log this error using the system logger. Defaults to `true`.
    * @param {Record<string, unknown>} [options.meta] - The meta options for internal use
-   * @param {string} [options.code] - The error code for internal use
-   * @param {unknown} [options.cause]
+   * @param {string} [options.code] - An optional code identifier for internal use.
+   * @param {unknown} [options.cause] - An optional cause for the error, such as an inner exception or error.
    */
   constructor(
     code: HttpErrorCodes,
@@ -189,14 +86,116 @@ export class HttpError extends Deno.errors.Http {
   ) {
     super(code, { cause: options.cause })
     this.message = options.message || code
-    this.name = this.constructor.name
     this.status = {
       code,
       value: httpErrorStatus[code],
     }
 
-    processExtraData.call(this, options)
+    processError.call(this, options)
+  }
+}
 
-    if (options.shouldLog) logger.error(this.message, this)
+/**
+ * A custom error class for handling general application errors, extending the `Error` class.
+ *
+ * This class allows for detailed error tracking with additional properties like error codes,
+ * metadata, and unique identifiers. Ideal for throwing and catching general application errors.
+ *
+ * @example
+ * ```ts
+ *  const error = new ApplicationError('Something went wrong!', {
+ *    code: 'APPLICATION_ERROR',
+ *    meta: { userId: '12345' },
+ *  });
+ * ```
+ *
+ * @category errors
+ */
+export class ApplicationError extends Error {
+  public override message: string
+  public id?: string
+  public code?: string
+  public meta?: Record<string, unknown>
+  // Define the type for the private properties
+  private _logged: boolean = false
+
+  /**
+   * Creates an instance of the `ApplicationError` class.
+   *
+   * This constructor takes an options object, allowing for customization
+   * of the error message and the optional cause of the error
+   *
+   * @param {string} [message] - The main error message
+   * @param {Object} options - Options to customize the error message and cause. This is optional.
+   * @param {boolean} [options.shouldLog] - Whether to log this error using the system logger. Defaults to `false`.
+   * @param {Record<string, unknown>} [options.meta] - The meta options for internal use
+   * @param {string} [options.code] - The error code for internal use
+   * @param {unknown} [options.cause]
+   */
+  constructor(
+    message: string,
+    options: Omit<ErrorOptions, 'message'> = {},
+  ) {
+    super(message, { cause: options.cause })
+    this.message = message
+
+    processError.call(this, options)
+  }
+}
+
+/**
+ * Custom error class to represent permission-related exceptions, extending Zanix's `ApplicationError` class.
+ *
+ * This error is thrown when a user or process attempts to access a resource or perform an action
+ * that requires specific permissions, but those permissions are not granted or insufficient.
+ * It provides a more specific way to handle permission-related errors, improving error reporting
+ * and debugging in applications.
+ *
+ * @example
+ * ```ts
+ *  const error = new PermissionDenied('No token provided.');
+ * ```
+ *
+ * @category errors
+ */
+export class PermissionDenied extends ApplicationError {}
+
+/**
+ * A custom error class for runtime server `exceptions`, extending Zanix's `ApplicationError` error class.
+ *
+ * ⚠️ This errors are considered critical errors.
+ *
+ * This class allows for more detailed and structured error handling, including associating
+ * error codes with their corresponding internal server codes and providing customizable error messages.
+ * It is particularly useful for throwing and catching general server errors.
+ *
+ * @example
+ * ```ts
+ *  const error = new InternalError('Invalid input provided.');
+ *  console.log(error.message);  // "Invalid input provided."
+ * ```
+ *
+ * @category errors
+ */
+export class InternalError extends ApplicationError {
+  /**
+   * Creates an instance of the `InternalError` class.
+   *
+   * This constructor takes an options object, allowing for customization
+   * of the error message and the optional cause of the erro
+   *
+   * @param {string} [message] - The main error message
+   * @param {Object} options - Options to customize the error message and cause. This is optional.
+   * @param {boolean} [options.shouldLog] - Whether to log this error using the system logger. Defaults to `true`.
+   * @param {Record<string, unknown>} [options.meta] - The meta options for internal use
+   * @param {string} [options.code] - An optional code identifier for internal use.
+   * @param {unknown} [options.cause] - An optional cause for the error, such as an inner exception or error.
+   */
+  constructor(
+    message: string,
+    options: Omit<ErrorOptions, 'message'> = {},
+  ) {
+    options.shouldLog = options.shouldLog ?? true
+    super(message, options)
   }
 }

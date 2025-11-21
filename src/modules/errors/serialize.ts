@@ -53,5 +53,12 @@ export function serializeError(
  * @category errors
  */
 export function serializeMultipleErrors<T>(errors: T[]): (SerializeError)[] {
-  return errors.map((errors) => serializeError(errors))
+  return errors.filter((error) => {
+    const isDouplicated = error['_logged' as never] === true
+    if (isDouplicated) return false
+    if (typeof error === 'object') {
+      Object.defineProperty(error, '_logged', { value: true, enumerable: false })
+    }
+    return true
+  }).map((error) => serializeError(error))
 }

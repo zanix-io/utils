@@ -1,6 +1,6 @@
 import { assert, assertEquals, assertExists, assertMatch } from '@std/assert'
 import { getLogFileName } from 'modules/logger/defaults/storage/file.ts'
-import { serializeMultipleErrors } from 'modules/errors/serialize.ts'
+import { serializeError } from 'modules/errors/serialize.ts'
 import { fileExists } from 'modules/helpers/files.ts'
 import { canUseZnx } from 'modules/helpers/zanix/namespace.ts'
 import { isoDatetimeRegex, uuidRegex } from 'utils/regex.ts'
@@ -58,7 +58,7 @@ Deno.test(
       'this is a serialized error',
       error,
     )
-    assertEquals(serializedErrorLog?.data, serializeMultipleErrors([error]))
+    assertEquals(serializedErrorLog?.data, [serializeError(error)])
   },
 )
 

@@ -5,6 +5,8 @@ import { HttpError, InternalError } from 'modules/errors/main.ts'
 import httpErrorStates from 'modules/errors/http-status-codes.ts'
 import { serializeError, serializeMultipleErrors } from 'modules/errors/serialize.ts'
 
+console.error = () => {}
+
 const validateHttpError = (
   code: HttpErrorCodes,
   options?: ErrorOptions,
