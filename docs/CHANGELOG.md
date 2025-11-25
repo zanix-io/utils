@@ -7,6 +7,12 @@ adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [2.2.6] - 2025-11-24
+
+### Added
+
+- Introduced a new validation decorator.
+
 ## [2.2.6] - 2025-11-19
 
 ### Added

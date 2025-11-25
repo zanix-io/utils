@@ -14,7 +14,7 @@ import { getFolderName } from 'modules/helpers/paths.ts'
 
 class BaseZanixTree<S extends ZanixBaseFolder> {
   #baseName: string
-  constructor(private root: string, private baseRoot: string) {
+  constructor(root: string, private baseRoot: string) {
     this.#baseName = getFolderName(root)
   }
 

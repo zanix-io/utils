@@ -31,7 +31,7 @@ import validationsMetadata from 'modules/validations/base/metadata.ts'
 export function defineValidationDecorator<T extends BaseRTO = BaseRTO>(
   validation: ValidationFunction<T>,
   opts: ValidationOptions = {},
-) {
+): ValidationDecoratorDefinition {
   if (opts.transform) opts.expose = true // If 'transform' is enabled, 'expose' is set to true by default.
 
   const { each, transform: currentTransform = (val: string) => val } = opts

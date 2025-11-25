@@ -27,9 +27,13 @@ export * from './decorators/strings/is-uuid.ts'
 export * from './decorators/strings/length.ts'
 export * from './decorators/strings/match.ts'
 
-export * from './decorators/generic.ts'
+export * from './decorators/generic/utils.ts'
+export * from './decorators/generic/is-enum.ts'
+
 export * from './decorators/nested.ts'
 
 export * from './base/rto.ts'
 
 export * from './main.ts'
+
+export { defineValidationDecorator } from './base/definitions/decorators.ts'

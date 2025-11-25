@@ -1,4 +1,4 @@
-import type { BaseRTO } from '../base/rto.ts'
+import type { BaseRTO } from '../../base/rto.ts'
 import type {
   ValidationDecoratorDefinition,
   ValidationFunction,

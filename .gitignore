@@ -30,10 +30,11 @@ __tmp__/
 tsconfig.tsbuildinfo
 
 # Miscellaneous
-node_modules/  # If using third-party tools that install node_modules
+# If using third-party tools that install node_modules
+node_modules 
+
+# Local databases
+.sqlite
 
 # Test coverage reports
 /coverage/
-
-# Node
-node_modules
