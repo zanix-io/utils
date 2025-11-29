@@ -300,7 +300,7 @@ Deno.test('Nested RTO multiple levels', async () => {
         stringPropArray: [
           {
             constraints: ["All values of 'stringPropArray' must be valid strings"],
-            value: [undefined],
+            value: undefined,
             plainValue: undefined,
           },
         ],
