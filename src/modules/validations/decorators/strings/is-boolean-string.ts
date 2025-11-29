@@ -1,6 +1,8 @@
 import type { ValidationDecorator, ValidationDecoratorDefinition } from 'typings/validations.ts'
 
 import { defineValidationDecorator } from 'modules/validations/base/definitions/decorators.ts'
+import { match, matchArray } from './match.ts'
+import { booleanRegex } from 'utils/regex.ts'
 
 /**
  * Is boolean validation
@@ -10,8 +12,8 @@ import { defineValidationDecorator } from 'modules/validations/base/definitions/
  *
  * @category validations
  */
-export function isBoolean(value?: boolean): boolean {
-  return value === true || value === false
+export function isBooleanString(value?: string): boolean {
+  return match(booleanRegex, value)
 }
 
 /**
@@ -22,8 +24,8 @@ export function isBoolean(value?: boolean): boolean {
  *
  * @category validations
  */
-export function isBooleanArray(value: boolean[]): boolean {
-  return value.every((v) => v === true || v === false)
+export function isBooleanStringArray(value: string[]): boolean {
+  return matchArray(booleanRegex, value)
 }
 
 /**
@@ -34,18 +36,18 @@ export function isBooleanArray(value: boolean[]): boolean {
  *
  * @category validations
  */
-export const IsBoolean: ValidationDecorator = function (
+export const IsBooleanString: ValidationDecorator = function (
   options = {},
 ): ValidationDecoratorDefinition {
   let defaultMessage
   let validation
 
   if (options.each) {
-    defaultMessage = (property: string) => `All values of '${property}' must be a boolean`
-    validation = isBooleanArray
+    defaultMessage = (property: string) => `All values of '${property}' must be a boolean string`
+    validation = isBooleanStringArray
   } else {
-    defaultMessage = (property: string) => `'${property}' must be a boolean.`
-    validation = isBoolean
+    defaultMessage = (property: string) => `'${property}' must be a boolean string.`
+    validation = isBooleanString
   }
 
   return defineValidationDecorator(validation, { message: defaultMessage, ...options })
