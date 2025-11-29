@@ -26,9 +26,8 @@ export const signHMAC = async (
   hash: Exclude<HashAlgorithm, 'SHA-1'> = 'SHA-256',
 ): Promise<Uint8Array> => {
   // Convert secret to a byte array
-  const encoder = new TextEncoder()
-  const key = stringToUint8Array(secret, encoder)
-  const dataBuffer = stringToUint8Array(data, encoder) // Convert data to a byte array
+  const key = stringToUint8Array(secret)
+  const dataBuffer = stringToUint8Array(data) // Convert data to a byte array
 
   const algorithmConfig = { name: 'HMAC', hash: { name: hash } }
 

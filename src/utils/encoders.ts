@@ -1,3 +1,6 @@
+export const encoder = new TextEncoder()
+export const decoder = new TextDecoder()
+
 /**
  * Capitalice function
  *
@@ -53,13 +56,11 @@ export function stripComments(value: string): string {
 /**
  * Function to convert string to Uint8Array
  * @param {string} value
- * @param {TextEncoder} encoder - The base encoder. Defaults `new TextEncoder()`
  *
  * @returns {Uint8Array<ArrayBuffer>} - string encoded
  */
 export function stringToUint8Array(
   value: string,
-  encoder: TextEncoder = new TextEncoder(),
 ): Uint8Array<ArrayBuffer> {
   return encoder.encode(value)
 }

@@ -32,7 +32,7 @@ export function serializeError(
     } as SerializeError
 
     if (withStackTrace) serielizedError.stack = error.stack
-    if (error.cause) serielizedError.cause = serializeError(error.cause)
+    if (error.cause) serielizedError.cause = serializeError(error.cause, { withStackTrace })
 
     return serielizedError
   } catch {

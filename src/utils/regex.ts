@@ -102,6 +102,11 @@ export const versionRegex = /^(\d+\.\d+\.\d+(-[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)*)?|la
 export const numericRegex = /^\d+(\.\d+)?$/
 
 /**
+ * Boolean regex (true/false)
+ */
+export const booleanRegex = /^(true|false)$/i
+
+/**
  * Available regular expressions for internal use only
  */
 

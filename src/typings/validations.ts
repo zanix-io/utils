@@ -100,7 +100,7 @@ export type ValidationOptions = {
   expose?: boolean
   /**
    * Returns transformed or formatted data.
-   * By default, this option exposes the property (avoid using the `@Expose` decorator together).
+   * By default, this option exposes the property (avoid using the `@Expose` decorator or expose option together).
    */
   transform?: (value?: string) => any
 }
