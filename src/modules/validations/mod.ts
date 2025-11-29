@@ -29,6 +29,7 @@ export * from './decorators/strings/match.ts'
 
 export * from './decorators/generic/utils.ts'
 export * from './decorators/generic/is-enum.ts'
+export * from './decorators/generic/is-boolean.ts'
 
 export * from './decorators/nested.ts'
 
