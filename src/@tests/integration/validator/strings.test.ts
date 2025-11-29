@@ -1,6 +1,6 @@
 import { classValidation } from 'modules/validations/mod.ts'
 import { StringsRTO } from './rtos/strings.ts'
-import { assertEquals, assertRejects } from '@std/assert'
+import { assertEquals, assertFalse, assertRejects } from '@std/assert'
 import { HttpError } from 'modules/errors/main.ts'
 import { searchParamsPropertyDescriptor } from 'utils/urls.ts'
 
@@ -21,7 +21,7 @@ Deno.test('Expose validations strings RTO with empty object', async () => {
         }])
         assertEquals(err.cause.properties.stringPropArray, [{
           constraints: ["All values of 'stringPropArray' must be valid strings"],
-          value: [undefined],
+          value: undefined,
           plainValue: undefined,
         }])
         assertEquals(err.cause.properties.stringPropWithInizializer, [{
@@ -59,6 +59,7 @@ Deno.test('Expose validations strings RTO with base payload', async () => {
     'stringPropWithDefaults',
     'stringPropOptional',
     'stringPropArray',
+    'stringPropArrayOptional',
   ]) // no metadata objects, only properties
 
   assertEquals(validatedObj.stringPropArray, ['value1', 'value2'])
@@ -70,19 +71,30 @@ Deno.test('Expose validations strings RTO with base payload', async () => {
 
   // Changing default value and setiing a context
 
-  const validatedObjDefault = await classValidation(StringsRTO, {
+  const obj = {
     stringPropExpose: 'string',
     stringPropWithInizializer: 'stringPropWithInizializer',
     stringPropArray: ['value1', 'value2'],
     extraneusValue: 'extraneous',
     stringPropWithDefaults: 'new value',
     stringPropOptional: 'optional',
-  }, { ctx: { stringPropExpose: 'other ctx' } })
+  }
 
-  assertEquals(validatedObjDefault['context'], undefined) // context should be removed
+  let validatedObjDefault = await classValidation(StringsRTO, obj, {
+    ctx: { stringPropExpose: 'other ctx' },
+  })
+
+  assertFalse(validatedObjDefault.stringPropArrayOptional)
+  assertFalse(validatedObjDefault['context']) // context should be removed
   assertEquals(validatedObjDefault.stringPropExpose, 'string')
   assertEquals(validatedObjDefault.stringPropWithInizializer, 'stringPropWithInizializer')
   assertEquals(validatedObjDefault.stringPropWithDefaults, 'new value')
   assertEquals(validatedObjDefault.stringPropOptional, 'optional')
-  assertEquals(validatedObjDefault['extraneusValue' as never], undefined)
+  assertFalse(validatedObjDefault['extraneusValue' as never])
+
+  validatedObjDefault = await classValidation(StringsRTO, {
+    ...obj,
+    stringPropArrayOptional: ['optional'],
+  })
+  assertEquals(validatedObjDefault.stringPropArrayOptional, ['optional'])
 })

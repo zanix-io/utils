@@ -25,4 +25,7 @@ export class StringsRTO extends BaseRTO<{ stringPropExpose: string }> {
 
   @IsString({ each: true, expose: true })
   accessor stringPropArray!: string[]
+
+  @IsString({ each: true, expose: true, optional: true })
+  accessor stringPropArrayOptional: undefined | string[]
 }

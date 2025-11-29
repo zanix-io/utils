@@ -36,7 +36,7 @@ export const defineInit = (
     const data = plainValue ?? (exposeDefaults ? value : undefined) // choose default or instanced param
 
     // Each array adaptation
-    plainValue = !each || Array.isArray(data) ? data : [data]
+    plainValue = (!each || Array.isArray(data)) ? data : data !== undefined ? [data] : undefined
 
     if (expose) defineExpose.call(this, { property, value, plainValue, optional, messageResult })
 
@@ -68,7 +68,7 @@ export const defineSetter = <T extends BaseRTO = BaseRTO>(
       return originalSetter.call(this, val) // For basic instance usage. `validate` is only `true` when using ClassValidator.
     }
 
-    val = transform(val)
+    val = val !== undefined ? transform(val) : val
 
     const exposedValues = validationsMetadata.getExposedProperties(this)
     const validationInst = validationInstance.call(this, exposedValues)
