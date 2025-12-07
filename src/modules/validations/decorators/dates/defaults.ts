@@ -1,6 +1,6 @@
 export const defaultTransform = (transform?: boolean) =>
   transform
     ? (value?: string) => {
-      if (value) return new Date(value)
+      if (value !== undefined) return new Date(value)
     }
     : undefined

@@ -12,7 +12,7 @@ Deno.test('Nested RTO first level data with defaults and array', async () => {
 
   assertEquals(data1.NumbersDefault?.stringNumber, '1')
   assertEquals(data1.NumbersDefault?.numberValue, '31')
-  assertEquals(data1.NumbersDefault?.valueOptional, 3)
+  assertEquals(data1.NumbersDefault?.valueOptional, 0)
   assertEquals(data1.NumbersRequired.stringNumber, '1')
   assertEquals(data1.NumbersRequired.numberValue, '4')
   assertEquals(data1.NumbersOptionals?.[0].stringNumber, '3')
@@ -120,6 +120,6 @@ Deno.test('Nested RTO default array validations', async () => {
   assertEquals(data.NumbersDefaultArray.length, 1)
   assertEquals(data.NumbersDefaultArray[0].numberValue, '3')
   assertEquals(data.NumbersDefaultArray[0].stringNumber, '1')
-  assertEquals(data.NumbersDefaultArray[0].valueOptional, 3)
+  assertEquals(data.NumbersDefaultArray[0].valueOptional, 0)
   assertEquals(data.NumbersDefaultArray[0].numbersDefault, [1, 2, 3])
 })

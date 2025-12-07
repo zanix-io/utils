@@ -7,6 +7,12 @@ adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [2.2.12] - 2025-12-07
+
+### Fixed
+
+- Fixed an issue with the number transformation validation.
+
 ## [2.2.7] - 2025-11-24
 
 ### Added

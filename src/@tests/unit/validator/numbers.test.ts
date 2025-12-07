@@ -21,6 +21,7 @@ Deno.test('Validates min number', () => {
 
 Deno.test('Validates number', () => {
   assertEquals(isNumber(1), true)
+  assertEquals(isNumber(0), true)
   assertEquals(isNumber('4' as never), false)
   assertEquals(isNumber('4s' as never), false)
 })

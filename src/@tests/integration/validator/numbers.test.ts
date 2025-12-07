@@ -179,7 +179,7 @@ Deno.test('Number validations RTO', async () => {
 
   assertEquals(resp6.numberValue, '4')
   assertEquals(resp6.minNumber, 5)
-  assertEquals(resp6.valueOptional, 3)
+  assertEquals(resp6.valueOptional, 0)
 
   // Number arrays
   const resp7 = await classValidation(NumbersRTO, { numberValue: '3', numbersDefault: [4, 3, 5] })

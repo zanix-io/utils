@@ -32,5 +32,5 @@ export class NumbersRTO extends BaseRTO {
   accessor minNumber!: number
 
   @IsNumber()
-  accessor valueOptional: number = 3
+  accessor valueOptional: number = 0
 }
