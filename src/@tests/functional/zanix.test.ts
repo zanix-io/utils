@@ -18,6 +18,7 @@ Deno.test('Fetching Zanix lates release validation', async () => {
   assertMatch(result['@zanix/auth'].version, versionRegex)
   assertMatch(result['@zanix/core'].version, versionRegex)
   assertMatch(result['@zanix/datamaster'].version, versionRegex)
+  assertMatch(result['@zanix/notifications'].version, versionRegex)
   assertMatch(result['@zanix/server'].version, versionRegex)
   assertMatch(result['@zanix/worker'].version, versionRegex)
 })

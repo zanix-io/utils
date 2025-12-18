@@ -1,6 +1,10 @@
 export type TaskFunction = (...args: never[]) => unknown
-// deno-lint-ignore no-explicit-any
-export type TaskCallbackResponse = { response: any | null; error: unknown | null }
+export type TaskCallbackResponse = {
+  // deno-lint-ignore no-explicit-any
+  response: any | null
+  error: unknown | null
+  messageId?: string
+}
 
 /**
  * Represents the callback function type used in the tasker system.
@@ -11,6 +15,7 @@ export type TaskCallback = (response: TaskCallbackResponse) => void
 
 export type TaskMessage = Omit<Parameters<Worker['onmessage']>[0], 'data'> & {
   data: {
+    messageId: string
     metaUrl: string
     taskName: string
     parameters: Parameters<TaskFunction>

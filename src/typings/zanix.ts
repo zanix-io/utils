@@ -178,6 +178,7 @@ export type ZanixLibraries = {
   '@zanix/asyncmq': ZanixBaseLibraryInfo
   '@zanix/core': ZanixBaseLibraryInfo
   '@zanix/datamaster': ZanixBaseLibraryInfo
+  '@zanix/notifications': ZanixBaseLibraryInfo
   '@zanix/server': ZanixBaseLibraryInfo
   '@zanix/worker': ZanixBaseLibraryInfo
   '@zanix/utils': ZanixBaseLibraryInfo

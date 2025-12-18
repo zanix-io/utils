@@ -7,6 +7,12 @@ adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [2.2.13] - 2025-12-17
+
+### Added
+
+- Worker manager pool for efficient worker management and reuse
+
 ## [2.2.12] - 2025-12-07
 
 ### Fixed

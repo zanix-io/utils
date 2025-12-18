@@ -162,11 +162,11 @@ new Logger() // Creating the first instance of Logger
  * @see {@link Logger}
  */
 const logger: Logger = new Proxy(Logger['prototype'], {
-  get(_, prop) {
+  get(instance, prop) {
     // Retrieve the current global logger instance
     // This is necessary to replace the default Logger instance with the current global logger (self.logger).
     const property = prop as keyof typeof logger
-    const target = self.logger
+    const target = ('logger' in self ? self.logger : instance) as Logger
     return target[property].bind(target)
   },
 })
