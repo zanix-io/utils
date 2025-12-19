@@ -1,6 +1,9 @@
 import type { TaskCallbackResponse, TaskMessage } from 'typings/workers.ts'
 import { generateUUID } from 'utils/identifiers.ts'
 
+// deno-lint-ignore no-explicit-any
+const moduleCache = new Map<string, any>()
+
 export const getWebProcessWorker = (): { worker: Worker; status: 'busy' | 'free' } => {
   const worker = new Worker(import.meta.url, { type: 'module' })
   return { worker, status: 'free' }
@@ -37,7 +40,12 @@ self.onmessage = async (e: TaskMessage) => {
   try {
     const { metaUrl, taskName, parameters } = e.data
 
-    const module = await import(metaUrl)
+    let module = moduleCache.get(metaUrl)
+
+    if (!module) {
+      module = await import(metaUrl)
+      moduleCache.set(metaUrl, module)
+    }
 
     let result = module[taskName](...parameters)
 

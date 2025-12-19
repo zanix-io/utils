@@ -1,4 +1,23 @@
+/**
+ * Shared instance of `TextEncoder`.
+ *
+ * Used to convert strings into `Uint8Array`
+ * using UTF-8 encoding.
+ *
+ * @example
+ * const bytes = encoder.encode('hello');
+ */
 export const encoder: TextEncoder = new TextEncoder()
+
+/**
+ * Shared instance of `TextDecoder`.
+ *
+ * Used to convert `Uint8Array` or `ArrayBuffer`
+ * into strings using UTF-8 encoding.
+ *
+ * @example
+ * const text = decoder.decode(bytes);
+ */
 export const decoder: TextDecoder = new TextDecoder()
 
 /**
