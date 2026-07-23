@@ -16,4 +16,5 @@ Deno.test('Validates if is array and array of arrays.', () => {
 
   assertEquals(isArrayOfArray([2, 3, 4] as never), false)
   assertEquals(isArrayOfArray([[2], [3], [4]]), true)
+  assertEquals(isArrayOfArray(5 as never), false) // non-array top-level value gets wrapped
 })

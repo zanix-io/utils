@@ -1,8 +1,10 @@
 import type { ConfigFile } from 'typings/config.ts'
+import type { ZanixGlobal } from 'typings/zanix.ts'
 
 import { readConfig } from 'modules/helpers/config.ts'
 
-type Zanix = typeof Znx
+/** Shape of the global `Znx` namespace. */
+export type Zanix = ZanixGlobal['Znx']
 
 /**
  * Adds a value to the global `Znx` namespace, making it available globally.

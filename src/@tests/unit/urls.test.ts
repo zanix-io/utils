@@ -1,5 +1,29 @@
-import { getProcessedParams, searchParamsPropertyDescriptor } from 'utils/urls.ts'
-import { assertEquals } from '@std/assert'
+import { getProcessedParams, searchParamsPropertyDescriptor, verifyUrl } from 'utils/urls.ts'
+import { assertEquals, assertStrictEquals } from '@std/assert'
+
+Deno.test('verifyUrl - parses valid URLs and returns undefined for invalid ones', () => {
+  const url = verifyUrl('http://www.zanix.co')
+
+  assertEquals(url?.hostname, 'www.zanix.co')
+  assertEquals(verifyUrl('not-a-valid-url'), undefined)
+})
+
+Deno.test({
+  name: 'searchParamsPropertyDescriptor - caches the processed value and allows overriding it',
+  fn: () => {
+    const context: { _computedSearch: unknown } = { _computedSearch: null }
+    const descriptor = searchParamsPropertyDescriptor(new URLSearchParams('?keyA=a'))
+
+    const firstAccess = descriptor.get?.call(context)
+    const secondAccess = descriptor.get?.call(context) // should hit the cached value, not reprocess
+
+    assertStrictEquals(firstAccess, secondAccess)
+
+    descriptor.set?.call(context, { keyA: 'overridden' })
+    assertEquals(context._computedSearch, { keyA: 'overridden' })
+    assertStrictEquals(descriptor.get?.call(context), context._computedSearch)
+  },
+})
 
 Deno.test('getProcessedParams - simple key-value pairs', () => {
   const searchParams = new URLSearchParams('?keyA=a&keyB=b')

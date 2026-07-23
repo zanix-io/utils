@@ -11,7 +11,7 @@ export const getAppSrcTree = (root: string): ZanixAppSrcTree => {
   const startingPoint = join(root, 'src/app')
   if (appTree?.FOLDER === startingPoint) return appTree
 
-  return ZanixTree.create<ZanixAppSrcTree>({ startingPoint, baseRoot: root }, {
+  appTree = ZanixTree.create<ZanixAppSrcTree>({ startingPoint, baseRoot: root }, {
     subfolders: {
       Components: { templates: { base: { files: ['ExampleComponent.tsx'], jsr } } },
       Layout: { templates: { base: { files: ['ExampleLayout.tsx'], jsr } } },
@@ -47,4 +47,6 @@ export const getAppSrcTree = (root: string): ZanixAppSrcTree => {
       },
     },
   })
+
+  return appTree
 }

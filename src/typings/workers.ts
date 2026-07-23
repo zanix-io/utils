@@ -1,4 +1,6 @@
+/** A function that can be executed as a task inside a `WorkerManager` worker. */
 export type TaskFunction = (...args: never[]) => unknown
+/** The result payload passed to a task's `onFinish` callback. */
 export type TaskCallbackResponse = {
   // deno-lint-ignore no-explicit-any
   response: any | null
@@ -13,7 +15,7 @@ export type TaskCallbackResponse = {
  */
 export type TaskCallback = (response: TaskCallbackResponse) => void
 
-export type TaskMessage = Omit<Parameters<Worker['onmessage']>[0], 'data'> & {
+export type TaskMessage = Omit<Parameters<NonNullable<Worker['onmessage']>>[0], 'data'> & {
   data: {
     messageId: string
     metaUrl: string

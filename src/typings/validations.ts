@@ -105,6 +105,7 @@ export type ValidationOptions = {
   transform?: (value?: string) => any
 }
 
+/** Validation options for decorators with a boolean-only `transform` flag. */
 export type DefaultTransformValidationOpts = Omit<ValidationOptions, 'transform' | 'expose'> & {
   /**
    * A flag indicating whether the value should be transformed into a validator type.

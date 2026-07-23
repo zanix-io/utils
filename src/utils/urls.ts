@@ -121,7 +121,8 @@ export const searchParamsPropertyDescriptor: (
   // deno-lint-ignore no-explicit-any
 ) => PropertyDescriptor & ThisType<any> = (
   searchParams,
-) => ({
+  // deno-lint-ignore no-explicit-any
+): PropertyDescriptor & ThisType<any> => ({
   set(value) {
     this._computedSearch = value
   },

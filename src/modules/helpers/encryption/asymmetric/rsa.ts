@@ -43,7 +43,7 @@ async function exportRSAKey(key: CryptoKey, type: 'spki' | 'pkcs8') {
 
 /**
  * A function to generate RSA Keys.
- * Using 'RSA-OAEP' algorithm for encryption and 'RSASSA-PKCS1-v1_5' for signing
+ * Using 'RSA-OAEP' algorithm for encryption and 'RSA-PSS' for signing
  *
  * @param {ValidRSAKeysOptions} options
  *      - `hash`: The encryption RSA algorithm hash. Defaults to 'SHA-256'

@@ -1,4 +1,6 @@
+/** The hashing strength level used by `generateHash`/`validateHash` for unidirectional encryption. */
 export type EncryptionLevel = 'low' | 'medium' | 'medium-high' | 'high'
+/** The supported AES key lengths, in bits. */
 export type AESLength = 128 | 192 | 256
 
 /**
@@ -14,8 +16,10 @@ export type HashAlgorithm =
   | 'SHA-384' // The SHA-384 hashing algorithm, a member of the SHA-2 family with a longer output length
   | 'SHA-512' // The SHA-512 hashing algorithm, another member of the SHA-2 family with even more bits for stronger security
 
+/** The supported RSA key modulus lengths, in bits. */
 export type ValidRSAModulusLength = 1024 | 2048 | 3072 | 4096
 
+/** Options accepted when generating or using RSA keys. */
 export type ValidRSAKeysOptions<T extends HashAlgorithm> = {
   /**
    * The encryption or signing RSA algorithm.

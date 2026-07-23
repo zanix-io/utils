@@ -14,7 +14,7 @@ import {
  * Encrypt a message using 'AES-GCM' or 'RSA-OAEP' as `symmetric` and `asymmetric` encryption.
  *
  * @param {string | string[]} message - The text to be encrypted.
- * @param {string} key - The encryption AES key or the RSA Private Key.
+ * @param {string} key - The encryption AES key or the RSA Public Key.
  * @param {'RSA' | 'AES'} type - 'AES' or 'RSA' types
  *
  * @example
@@ -40,7 +40,7 @@ export function encrypt<T extends string | string[]>(
  * Decrypt a message using 'AES-GCM' or 'RSA-OAEP' as `symmetric` and `asymmetric` encryption.
  *
  * @param {string | string[]} encryptedMessage - The text to be decrypted.
- * @param {string} key - The encryption AES key or the RSA Public Key.
+ * @param {string} key - The encryption AES key or the RSA Private Key.
  * @param {'RSA' | 'AES'} type - 'AES' or 'RSA' types
  *
  * @example

@@ -3,11 +3,13 @@ import {
   base64UrlEncode,
   capitalize,
   capitalizeWords,
+  hexToUint8Array,
   stringToUint8Array,
+  stripComments,
   uint8ArrayToBase64,
   uint8ArrayToString,
 } from 'utils/encoders.ts'
-import { assertEquals, assertNotEquals } from '@std/assert'
+import { assertEquals, assertNotEquals, assertThrows } from '@std/assert'
 
 Deno.test('capitalize should capitalize the first character of a string', () => {
   assertEquals(capitalize('hello'), 'Hello')
@@ -27,6 +29,20 @@ Deno.test('array buffer encoding and decoding', () => {
   const resultString = atob(uint8ArrayToBase64(exampleArrayBuffer))
 
   assertEquals(resultString, 'Hello, world!')
+})
+
+Deno.test('stripComments removes block and line comments but keeps quoted content', () => {
+  assertEquals(stripComments('/* block comment */{"a": 1}'), '{"a": 1}')
+  assertEquals(stripComments('  // full line comment\n{"a": 1}'), '\n{"a": 1}')
+  assertEquals(stripComments('{"a": 1} // trailing comment'), '{"a": 1}')
+  assertEquals(stripComments('{"note": "//not a comment"}'), '{"note": "//not a comment"}')
+})
+
+Deno.test('hexToUint8Array converts hex strings and rejects odd length', () => {
+  assertEquals(hexToUint8Array('48 65'), new Uint8Array([0x48, 0x65]))
+  assertEquals(hexToUint8Array('FF00'), new Uint8Array([0xff, 0x00]))
+
+  assertThrows(() => hexToUint8Array('abc'), Error, 'Hex string must have an even length')
 })
 
 Deno.test('base64 url encode should encode and decode correctly', () => {

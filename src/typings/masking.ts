@@ -28,6 +28,7 @@ export type MaskingMainOptions =
   & { algorithm?: MaskingAlgorithms; method: MaskingBaseMethods }
   & MaskingBaseOptions
 
+/** Options accepted by the `mask` function. */
 export type MaskingOptions = {
   /**
    * Optional masking algorithm to apply.
@@ -37,6 +38,7 @@ export type MaskingOptions = {
   algorithm?: MaskingAlgorithms
 } & MaskingBaseOptions
 
+/** Options accepted by the `unmask` function. */
 export type UnMaskingOptions = {
   /**
    * Optional masking algorithm to apply. Defaults to `'xor'`.
@@ -44,6 +46,7 @@ export type UnMaskingOptions = {
   algorithm?: Exclude<MaskingAlgorithms, 'hard'>
 } & MaskingBaseOptions
 
+/** The supported masking algorithms: reversible `xor` or irreversible `hard`. */
 export type MaskingAlgorithms = 'xor' | 'hard'
 
 export type MaskingMethods = `${MaskingAlgorithms}${MaskingBaseMethods}`

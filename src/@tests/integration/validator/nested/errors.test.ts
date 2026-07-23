@@ -176,6 +176,34 @@ Deno.test('Nested RTO children validation empty object array', async () => {
   })
 })
 
+Deno.test('Nested RTO children validation with multiple invalid array items', async () => {
+  const error: any = {}
+
+  await assertRejects(() =>
+    classValidation(ValidateNestedRTO, {
+      NumbersRequired: { numberValue: '1' },
+      NumbersOptionals: [{}, {}],
+    }).catch((err) => {
+      Object.assign(error, err.cause)
+      throw err
+    })
+  )
+
+  assertEquals(error.message, 'Request validation error')
+  assertEquals(error.properties.NumbersOptionals.properties.numberValue, [
+    {
+      constraints: ["'numberValue' must be a valid numeric string."],
+      value: undefined,
+      plainValue: undefined,
+    },
+    {
+      constraints: ["'numberValue' must be a valid numeric string."],
+      value: undefined,
+      plainValue: undefined,
+    },
+  ])
+})
+
 Deno.test('Nested RTO children validation mix data', async () => {
   const error: any = {}
 

@@ -15,7 +15,7 @@ export type CompilerOptions = Omit<import('npm:esbuild@0.20.2').BuildOptions, 'p
    */
   obfuscate?: boolean
   /**
-   * A flag that determines whether a worker should be used for processing.
+   * A flag that determines whether a one-time worker should be used for processing.
    * Only set to true when necessary, as using workers can add overhead.
    */
   useWorker?: boolean

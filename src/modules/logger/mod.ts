@@ -69,7 +69,7 @@ import { Logger as LoggerMainClass } from 'modules/logger/main.ts'
  * const logger = new Logger({
  *   storage: {
  *     save: {
- *       useWorker: true,    // Enable the use of workers for processing logs
+ *       useWorker: true,    // Enable the use of a one-time workersfor processing logs
  *       callback: () => {}  // Optional callback to ensure completion when `useWorker` is set to `true`
  *     }
  *   }

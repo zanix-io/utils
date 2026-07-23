@@ -7,6 +7,47 @@ adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [2.2.15] - 2026-07-23
+
+### Added
+
+- Full public type coverage for the `/types` entrypoint: ~35 previously-internal types are now
+  exported and documented, resolving all `deno doc --lint` `private-type-ref` errors (except a
+  documented exception for the third-party `esbuild` `BuildOptions`/`Plugin` types).
+- `IsBooleanString`/`isBooleanString`/`isBooleanStringArray` are now exported from the `/validator`
+  entrypoint (the decorator existed but was unreachable from outside the package).
+- Complete documentation set under `docs/`: validator, helpers, utils, encryption & masking,
+  logger, workers, errors, linter plugins, and a full types reference, each cross-linked and with
+  runnable examples verified against the real implementation.
+- Expanded test coverage (branch, function, and line) across validation decorators, GitHub/editor
+  helpers, config, masking, and worker/project-tree caching.
+
+### Fixed
+
+- `getAppSrcTree`/`getServerSrcTree`/`getCommonTree` memoization never actually cached anything (a
+  missing assignment), so the full Zanix folder tree was rebuilt on every call instead of reusing
+  the cached one.
+- `createPreCommitYaml` was missing an `await`, letting `pre-commit install`/`autoupdate` run
+  before the `.pre-commit-config.yaml` file had finished being written.
+- The `Zanix`/`DefaultLogger` type aliases depended on an ambient global that JSR's slow-types
+  checker cannot resolve, which made `deno publish` fail outright.
+- Corrected several outdated JSDoc comments across `errors`, `workers`, `encryption`, GitHub
+  helpers, and linter plugins: wrong option defaults, swapped RSA public/private key descriptions,
+  descriptions copied from a sibling symbol without updating them, and a reference to a
+  `zanixFlags` rule that no longer exists.
+
+### Removed
+
+- `src/modules/helpers/environment.ts` and `src/modules/helpers/zanix/flags.ts` — orphaned files
+  with no consumers.
+
+## [2.2.14] - 2025-12-19
+
+### Added
+
+- Worker task modules are now cached after the first import, avoiding a redundant dynamic import
+  on every subsequent call to the same task.
+
 ## [2.2.13] - 2025-12-17
 
 ### Added

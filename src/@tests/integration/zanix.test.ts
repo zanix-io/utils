@@ -1,6 +1,13 @@
-import { getZanixPaths } from 'modules/helpers/zanix/tree.ts'
+import { getSrcDir, getSrcName, getZanixPaths } from 'modules/helpers/zanix/tree.ts'
 import { assert, assertEquals, assertExists } from '@std/assert'
 import { ZanixTree } from 'modules/helpers/zanix/base-tree.ts'
+
+Deno.test('getSrcDir and getSrcName should return the src folder path and name', () => {
+  const paths = getZanixPaths()
+
+  assertEquals(getSrcDir(), paths.subfolders.src.FOLDER)
+  assertEquals(getSrcName(), paths.subfolders.src.NAME)
+})
 
 Deno.test('getZanixPaths should return correct folder structure for server type', () => {
   const paths = getZanixPaths('server')

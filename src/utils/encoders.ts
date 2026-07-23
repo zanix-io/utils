@@ -194,7 +194,7 @@ export const base64UrlEncode = (input: string | Uint8Array): string => {
  * byte representation in a `Uint8Array`.
  *
  * @param {string} input - The Base64 URL-safe encoded string to decode.
- * @param {string} toString - If `true`, the function will ensure that the input is converted to a string.
+ * @param {boolean} toString - If `true`, the function will ensure that the input is converted to a string.
  *                            If `false`, the function will return a `Uint8Array` by default.
  *                            This flag is used to control the conversion behavior of the input.
  * @returns {Uint8Array | string} A `Uint8Array` or a `string` containing the decoded byte data.
@@ -219,7 +219,8 @@ export const base64UrlDecode = <S extends boolean = false>(
 }
 
 /** Check if is valid ZanixHex */
-export const isZanixHex: (str: string) => boolean = (str: string) => /^Zx[0-9a-fA-F]+$/.test(str)
+export const isZanixHex: (str: string) => boolean = (str: string): boolean =>
+  /^Zx[0-9a-fA-F]+$/.test(str)
 
 /**
  * Compare two Uint8Array objects for equality.

@@ -23,7 +23,8 @@ export function arrayLength(value: unknown[], min: number, max: number): boolean
 /**
  * Decorator to validate that an array length between the specified min and max.
  * @param constraints The constraints
- *   - min: (Optional) The minimum allowed length.
+ *   - min: (Optional) The minimum allowed length. Defaults to `2`. Must be at least `1`;
+ *     passing `0` makes the validation always fail, since arrays are expected to be non-empty.
  *   - max: (Optional) The maximum allowed length.
  * @param options Optional validation settings, including a custom error message.
  *

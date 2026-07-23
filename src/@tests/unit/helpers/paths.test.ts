@@ -1,7 +1,13 @@
 import { assert, assertEquals } from '@std/assert'
 import { join } from '@std/path/join'
 import { stub } from '@std/testing/mock'
-import { getConfigDir, getFolderName, getRelativePath, getRootDir } from 'modules/helpers/paths.ts'
+import {
+  getConfigDir,
+  getFolderName,
+  getRelativePath,
+  getRootDir,
+  getTemporaryFolder,
+} from 'modules/helpers/paths.ts'
 import { mockWrap } from 'modules/testing/mod.ts'
 
 // Test for getting root path
@@ -36,6 +42,25 @@ Deno.test('get config dir should return correct config filedir', () => {
   context.fileExists = (filePath: string) => filePath === `${root}config.jsonc`
   const getConfigDirMockedJSONC = mockWrap(getConfigDir, context)
   assert(getConfigDirMockedJSONC() === `${root}config.jsonc`)
+})
+
+Deno.test('getConfigDir prefers a real deno.json file over deno.jsonc', async () => {
+  const tempDir = getTemporaryFolder(import.meta.url) + '/json-config'
+  await Deno.mkdir(tempDir, { recursive: true })
+  await Deno.writeTextFile(join(tempDir, 'deno.json'), '{}')
+
+  assertEquals(getConfigDir(tempDir), join(tempDir, 'deno.json'))
+
+  await Deno.remove(tempDir, { recursive: true })
+})
+
+Deno.test('getConfigDir returns null when no real config file exists', async () => {
+  const tempDir = getTemporaryFolder(import.meta.url) + '/no-config'
+  await Deno.mkdir(tempDir, { recursive: true })
+
+  assertEquals(getConfigDir(tempDir), null)
+
+  await Deno.remove(tempDir, { recursive: true })
 })
 
 Deno.test('getFolderName should return the folder name from a URI', () => {

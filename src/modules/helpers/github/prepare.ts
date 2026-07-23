@@ -12,7 +12,8 @@ import { createIgnoreBaseFile } from 'modules/helpers/github/files/main.ts'
 import { createPreCommitYaml } from 'modules/helpers/github/files/pre-commit-config.ts'
 import { gitInitialization } from './hooks/main.ts'
 
-type Options = {
+/** Options accepted by {@link prepareGithub}. */
+export type PrepareGithubOptions = {
   /**
    * legacyHooks options to create main github hooks without using the framework
    *    - `preCommitHook`
@@ -56,14 +57,16 @@ type Options = {
  * This function ensures that the pre-commit hook, pre-push hook, publish workflow, and `.gitignore` are created.
  *
  * @param {Object} options - Configuration options for setting up hooks and workflows.
- * @param {PreCommitHookOptions} [options.usePrecommit] - Optional configuration for using the pre-commit framework.
- * @param {PreCommitHookOptions} [options.legacyHooks] - Optional configuration for the pre-commit and pre-push hooks.
+ * @param {true | Object} [options.usePrecommit] - Optional configuration for using the pre-commit framework.
+ * @param {Object} [options.legacyHooks] - Optional `preCommit`/`prePush` configuration for the legacy hooks.
  * @param {WorkflowOptions} [options.publishWorkflow] - Optional configuration for the publish workflow.
- * @param {WorkflowOptions} [options.gitIgnoreBase] - Optional configuration for the publish workflow.
+ * @param {Object} [options.gitIgnoreBase] - Optional configuration for the `.gitignore` file creation.
  *
  * @category helpers
  */
-export async function prepareGithub(options: Options & { root?: string } = {}): Promise<boolean[]> {
+export async function prepareGithub(
+  options: PrepareGithubOptions & { root?: string } = {},
+): Promise<boolean[]> {
   const { legacyHooks = {}, root, publishWorkflow, gitIgnoreBase, usePrecommit } = options
 
   await gitInitialization(root)

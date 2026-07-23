@@ -56,10 +56,15 @@ function processError(this: ApplicationError | HttpError, options: ErrorOptions)
  * @category errors
  */
 export class HttpError extends Deno.errors.Http {
+  /** The main error message. */
   public override message: string
+  /** Unique identifier assigned to this error instance. */
   public id?: string
+  /** Optional internal error code identifier. */
   public code?: string
+  /** Optional metadata attached to this error for internal use. */
   public meta?: Record<string, unknown>
+  /** The HTTP error code and its corresponding numeric status value. */
   public status: { code: HttpErrorCodes; value: number }
   // Define the type for the private properties
   private _logged: boolean = false
@@ -75,7 +80,7 @@ export class HttpError extends Deno.errors.Http {
    * @param {HttpErrorCodes} code - The error code (e.g., 'BAD_REQUEST', 'NOT_FOUND') that defines the type of error.
    * @param {Object} options - Options to customize the error message and cause. This is optional.
    * @param {string} [options.message] - The main error message
-   * @param {boolean} [options.shouldLog] - Whether to log this error using the system logger. Defaults to `true`.
+   * @param {boolean} [options.shouldLog] - Whether to log this error using the system logger. Defaults to `false`.
    * @param {Record<string, unknown>} [options.meta] - The meta options for internal use
    * @param {string} [options.code] - An optional code identifier for internal use.
    * @param {unknown} [options.cause] - An optional cause for the error, such as an inner exception or error.
@@ -112,9 +117,13 @@ export class HttpError extends Deno.errors.Http {
  * @category errors
  */
 export class ApplicationError extends Error {
+  /** The main error message. */
   public override message: string
+  /** Unique identifier assigned to this error instance. */
   public id?: string
+  /** Optional internal error code identifier. */
   public code?: string
+  /** Optional metadata attached to this error for internal use. */
   public meta?: Record<string, unknown>
   // Define the type for the private properties
   private _logged: boolean = false
@@ -165,9 +174,9 @@ export class PermissionDenied extends ApplicationError {}
  *
  * ⚠️ This errors are considered critical errors.
  *
- * This class allows for more detailed and structured error handling, including associating
- * error codes with their corresponding internal server codes and providing customizable error messages.
- * It is particularly useful for throwing and catching general server errors.
+ * This class allows for more detailed and structured error handling, with error codes,
+ * metadata, and customizable error messages, and defaults to logging the error. It is
+ * particularly useful for throwing and catching general server errors.
  *
  * @example
  * ```ts

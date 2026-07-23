@@ -3,6 +3,7 @@ import {
   isNumberString,
   isNumberStringArray,
 } from 'modules/validations/decorators/strings/is-number-string.ts'
+import { isEmail, isEmailArray } from 'modules/validations/decorators/strings/is-email.ts'
 import { isUUID, isUUIDArray } from 'modules/validations/decorators/strings/is-uuid.ts'
 import { stringLength, stringLengthArray } from 'modules/validations/decorators/strings/length.ts'
 import { match, matchArray } from 'modules/validations/decorators/strings/match.ts'
@@ -30,6 +31,16 @@ Deno.test('Validates isNumberString and isNumberStringArray functions', () => {
   assertEquals(isNumberStringArray('10' as never), false)
   assertEquals(isNumberStringArray(['3', 4] as never), false)
   assertEquals(isNumberStringArray(['3', 'd']), false)
+})
+
+Deno.test('Validates isEmail and isEmailArray functions', () => {
+  assertEquals(isEmail('juan@pablo.com'), true)
+  assertEquals(isEmail('pepito@gmail.'), false)
+  assertEquals(isEmail(undefined), false)
+
+  assertEquals(isEmailArray('juan@pablo.com' as never), false)
+  assertEquals(isEmailArray(['juan@pablo.com', 'pepito@gmail.com']), true)
+  assertEquals(isEmailArray(['juan@pablo.com', 'pepito@gmail.']), false)
 })
 
 Deno.test('Validates isUUID and isUUIDArray functions', () => {

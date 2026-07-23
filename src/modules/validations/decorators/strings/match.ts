@@ -1,4 +1,4 @@
-import type { ValidationDecorator } from 'typings/validations.ts'
+import type { ValidationDecorator, ValidationDecoratorDefinition } from 'typings/validations.ts'
 
 import { defineValidationDecorator } from 'modules/validations/base/definitions/decorators.ts'
 
@@ -42,7 +42,10 @@ export function matchArray(regex: RegExp, values: string[]): boolean {
  *
  * @category validations
  */
-export const Match: ValidationDecorator<RegExp> = function (regex, options = {}) {
+export const Match: ValidationDecorator<RegExp> = function (
+  regex,
+  options = {},
+): ValidationDecoratorDefinition {
   let defaultMessage
   let validation
 

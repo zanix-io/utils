@@ -30,6 +30,11 @@ export class WorkerManager {
   #tasks: Array<(workerId?: number) => void> = []
   #workerIx: number = 0
 
+  /**
+   * Creates a new `WorkerManager`, initializing the internal pool of workers.
+   *
+   * @param options.pool - The number of workers to keep in the pool. Defaults to `1`.
+   */
   constructor(options: { pool?: number } = {}) {
     const { pool = 1 } = options
     this.#initializeWorkers(pool)
@@ -49,7 +54,12 @@ export class WorkerManager {
     }
   }
 
-  private getWorkerId() {
+  /**
+   * Resolves the index of a worker to use for the next task: prefers a free
+   * worker, otherwise round-robins over the pool, instantiating a new worker
+   * if the resolved slot is empty.
+   */
+  private getWorkerId(): number {
     let index = this.workers.findIndex((worker) => worker?.status === 'free')
     if (index !== -1) return index
 
@@ -64,20 +74,26 @@ export class WorkerManager {
     return index
   }
 
+  /**
+   * Sends a task to the given (or resolved) worker, queueing it instead if
+   * that worker is currently busy, and wires up the timeout, message and
+   * error handlers that settle the task once the worker responds.
+   */
   private invokeTask(
     taskData: TaskMessage['data'],
     options: { onFinish?: TaskCallback; autoClose?: boolean; timeout: number; verbose?: boolean },
     workerId = this.getWorkerId(),
-  ) {
+  ): void {
     const { onFinish, autoClose, timeout, verbose = true } = options
     const workerManager = this.workers[workerId]
     const { worker, status } = this.workers[workerId]
     workerManager.status = 'busy'
 
     if (status === 'busy') {
-      return this.#tasks.push((workerId) => {
+      this.#tasks.push((workerId) => {
         this.invokeTask(taskData, options, workerId)
       })
+      return
     }
 
     // Timeout rejection
@@ -159,7 +175,7 @@ export class WorkerManager {
    *                            after the task completes. Defaults to `false`.
    * @param options.timeout - Optional timeout in milliseconds. If the task
    *                           does not complete within this period, the worker
-   *                           can be terminated automatically. Defaults to `15000`.
+   *                           can be terminated automatically. Defaults to `10000`.
    *
    * @returns An object with an `invoke` method to send parameters to the worker
    *          and execute the task.

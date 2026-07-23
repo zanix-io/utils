@@ -1,9 +1,11 @@
 // deno-lint-ignore-file ban-types
 import type { Logger } from 'modules/logger/main.ts'
 
-type DefaultLogger = typeof Logger['prototype']
+/** The default `Logger` instance shape exposed via `Znx.logger`. */
+export type DefaultLogger = typeof Logger['prototype']
 
-type ZanixSrcTreeMap = {
+/** Maps each Zanix project type to its `src` subfolder shape. */
+export type ZanixSrcTreeMap = {
   server: { server: ZanixServerSrcTree }
   app: { app: ZanixAppSrcTree }
   library: { modules: ZanixLibrarySrcTree }
@@ -11,11 +13,13 @@ type ZanixSrcTreeMap = {
   all: { modules: ZanixLibrarySrcTree; app: ZanixAppSrcTree; server: ZanixServerSrcTree }
 }
 
-type ZanixSrcTree<T extends ZanixProjectsFull> = T extends keyof ZanixSrcTreeMap
+/** Resolves the `src` subfolder shape for a given Zanix project type. */
+export type ZanixSrcTree<T extends ZanixProjectsFull> = T extends keyof ZanixSrcTreeMap
   ? ZanixSrcTreeMap[T]
   : {}
 
-type ZanixProjectSrc<T extends ZanixProjectsFull> = T extends 'library' | undefined ? {}
+/** Resolves the `zanix` folder addition for non-library Zanix project types. */
+export type ZanixProjectSrc<T extends ZanixProjectsFull> = T extends 'library' | undefined ? {}
   : { zanix: ZanixBaseFolder }
 
 type ZanixSubfolderOptions<S> = S extends { subfolders: infer U }
@@ -36,11 +40,13 @@ export type ZanixFolderOptions = {
 }
 
 export type ZanixTreeFolderOptions<S> = ZanixSubfolderOptions<S> & ZanixTemplateOptions<S>
+/** A record of generated template files, grouped by template category. */
 export type ZanixTemplatesRecord = Record<
   ZanixTemplates,
   { PATH: string; NAME: string; content(local: ZanixLocalContentProps): Promise<string> }[]
 >
 
+/** The base fields present on every Zanix folder-tree node. */
 export type ZanixBaseFolderProps<S> = {
   readonly FOLDER: string
   readonly NAME: string
@@ -48,6 +54,7 @@ export type ZanixBaseFolderProps<S> = {
   subfolders: S
 }
 
+/** The recursive folder-tree shape shared by all Zanix folder structures. */
 export type ZanixBaseFolder<
   S extends Record<string, Partial<ZanixBaseFolder>> | undefined = undefined,
   O extends 'noTemplates' | undefined = undefined,
@@ -59,16 +66,17 @@ export type ZanixBaseFolder<
     : never
 >
 
+/** Context passed to a template's `content` resolver function. */
 export type ZanixLocalContentProps = { metaUrl: string; relativePath?: string }
 
+/** `ZanixProjects` plus the `'all'` and `undefined` (common structure) cases. */
 export type ZanixProjectsFull = ZanixProjects | 'all' | undefined
 
 /** Zanix Templates for Automated File Generation */
 export type ZanixTemplates = 'base'
 
 /**
- * Defines the 'ZanixProjects' type, which is a reference to ZnxProjects
- * This type represents the available projects in Zanix.
+ * The Zanix project types supported by the framework.
  */
 export type ZanixProjects = 'library' | 'server' | 'app' | 'app-server'
 
@@ -169,7 +177,8 @@ export interface ZanixGlobal {
   }
 }
 
-type ZanixBaseLibraryInfo = { version: string }
+/** Basic identifying info for a Zanix library dependency. */
+export type ZanixBaseLibraryInfo = { version: string }
 
 /** Zanix library types. Shows library name and version */
 export type ZanixLibraries = {

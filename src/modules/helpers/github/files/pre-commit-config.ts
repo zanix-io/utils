@@ -15,7 +15,7 @@ import logger from 'modules/logger/mod.ts'
 export async function createPreCommitYaml(
   options: Omit<BaseGithubHelperOptions, 'baseFolder'> = {},
 ): Promise<boolean> {
-  const response = createBaseFile({
+  const response = await createBaseFile({
     baseFile: 'pre-commit.yaml',
     filename: '.pre-commit-config.yaml',
     ...options,

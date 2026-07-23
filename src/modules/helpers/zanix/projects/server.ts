@@ -11,7 +11,7 @@ export const getServerSrcTree = (root: string): ZanixServerSrcTree => {
   const startingPoint = join(root, 'src/server')
   if (serverTree?.FOLDER === startingPoint) return serverTree
 
-  return ZanixTree.create<ZanixServerSrcTree>({ startingPoint, baseRoot: root }, {
+  serverTree = ZanixTree.create<ZanixServerSrcTree>({ startingPoint, baseRoot: root }, {
     subfolders: {
       connectors: {
         templates: { base: { files: ['example.connector.ts'], jsr } },
@@ -33,4 +33,6 @@ export const getServerSrcTree = (root: string): ZanixServerSrcTree => {
       },
     },
   })
+
+  return serverTree
 }

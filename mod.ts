@@ -24,4 +24,4 @@ export { default as regex } from 'modules/regex/mod.ts'
  *
  * @module validator
  */
-export const validator = validatorModule
+export const validator: typeof validatorModule = validatorModule

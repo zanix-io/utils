@@ -18,6 +18,7 @@ export * from './decorators/numbers/is-number.ts'
 export * from './decorators/numbers/max-number.ts'
 export * from './decorators/numbers/min-number.ts'
 
+export * from './decorators/strings/is-boolean-string.ts'
 export * from './decorators/strings/is-email.ts'
 export * from './decorators/strings/is-number-string.ts'
 export * from './decorators/strings/is-phone.ts'

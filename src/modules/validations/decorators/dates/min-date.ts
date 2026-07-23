@@ -38,7 +38,7 @@ export function minDateArray(date: Date, values: Date[]): boolean {
 }
 
 /**
- * Decorator to validate that a date is not later than the specified date.
+ * Decorator to validate that a date is not earlier than the specified date.
  * @param {Date} date - The minimum allowed date.
  * @param options Optional validation settings, including a custom error message.
  *

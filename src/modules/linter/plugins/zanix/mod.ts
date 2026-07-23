@@ -23,18 +23,16 @@ import testPlugin from '../test/mod.ts'
  * @example
  *
  * ```ts
- * import zanixPlugin 'jsr:@zanix/utils@[version]'
+ * import zanixPlugin from 'jsr:@zanix/utils@[version]/linter/deno-zanix-plugin'
  *
- * // use of Zanix project flags.
  * const diagnostics = Deno.lint.runPlugin(
  *   zanixPlugin,
  *   'fileName.ts',
- *   `'enablePipe:global'`,
+ *   `console.log('use the Zanix logger instead')`,
  * );
  * ```
  * This linter plugin includes rules from the following plugins:
  * @see
- * - `zanixFlags`: A set of custom rules related to `Zanix` projects.
  * - `zanixLogger`: A set of custom rules related to `Zanix` logger.
  * - `zanixImports`: A set of custom rules related to `Zanix` imports.
  * - `testPlugin`: A set of rules of `deno-test-plugin`.

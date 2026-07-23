@@ -1,11 +1,13 @@
 import type { TaskCallback } from 'typings/workers.ts'
 
-type Console = typeof console
+/** The type of the global `console` object. */
+export type Console = typeof console
 
 /** The base method types */
 export type BaseMethods = Exclude<LoggerMethods, 'success'>
 
-type ConsoleInfo<Method extends BaseMethods> = Console[Method]
+/** The native `console` method invoked for a given base logger method. */
+export type ConsoleInfo<Method extends BaseMethods> = Console[Method]
 
 /** The logger available methods types */
 export type LoggerMethods = 'info' | 'error' | 'warn' | 'debug' | 'success'
@@ -93,14 +95,14 @@ export type SaveDataFile =
   }
   & ({
     /**
-     * Determines whether a worker should be used to save log data.
+     * Determines whether a one-time worker should be used to save log data.
      * Enable only for heavy or resource-intensive log storage operations,
      * since using a worker adds extra overhead to the process.
      */
     useWorker?: false
   } | {
     /**
-     * Determines whether a worker should be used to save log data.
+     * Determines whether a one-time worker should be used to save log data.
      * Enable only for heavy or resource-intensive log storage operations,
      * since using a worker adds extra overhead to the process.
      */

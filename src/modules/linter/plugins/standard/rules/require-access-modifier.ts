@@ -8,9 +8,10 @@ import { linterMessageFormat } from 'modules/linter/commons/message.ts'
  * clear and explicit. Without access modifiers, it may be unclear whether a
  * property or method is intended to be private, protected, or public.
  *
- * If such an error is found, the rule will report a message:
+ * If such an error is found, the rule will report one of the following messages:
  *
- *  `❌ Methods/Properties should have an explicit access modifier (`public`, `private`, or `protected`).`
+ *  `❌ Methods should have an explicit access modifier (public, private, protected).`
+ *  `❌ Properties should have an explicit access modifier (public, private, protected).`
  *
  *  The goal of this rule is to enforce good encapsulation practices and to improve
  *  the readability and maintainability of the codebase by making access levels clear.

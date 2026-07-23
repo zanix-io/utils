@@ -23,13 +23,15 @@ export type HttpErrorCodes =
   | 'SERVICE_UNAVAILABLE'
   | 'GATEWAY_TIMEOUT'
 
-type BaseSerializeError = Partial<{
+/** The base serializable error shape: name, message, stack and cause. */
+export type BaseSerializeError = Partial<{
   name: string
   message: string
   stack: string
   cause: BaseSerializeError
 }>
 
+/** A serializable error, defaulting to the base `{ message, stack, cause }` shape. */
 export type SerializeError<T extends BaseSerializeError = BaseSerializeError> = T
 
 /**

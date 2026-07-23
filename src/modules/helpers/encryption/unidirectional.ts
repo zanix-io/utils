@@ -44,7 +44,7 @@ const encriptionLevel: Record<EncryptionLevel, { algorithm: HashAlgorithm; itera
  * secure hashing where the original value cannot be recovered.
  *
  * @param {string} message - The text to be encrypted.
- * @param {EncryptionLevel} [level='medium'] - The encryption strength level. Can be 'low', 'medium', or 'high'. Default is 'medium'
+ * @param {EncryptionLevel} [level='medium'] - The encryption strength level. Can be 'low', 'medium', 'medium-high', or 'high'. Default is 'medium'
  * @param {Uint8Array | number | false} [useSalt=16] - The salt or the number of salt to use for hashing. If `false`, no salt is used. Default is 16.
  *
  * @example
@@ -88,7 +88,7 @@ export async function generateHash(
  *
  * @param {string} inputMessage - The message to validate against the stored hash.
  * @param {string} storedHash - The pre-existing hash to compare the input message against.
- * @param {EncryptionLevel} [level='medium'] - The encryption strength level used for validation. Can be 'low', 'medium', or 'high'.
+ * @param {EncryptionLevel} [level='medium'] - The encryption strength level used for validation. Can be 'low', 'medium', 'medium-high', or 'high'.
  *
  * @example
  * ```ts

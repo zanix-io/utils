@@ -14,8 +14,9 @@
 4. [Basic Usage](#basic-usage)
 5. [Documentation](#documentation)
 6. [Contributing](#contributing)
-7. [License](#license)
-8. [Resources](#resources)
+7. [Changelog](#changelog)
+8. [License](#license)
+9. [Resources](#resources)
 
 ## Description
 
@@ -55,16 +56,16 @@ import zanixPlugin from 'jsr:@zanix/utils@[version]/linter/deno-zanix-plugin'
 import fmtPlugin from 'jsr:@zanix/utils@[version]/linter/deno-fmt-plugin'
 
 // Standard linter plugin
-import standardPlugin from 'jsr:@zanix/utils@[version]/linter/deno-standard-plugin'
+import standardPlugin from 'jsr:@zanix/utils@[version]/linter/deno-std-plugin'
 
 // Testing linter plugin
 import testPlugin from 'jsr:@zanix/utils@[version]/linter/deno-test-plugin'
 
 // Available constants
-import zanixConstants, {/*SOME_CONSTANT*/} from 'jsr:@zanix/utils@[version]/constants'
+import zanixConstants, { CONFIG_FILE } from 'jsr:@zanix/utils@[version]/constants'
 
 // Regular expressions
-import zanixRegex, {/*SOME_REGEXP*/} from 'jsr:@zanix/utils@[version]/regex'
+import zanixRegex, { emailRegex } from 'jsr:@zanix/utils@[version]/regex'
 
 // Logger
 import zanixLogger, { Logger } from 'jsr:@zanix/utils@[version]/logger'
@@ -109,18 +110,60 @@ This provides clear instructions for installing and using the library, including
 
 ## Basic Usage
 
-Here’s a basic example of how to use the library:
+The most distinctive feature of **Zanix Utils** is its class-validator: define a `BaseRTO`
+subclass, decorate its properties, and validate plain data against it.
+
+```typescript
+import {
+  BaseRTO,
+  classValidation,
+  IsEmail,
+  IsNumber,
+  IsString,
+} from 'jsr:@zanix/utils@[version]/validator'
+
+class UserRTO extends BaseRTO {
+  constructor(data: UserRTO) {
+    super()
+    this.age = Number(data.age)
+  }
+
+  @IsString({ expose: true })
+  accessor name!: string
+
+  @IsEmail({ expose: true })
+  accessor email!: string
+
+  @IsNumber()
+  accessor age!: number
+}
+
+const user = await classValidation(UserRTO, { name: 'Ana', email: 'ana@example.com', age: '30' })
+```
+
+Other helpers, such as the esbuild-based compiler, are also available:
 
 ```typescript
 import { compileAndObfuscate } from 'jsr:@zanix/utils@[version]'
 
-// Some helpers
 await compileAndObfuscate() // esbuild
 ```
 
 ## Documentation
 
-For full documentation, check out the [official Zanix website](https://github.com/zanix-io) for detailed usage, advanced examples, and more.
+Full guides for every module live under [`docs/`](./docs):
+
+- [Validator](./docs/validator.md) — `BaseRTO`, decorators, and `classValidation`.
+- [Helpers](./docs/helpers.md) — config, files, GitHub, editor, and Zanix-namespace utilities.
+- [Utils](./docs/utils.md) — encoding helpers, regular expressions, and constants.
+- [Encryption & Masking](./docs/encryption-masking.md) — AES/RSA, HMAC, hashing, and masking.
+- [Logger](./docs/logger.md) — the default `Logger` and its storage/formatting options.
+- [Workers](./docs/workers.md) — `WorkerManager` and background task execution.
+- [Errors](./docs/errors.md) — `HttpError`, `ApplicationError`, and error serialization.
+- [Linter plugins](./docs/linter.md) — `deno-fmt-plugin`, `deno-std-plugin`, `deno-test-plugin`, `deno-zanix-plugin`.
+- [Types reference](./docs/types.md) — the public types exported from `/types`.
+
+For the Zanix framework itself, see the [Zanix organization on GitHub](https://github.com/zanix-io).
 
 ## Contributing
 
@@ -140,11 +183,11 @@ If you'd like to contribute to this library, please follow these steps:
 
 ## Changelog
 
-For a detailed list of changes, please refer to the [CHANGELOG](./docs/CHANGELOG.md) file.
+For a detailed list of changes, please refer to the [CHANGELOG](./CHANGELOG.md) file.
 
 ## License
 
-This library is licensed under the MIT License. See the [LICENSE](./docs/LICENSE) file for more details.
+This library is licensed under the MIT License. See the [LICENSE](./LICENSE) file for more details.
 
 ## Resources
 

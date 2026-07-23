@@ -1,7 +1,7 @@
 import { maxNumber, maxNumberArray } from 'modules/validations/decorators/numbers/max-number.ts'
 import { minNumber, minNumberArray } from 'modules/validations/decorators/numbers/min-number.ts'
 import { assertEquals } from '@std/assert'
-import { isNumber } from 'modules/validations/decorators/numbers/is-number.ts'
+import { isNumber, isNumberArray } from 'modules/validations/decorators/numbers/is-number.ts'
 
 Deno.test('Validates max number', () => {
   assertEquals(maxNumber(3, 2), true)
@@ -24,4 +24,11 @@ Deno.test('Validates number', () => {
   assertEquals(isNumber(0), true)
   assertEquals(isNumber('4' as never), false)
   assertEquals(isNumber('4s' as never), false)
+})
+
+Deno.test('Validates number array', () => {
+  assertEquals(isNumberArray([1, 2, 3]), true)
+  assertEquals(isNumberArray([1, '2' as never, 3]), false)
+  assertEquals(isNumberArray('not-an-array' as never), false)
+  assertEquals(isNumberArray(undefined as never), false)
 })

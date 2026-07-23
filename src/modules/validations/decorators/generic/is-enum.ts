@@ -1,7 +1,8 @@
 import type { ValidationDecoratorDefinition, ValidationOptions } from 'typings/validations.ts'
 import { defineValidationDecorator } from 'modules/validations/base/definitions/decorators.ts'
 
-type EnumType = Record<string, unknown> | unknown[]
+/** An enum-like object, or an array of literal values treated as an enum. */
+export type EnumType = Record<string, unknown> | unknown[]
 
 function normalizeEnum(enumLike: EnumType): Record<string, unknown> {
   // If already an enum (object)

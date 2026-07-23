@@ -1,0 +1,328 @@
+# Helpers
+
+The `helpers` module groups together the everyday utilities used by the Zanix ecosystem and by any Deno project that wants a bit of scaffolding for free: reading and writing the `deno.json(c)` config, resolving project paths, generating GitHub hooks/workflows, editor configuration, the `Znx` global namespace, the recommended Zanix folder tree, date/URL helpers, and the esbuild-based compiler.
+
+Import everything from the `helpers` entrypoint:
+
+```typescript
+import { getRootDir, prepareGithub, readConfig } from 'jsr:@zanix/utils@[version]/helpers'
+```
+
+## Config & Paths
+
+Helpers to locate the project root, resolve paths relative to the current module, read/write the `deno.json(c)` configuration, and check for the existence of files and folders.
+
+| Symbol               | Signature                                                                                       | Description                                                                                                                                                                                               |
+| -------------------- | ----------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `getRootDir`         | `(): string`                                                                                    | Returns `Deno.cwd()`, the root directory of the running process.                                                                                                                                          |
+| `getConfigDir`       | `(root?: string): string \| null`                                                               | Resolves the path to `deno.json` or `deno.jsonc` inside `root` (defaults to `getRootDir()`). Prefers `deno.json` over `deno.jsonc` when both exist. Returns `null` if neither exists.                     |
+| `readConfig`         | `(configPath?: string \| null): ConfigFile`                                                     | Reads and parses (comment-stripped) the `deno` config file. The parsed result is cached in memory; subsequent calls with the same `configPath` reuse the cache. Throws if no config file can be resolved. |
+| `saveConfig`         | `(config: ConfigFile, path?: string \| null): Promise<void>`                                    | Serializes `config` with two-space indentation and writes it to `path` (or the resolved config dir, or `deno.jsonc` as a last resort). Resets the internal `readConfig` cache.                            |
+| `readModuleConfig`   | `(metaUrl: string, isJsonc?: boolean): Promise<ConfigFile>`                                     | Reads a library's own `deno.json(c)`, either from the local filesystem (when `metaUrl` is a `file:` URL) or by fetching it from the equivalent JSR URL. `isJsonc` defaults to `true`.                     |
+| `getSrcDir`          | `(): string`                                                                                    | Returns the `src` folder path from `getZanixPaths()`, assuming a Zanix project layout.                                                                                                                    |
+| `getSrcName`         | `(): string`                                                                                    | Returns the `src` folder name (`"src"`) from `getZanixPaths()`.                                                                                                                                           |
+| `getFolderName`      | `(uri: string): string`                                                                         | Extracts the base name (last path segment) from a URI or path.                                                                                                                                            |
+| `getRelativePath`    | `(to: string, from?: string): string`                                                           | Returns the relative path from `from` (defaults to `getRootDir()`) to `to`.                                                                                                                               |
+| `getPathFromCurrent` | `(callerUrl: string, relativePath: string): string`                                             | Resolves `relativePath` against the directory of `callerUrl` (typically `import.meta.url`). Converts `file:` URLs to a plain filesystem path.                                                             |
+| `getTemporaryFolder` | `(callerUrl: string): string`                                                                   | Creates (if needed) and returns a `__tmp__` folder next to `callerUrl`, intended to be git-ignored scratch space.                                                                                         |
+| `fileExists`         | `(path: string): boolean`                                                                       | Checks whether `path` points to an existing file. Requires `allow-read`.                                                                                                                                  |
+| `folderExists`       | `(path: string): boolean`                                                                       | Checks whether `path` points to an existing directory. Requires `allow-read`.                                                                                                                             |
+| `collectFiles`       | `(root: string, extensions: string[], callback: (path: string, content: string) => void): void` | Recursively walks `root`, and for every file whose name ends with one of `extensions` calls `callback` with its full path and text content.                                                               |
+
+```typescript
+import {
+  getConfigDir,
+  getRootDir,
+  readConfig,
+  saveConfig,
+} from 'jsr:@zanix/utils@[version]/helpers'
+
+const root = getRootDir()
+const configDir = getConfigDir(root) // e.g. "/project/deno.json", or null if not found
+
+const config = readConfig(configDir)
+config.version = '1.2.3'
+
+await saveConfig(config, configDir)
+```
+
+```typescript
+import { getSrcDir, getSrcName } from 'jsr:@zanix/utils@[version]/helpers'
+
+getSrcDir() // e.g. "/project/src"
+getSrcName() // "src"
+```
+
+```typescript
+import { getPathFromCurrent, getTemporaryFolder } from 'jsr:@zanix/utils@[version]/helpers'
+
+// Resolve a file relative to the current module
+const fixturePath = getPathFromCurrent(import.meta.url, 'fixtures/data.json')
+
+// Get (and create) a git-ignored scratch folder next to the current module
+const tmpDir = getTemporaryFolder(import.meta.url)
+```
+
+```typescript
+import { collectFiles, fileExists, folderExists } from 'jsr:@zanix/utils@[version]/helpers'
+
+fileExists('./deno.json') // true | false
+folderExists('./src') // true | false
+
+collectFiles('./src', ['.gql', '.graphql'], (path, content) => {
+  console.log(`Found ${path} (${content.length} chars)`)
+})
+```
+
+## GitHub automation
+
+Scaffolding for `.github` hooks, workflows, and the base `.gitignore`. Each individual helper accepts a `baseFolder`/`baseRoot` pair (`BaseGithubHelperOptions`), but **there is no single shared default for `baseFolder`** — every helper defaults it differently depending on what it creates (hooks default to `.github/hooks`, the publish workflow defaults to `.github/workflows`). `prepareGithub` is the orchestrator that wires all of them together in one call.
+
+| Symbol                        | Signature                                                                   | Description                                                                                                                                                                                                                                                                                                                             |
+| ----------------------------- | --------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `PrepareGithubOptions` (type) | `{ legacyHooks?, usePrecommit?, publishWorkflow?, gitIgnoreBase? }`         | Options accepted by `prepareGithub`.                                                                                                                                                                                                                                                                                                    |
+| `prepareGithub`               | `(options?: PrepareGithubOptions & { root?: string }): Promise<boolean[]>`  | Initializes the git repo if needed, then creates the publish workflow, the base `.gitignore`, the `pre-commit` and `pre-push` hooks, and — when `usePrecommit` is truthy — the `pre-commit` framework YAML. Returns the boolean creation result of each step, in that order.                                                            |
+| `createGitWorkflow`           | `(options?: WorkflowOptions): Promise<boolean>`                             | Creates the `publish.yml` GitHub Actions workflow. Only generates a file for `projectType: 'library'` (the default); for other project types it logs a warning and returns `false` without writing anything. Defaults `baseFolder` to `.github/workflows` and `mainBranch` to `master`.                                                 |
+| `createIgnoreBaseFile`        | `(options?: Omit<BaseGithubHelperOptions, 'baseFolder'>): Promise<boolean>` | Writes a base `.gitignore` file at the project root (or `baseRoot`).                                                                                                                                                                                                                                                                    |
+| `createPreCommitHook`         | `(options: PreCommitHookOptions): Promise<boolean>`                         | Writes a `pre-commit` git hook that runs `deno fmt` and `deno lint` on staged files, and symlinks it into `.git/hooks` (unless `createLink: false`). Defaults `baseFolder` to `.github/hooks`. `filePatterns.lint` defaults to `['ts', 'tsx', 'js', 'jsx']` and `filePatterns.fmt` defaults to that same list plus `'md'` and `'json'`. |
+| `createPrePushHook`           | `(options?: HookOptions): Promise<boolean>`                                 | Writes a `pre-push` git hook that runs `deno test`, and symlinks it into `.git/hooks`. Defaults `baseFolder` to `.github/hooks`.                                                                                                                                                                                                        |
+
+```typescript
+import { prepareGithub } from 'jsr:@zanix/utils@[version]/helpers'
+
+// Sets up the publish workflow, .gitignore, and legacy pre-commit/pre-push hooks
+const results = await prepareGithub()
+
+// Using the `pre-commit` framework instead of the legacy hook, plus a custom main branch
+await prepareGithub({
+  usePrecommit: true,
+  publishWorkflow: { mainBranch: 'main' },
+})
+```
+
+```typescript
+import { createPreCommitHook, createPrePushHook } from 'jsr:@zanix/utils@[version]/helpers'
+
+await createPreCommitHook({
+  filePatterns: { lint: ['ts', 'tsx'], fmt: ['ts', 'tsx', 'md'] },
+})
+
+await createPrePushHook({ createLink: false })
+```
+
+```typescript
+import { createGitWorkflow, createIgnoreBaseFile } from 'jsr:@zanix/utils@[version]/helpers'
+
+await createGitWorkflow({ mainBranch: 'main', projectType: 'library' })
+await createIgnoreBaseFile()
+```
+
+## Editor
+
+| Symbol               | Signature                                               | Description                                                                                                                                                  |
+| -------------------- | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `createVSCodeConfig` | `(options?: BaseEditorHelperOptions): Promise<boolean>` | Generates a VSCode `settings.json` for the project, pointing it at the resolved `deno.json`/`deno.jsonc` file name. `baseRoot` defaults to the project root. |
+
+```typescript
+import { createVSCodeConfig } from 'jsr:@zanix/utils@[version]/helpers'
+
+await createVSCodeConfig()
+```
+
+## Zanix namespace & tree
+
+Helpers around the global `Znx` namespace (used internally by the Zanix framework to share config/logger state process-wide) and the recommended folder structure for Zanix projects.
+
+| Symbol                     | Signature                                                                          | Description                                                                                                                                                                                                                                                                                         |
+| -------------------------- | ---------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Zanix` (type)             | `ZanixGlobal['Znx']`                                                               | The shape of the global `Znx` namespace (`{ config, logger }`).                                                                                                                                                                                                                                     |
+| `canUseZnx`                | `(): boolean`                                                                      | Returns whether the global `Znx` object is currently defined.                                                                                                                                                                                                                                       |
+| `getGlobalZnx`             | `(): Zanix \| undefined`                                                           | Returns the global `Znx` object, or `undefined` if it hasn't been initialized via `setGlobalZnx`.                                                                                                                                                                                                   |
+| `setGlobalZnx`             | `(data: Partial<Zanix>): void`                                                     | Initializes `Znx` on `globalThis` on first call (seeding `config` from the project's `deno.json` `zanix` field, ignoring read errors), then merges `data` into it on every call.                                                                                                                    |
+| `getZanixPaths`            | `<T extends ZanixProjectsFull>(type?: T, projectDir?: string): ZanixFolderTree<T>` | Returns the recommended nested folder structure for a Zanix project. `type` is one of `'server'`, `'app'`, `'library'`, `'app-server'`, `'all'`, or `undefined` for the common structure shared by all project types. `projectDir` defaults to `getRootDir()`. Requires `allow-read`. Experimental. |
+| `getAllZanixLibrariesInfo` | `(): Promise<ZanixLibraries>`                                                      | Fetches the latest published JSR version of every `@zanix/*` library (`app`, `auth`, `asyncmq`, `core`, `datamaster`, `server`, `worker`, `utils`, `notifications`) and returns them keyed by package name. Result is cached after the first call. Intended for CLI/development use.                |
+| `getLatestRelease`         | `(lib: string, username?: string): Promise<string>`                                | Fetches the latest GitHub release tag (e.g. `"2.1.0"`) for `username/lib` via the Shields.io badge endpoint. `username` defaults to `'zanix-io'`. Falls back to `'latest'` on failure.                                                                                                              |
+| `getLatestVersion`         | `(lib: string, username?: string): Promise<string>`                                | Fetches the latest JSR version for `@username/lib` via the Shields.io badge endpoint. `username` defaults to `'@zanix'`. Falls back to `'latest'` on failure.                                                                                                                                       |
+
+```typescript
+import { canUseZnx, getGlobalZnx, setGlobalZnx } from 'jsr:@zanix/utils@[version]/helpers'
+
+canUseZnx() // false, before any initialization
+
+setGlobalZnx({ config: {} })
+
+canUseZnx() // true
+getGlobalZnx() // { config: {}, logger: {} }
+```
+
+```typescript
+import { getZanixPaths } from 'jsr:@zanix/utils@[version]/helpers'
+
+const common = getZanixPaths() // shared structure: docs, src/@tests, src/typings, src/utils, ...
+const serverTree = getZanixPaths('server') // adds src/shared and src/server subtrees
+const fullTree = getZanixPaths('all', '/path/to/project') // every subtree, rooted at a custom project dir
+
+common.subfolders.src.FOLDER // e.g. "/path/to/project/src"
+```
+
+```typescript
+import { getAllZanixLibrariesInfo, getLatestVersion } from 'jsr:@zanix/utils@[version]/helpers'
+
+const version = await getLatestVersion('utils') // e.g. "2.2.14"
+const libraries = await getAllZanixLibrariesInfo()
+// { '@zanix/utils': { version: '2.2.14' }, '@zanix/server': { version: '1.0.3' }, ... }
+```
+
+## Dates & URLs
+
+| Symbol                           | Signature                                                             | Description                                                                                                                                                                                                         |
+| -------------------------------- | --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `getISODate`                     | `(): string`                                                          | Returns the current local date as `YYYY-MM-DD`.                                                                                                                                                                     |
+| `getLocalTime`                   | `(): string`                                                          | Returns `new Date().toLocaleTimeString()`.                                                                                                                                                                          |
+| `getUtcTime`                     | `(): string`                                                          | Returns the UTC time portion (`HH:mm:ss.sssZ`) of the current ISO timestamp.                                                                                                                                        |
+| `parseTTL`                       | `(input: number \| string): number`                                   | Parses a human-readable duration (`"1h"`, `"30m"`, `"7d"`, `"2w"`, `"1mo"`, `"1y"`, etc.) into seconds. A numeric input is returned as-is (assumed to already be seconds). Throws on an unrecognized string format. |
+| `verifyUrl`                      | `(url: string): URL \| undefined`                                     | Attempts to parse `url` as a `URL`, returning `undefined` instead of throwing when it is invalid.                                                                                                                   |
+| `isFileUrl`                      | `(url: string): boolean`                                              | Returns whether `url` parses to the `file:` protocol.                                                                                                                                                               |
+| `getProcessedParams`             | `(searchParams: URLSearchParams): object`                             | Converts `URLSearchParams` into a plain object: simple keys map to a single value, repeated keys map to an array, and bracket-style keys (`keyA[subKeyA]=a`) map to nested objects.                                 |
+| `searchParamsPropertyDescriptor` | `(searchParams: URLSearchParams): PropertyDescriptor & ThisType<any>` | Builds a lazily-computed `get`/`set` property descriptor backed by `getProcessedParams`, for use with `Object.defineProperty` on a class or object that wraps `URLSearchParams`.                                    |
+
+```typescript
+import { getISODate, getLocalTime, getUtcTime } from 'jsr:@zanix/utils@[version]/helpers'
+
+getISODate() // "2026-07-23"
+getLocalTime() // e.g. "2:15:03 PM"
+getUtcTime() // e.g. "18:15:03.512Z"
+```
+
+```typescript
+import { parseTTL } from 'jsr:@zanix/utils@[version]/helpers'
+
+parseTTL('1h') // 3600
+parseTTL('15m') // 900
+parseTTL(300) // 300
+
+const expiresIn = parseTTL('7d')
+jwt.sign(payload, secret, { expiresIn })
+```
+
+```typescript
+import { isFileUrl, verifyUrl } from 'jsr:@zanix/utils@[version]/helpers'
+
+verifyUrl('https://example.com') // URL instance
+verifyUrl('not a url') // undefined
+
+isFileUrl(import.meta.url) // true when running a local module
+```
+
+```typescript
+import { getProcessedParams } from 'jsr:@zanix/utils@[version]/helpers'
+
+getProcessedParams(new URLSearchParams('?keyA=a&keyB=b')) // { keyA: 'a', keyB: 'b' }
+getProcessedParams(new URLSearchParams('?keyA=a&keyA=b')) // { keyA: ['a', 'b'] }
+getProcessedParams(new URLSearchParams('keyA[subKeyA]=a&keyA[subKeyB]=b'))
+// { keyA: { subKeyA: 'a', subKeyB: 'b' } }
+```
+
+## Build
+
+| Symbol                | Signature                                                                                      | Description                                                                                    |
+| --------------------- | ---------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `compileAndObfuscate` | `(options?: Partial<CompilerOptions>): void \| Promise<{ error?: unknown; message?: string }>` | Bundles a file with esbuild and optionally obfuscates the output with `javascript-obfuscator`. |
+
+`options` accepts (all optional):
+
+| Option       | Default                   | Description                                                                                        |
+| ------------ | ------------------------- | -------------------------------------------------------------------------------------------------- |
+| `inputFile`  | Zanix `mod.ts` path       | The source file to compile.                                                                        |
+| `outputFile` | Zanix `.dist` bundle path | Where the compiled (and possibly obfuscated) file is written.                                      |
+| `obfuscate`  | `false`                   | Whether to run the output through `javascript-obfuscator`.                                         |
+| `useWorker`  | `false`                   | Whether to run the build inside a `WorkerManager` background worker instead of the current thread. |
+| `minify`     | `true`                    | Whether esbuild minifies the output.                                                               |
+| `bundle`     | `true`                    | Whether esbuild bundles all dependencies into a single file.                                       |
+| `platform`   | `'neutral'`               | esbuild platform target (`'node' \| 'neutral' \| 'browser'`).                                      |
+| `npm`        | `''`                      | Comma-separated list of npm packages to keep external (not bundled).                               |
+| `plugins`    | `() => []`                | Extra esbuild plugins to include alongside the built-in Deno/npm loaders.                          |
+| `callback`   | `() => {}`                | Invoked with `{ error?, message? }` once the build finishes (in both the direct and worker paths). |
+
+This function requires `allow-read`, `allow-env`, `allow-write`, and `allow-run`.
+
+```typescript
+import { compileAndObfuscate } from 'jsr:@zanix/utils@[version]/helpers'
+
+await compileAndObfuscate() // esbuild, using Zanix default input/output paths
+```
+
+```typescript
+import { compileAndObfuscate } from 'jsr:@zanix/utils@[version]/helpers'
+
+await compileAndObfuscate({
+  inputFile: './src/mod.ts',
+  outputFile: './.dist/mod.js',
+  obfuscate: true,
+  npm: 'esbuild,javascript-obfuscator',
+  callback: ({ error, message }) => console.log(message ?? error),
+})
+```
+
+```typescript
+import { compileAndObfuscate } from 'jsr:@zanix/utils@[version]/helpers'
+
+// Runs the build in a background worker instead of blocking the current thread
+compileAndObfuscate({ useWorker: true, obfuscate: true })
+```
+
+## Misc
+
+| Symbol         | Signature                | Description                                                                                                       |
+| -------------- | ------------------------ | ----------------------------------------------------------------------------------------------------------------- |
+| `generateUUID` | `(): string`             | Returns a random v4 UUID via `crypto.randomUUID()`.                                                               |
+| `isFileUrl`    | `(url: string): boolean` | See [Dates & URLs](#dates--urls). Listed here as well since it is a general-purpose URL check, not date-specific. |
+
+```typescript
+import { generateUUID } from 'jsr:@zanix/utils@[version]/helpers'
+
+generateUUID() // e.g. "3fa1c2b0-9c1e-4e2a-8f3e-6f6a6a6c8b21"
+```
+
+## Testing utilities
+
+`mockWrap` actually lives in `modules/testing/mod.ts`, not in the `helpers` group, but it is the only public symbol exported from that module, so it is documented here rather than in its own file.
+
+| Symbol     | Signature                                                                       | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| ---------- | ------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `mockWrap` | `<F extends Function>(fn: F, context: Record<string, any>, force?: boolean): F` | Rewrites the source of `fn` so that every identifier matching a key in `context` is rebound to `this.<key>`, then returns a new function bound to `context`. This lets a test substitute the global/imported dependencies a function calls (other functions, constants, modules) with mocks, without touching or re-exporting internals from the original file. When a `context` value is a function and `force` is not set, only call sites (`key(`) are rewritten, preserving plain references to the identifier; pass `force: true` to rewrite every occurrence unconditionally. |
+
+```typescript
+import { mockWrap } from 'jsr:@zanix/utils@[version]/testing'
+
+function myFunction() {
+  return user()
+}
+
+const mock = mockWrap(myFunction, { user: () => 'testUser' })
+mock() // 'testUser'
+```
+
+```typescript
+import { getConfigDir } from 'jsr:@zanix/utils@[version]/helpers'
+import { mockWrap } from 'jsr:@zanix/utils@[version]/testing'
+import { join } from '@std/path/join'
+
+// Replace getRootDir, join, fileExists and CONFIG_FILE with test doubles,
+// without changing how paths.ts itself is written.
+const context = {
+  getRootDir: () => '/mock/root/dir/',
+  join,
+  fileExists: (filePath: string) => filePath === '/mock/root/dir/config.json',
+  CONFIG_FILE: 'config.json',
+}
+
+const mockedGetConfigDir = mockWrap(getConfigDir, context)
+mockedGetConfigDir() // "/mock/root/dir/config.json"
+```
+
+## See also
+
+- [Types reference](./types.md)
+- [Utils](./utils.md)
+- [Encryption & Masking](./encryption-masking.md)

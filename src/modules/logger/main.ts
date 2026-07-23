@@ -15,15 +15,21 @@ import { setGlobalZnx } from 'modules/helpers/zanix/namespace.ts'
 import { baseSaveData } from './defaults/storage/main.ts'
 import { showMessage } from './base.ts'
 
+/**
+ * The internal `Logger` base class. Extended by the default `Logger` export
+ * of `@zanix/utils/logger` to make the class nameable in generated docs.
+ */
 export class Logger<Return extends unknown = DefaultResponse> {
   #formatter: Formatter = () => ({})
   #saveFuntion: SaveDataFunction = () => {}
 
   /**
+   * Creates a `Logger` instance with a function-based save mode.
    * @param options Configuration options for the Logger class with a function-based save mode.
    */
   constructor(options?: LoggerFunctionOptions<Return>)
   /**
+   * Creates a `Logger` instance with file-based save mode.
    * @param options Configuration options for the Logger class with file-based save mode.
    */
   constructor(options?: LoggerFileOptions<Return>)

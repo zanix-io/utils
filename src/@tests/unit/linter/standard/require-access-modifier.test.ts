@@ -14,6 +14,7 @@ Deno.test('require-access-modifier plugin should report encapsulation violations
 
     class A {
       #property
+      property
       #private(){
       }
       constructor(){
@@ -24,19 +25,29 @@ Deno.test('require-access-modifier plugin should report encapsulation violations
     }`,
   )
 
-  // Ensure there is exactly one diagnostic violation
-  assertEquals(diagnostics.length, 1)
+  // Ensure there is exactly one diagnostic violation per public member without a modifier
+  assertEquals(diagnostics.length, 2)
 
   // Verify the diagnostic contains the correct details
 
-  const mainDiagnostic = diagnostics[0]
+  const [propertyDiagnostic, methodDiagnostic] = diagnostics
 
-  assertEquals({ ...mainDiagnostic }, {
+  assertEquals({ ...propertyDiagnostic }, {
+    id: 'deno-std-plugin/require-access-modifier',
+    message: linterMessageFormat(
+      'Properties should have an explicit access modifier (public, private, protected).',
+    ),
+    range: [57, 65],
+    hint: 'Add a public, private, or protected modifier to the property.',
+    fix: [],
+  })
+
+  assertEquals({ ...methodDiagnostic }, {
     id: 'deno-std-plugin/require-access-modifier',
     message: linterMessageFormat(
       'Methods should have an explicit access modifier (public, private, protected).',
     ),
-    range: [112, 147],
+    range: [127, 162],
     hint: 'Add a public, private, or protected modifier to the method.',
     fix: [],
   })
