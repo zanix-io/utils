@@ -21,5 +21,7 @@ export { default as regex } from 'modules/regex/mod.ts'
  * This module provides basic validation decorators for string, array, and date types,
  * using native ECMAScript features compatible with Deno and Microsoft's Reflect Metadata API.
  * Validations are based on object extensions from BaseRTO.
+ *
+ * @module validator
  */
 export const validator: typeof validatorModule = validatorModule

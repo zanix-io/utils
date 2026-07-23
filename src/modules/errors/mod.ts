@@ -7,6 +7,13 @@
  * \_____/ \__,_||_| |_||_|/_/\_\
  */
 
+/**
+ * Custom error classes (`HttpError`, `ApplicationError`, `InternalError`, `PermissionDenied`),
+ * HTTP status code mapping (`httpStates`), and error serialization helpers.
+ *
+ * @module zanixErrors
+ */
+
 export * from './main.ts'
 export * from './serialize.ts'
 

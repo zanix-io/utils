@@ -7,6 +7,18 @@ adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [2.2.17] - 2026-07-23
+
+### Fixed
+
+- Restored the `@module` tag on the `validator` re-export in `mod.ts` (removed by mistake in
+  2.2.16): the fix for JSR's Overview tab showing that comment instead of `README.md` is the
+  package's "Readme Source" setting on jsr.io, not removing the module doc — removing it broke
+  the "Has module docs in all entrypoints" score item instead.
+- Added the missing `@module` tag (with a real summary) to the 7 entrypoints that never had one:
+  `/helpers`, `/validator`, `/logger`, `/testing`, `/workers`, `/errors`, and `/types`, so every
+  entrypoint declared in `deno.jsonc`'s `exports` now satisfies JSR's module-doc score check.
+
 ## [2.2.16] - 2026-07-23
 
 ### Fixed

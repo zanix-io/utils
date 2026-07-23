@@ -10,6 +10,14 @@
 import { Logger as LoggerMainClass } from 'modules/logger/main.ts'
 
 /**
+ * A default, ready-to-use `logger` instance plus the `Logger` class for creating custom
+ * instances with their own storage strategy (file, custom function, or worker-offloaded) and
+ * formatter.
+ *
+ * @module zanixLogger
+ */
+
+/**
  * The main logger class that provides various options for logging with customizable behavior.
  * You can configure the logger to save logs to different locations, use custom formats, and even
  * enable workers for processing logs asynchronously.

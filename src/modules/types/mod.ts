@@ -7,6 +7,13 @@
  * \_____/ \__,_||_| |_||_|/_/\_\
  */
 
+/**
+ * Pure TypeScript types used across `@zanix/utils`: decorator options, logger and error shapes,
+ * encryption/masking options, the Zanix project/folder model, and more.
+ *
+ * @module zanixTypes
+ */
+
 export type {
   DefaultLogger,
   ZanixAppSrcTree,

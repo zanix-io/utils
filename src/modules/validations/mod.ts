@@ -7,6 +7,14 @@
  * \_____/ \__,_||_| |_||_|/_/\_\
  */
 
+/**
+ * Validator module for `BaseRTO`-based requests: validation decorators for strings, numbers,
+ * dates, arrays, and enums, plus nested/custom validation and `classValidation`, all built on
+ * native ECMAScript decorators (no `experimentalDecorators` or `reflect-metadata` needed).
+ *
+ * @module zanixValidator
+ */
+
 export * from './decorators/arrays/is-array.ts'
 export * from './decorators/arrays/length.ts'
 

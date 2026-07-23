@@ -7,4 +7,11 @@
  * \_____/ \__,_||_| |_||_|/_/\_\
  */
 
+/**
+ * Testing utilities: `mockWrap` rewrites a function's source to inject mock dependencies
+ * (globals, imports) without touching the original module.
+ *
+ * @module zanixTesting
+ */
+
 export * from './mocks.ts'

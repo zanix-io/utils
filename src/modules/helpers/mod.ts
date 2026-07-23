@@ -7,6 +7,14 @@
  * \_____/ \__,_||_| |_||_|/_/\_\
  */
 
+/**
+ * General-purpose helpers for the Zanix ecosystem: config and path resolution, file utilities,
+ * date/URL/encoding helpers, the Zanix project-tree and namespace helpers, GitHub/editor
+ * scaffolding automation, and cryptography (encryption and masking).
+ *
+ * @module zanixHelpers
+ */
+
 export * from 'utils/identifiers.ts'
 export * from 'utils/dates.ts'
 export * from './zanix/tree.ts'
