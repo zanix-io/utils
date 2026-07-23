@@ -7,6 +7,23 @@ adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [2.2.16] - 2026-07-23
+
+### Fixed
+
+- Removed the `@module` tag from the `validator` re-export in `mod.ts`: JSR's package Overview
+  page prioritizes a `@module`-tagged doc comment on the main entrypoint over the actual
+  `README.md`, which made the Overview show that comment's text instead of the real README.
+- Bumped `actions/checkout` (`v4` → `v5`) and `denoland/setup-deno` (`v1` → `v2`) in the publish
+  workflow and its scaffolding template (`publish.base.yml`), resolving a Node.js 20 deprecation
+  warning on GitHub Actions runners.
+
+### Changed
+
+- Documented the remaining undocumented private fields on `WorkerManager` (`workers`, `#tasks`,
+  `#workerIx`) and replaced a placeholder comment on `HttpError`/`ApplicationError`'s `_logged`
+  field with a description of its actual purpose (de-duplicating repeated logs of the same error).
+
 ## [2.2.15] - 2026-07-23
 
 ### Added

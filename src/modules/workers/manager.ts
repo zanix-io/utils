@@ -26,8 +26,11 @@ import { generateUUID } from 'utils/identifiers.ts'
  * @category workers
  */
 export class WorkerManager {
+  /** The pool of workers managed by this instance, indexed by worker id. */
   private workers: { worker: Worker; status: 'busy' | 'free' }[] = []
+  /** Tasks queued while every worker in the pool is busy. */
   #tasks: Array<(workerId?: number) => void> = []
+  /** Round-robin cursor used by {@link getWorkerId} when no worker is free. */
   #workerIx: number = 0
 
   /**

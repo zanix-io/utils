@@ -66,7 +66,7 @@ export class HttpError extends Deno.errors.Http {
   public meta?: Record<string, unknown>
   /** The HTTP error code and its corresponding numeric status value. */
   public status: { code: HttpErrorCodes; value: number }
-  // Define the type for the private properties
+  /** Tracks whether this error instance has already been logged, to avoid double-logging the same error when it is re-serialized (see `serializeMultipleErrors`). */
   private _logged: boolean = false
 
   /**
@@ -125,7 +125,7 @@ export class ApplicationError extends Error {
   public code?: string
   /** Optional metadata attached to this error for internal use. */
   public meta?: Record<string, unknown>
-  // Define the type for the private properties
+  /** Tracks whether this error instance has already been logged, to avoid double-logging the same error when it is re-serialized (see `serializeMultipleErrors`). */
   private _logged: boolean = false
 
   /**
