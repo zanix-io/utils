@@ -47,7 +47,10 @@
     },
     "exclude": [".dist/"],
     "plugins": [
-      // TODO: review this local because does not work "./src/modules/linter/plugins/zanix/mod.ts",
+      // Using the jsr: specifier (not the local "./src/modules/linter/plugins/zanix/mod.ts" path)
+      // because the vscode-deno language server doesn't load lint plugins from a local relative
+      // path — even after an LSP restart. `deno lint`/`deno publish` work fine with the local path,
+      // but editor diagnostics need the resolved jsr specifier.
       "jsr:@zanix/utils/linter/deno-zanix-plugin"
     ],
     "report": "pretty"

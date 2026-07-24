@@ -155,9 +155,20 @@ export type ZanixFolderTree<T extends ZanixProjectsFull = undefined> = ZanixBase
 >
 
 /**
- * Global library type modules definition
+ * Global library type modules definition.
+ *
+ * JSR does not support a package injecting global namespace declarations into
+ * consumers automatically, so this stays as a plain exported interface.
+ * Consumers who need typed access to the runtime globals (`Znx`, `logger`, etc.)
+ * should declare their own `declare global` block referencing this type, e.g.:
+ *
+ * ```ts
+ * declare global {
+ *   const Znx: ZanixGlobal['Znx']
+ *   interface Window extends ZanixGlobal {}
+ * }
+ * ```
  */
-// TODO: Add a global declaration once JSR supports global namespaces.
 export interface ZanixGlobal {
   /** The global logger default instance */
   logger: DefaultLogger
