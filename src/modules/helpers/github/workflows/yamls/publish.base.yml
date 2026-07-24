@@ -3,7 +3,7 @@
 name: Publish
 
 on:
-  # Run on push or PRs to master
+  # Run on push or PRs to main branch
   pull_request:
     branches:
       - ${MAIN_BRANCH}
