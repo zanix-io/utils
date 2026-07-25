@@ -17,6 +17,11 @@
 
 export * from 'utils/identifiers.ts'
 export * from 'utils/dates.ts'
+export * from 'utils/templates.ts'
+export * from 'utils/concurrency.ts'
+export * from 'utils/cron.ts'
+export * from 'utils/routes.ts'
+export * from 'utils/params.ts'
 export * from './zanix/tree.ts'
 export * from './zanix/namespace.ts'
 export * from './zanix/info.ts'

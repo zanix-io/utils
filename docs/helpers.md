@@ -175,16 +175,18 @@ const libraries = await getAllZanixLibrariesInfo()
 
 ## Dates & URLs
 
-| Symbol                           | Signature                                                             | Description                                                                                                                                                                                                         |
-| -------------------------------- | --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `getISODate`                     | `(): string`                                                          | Returns the current local date as `YYYY-MM-DD`.                                                                                                                                                                     |
-| `getLocalTime`                   | `(): string`                                                          | Returns `new Date().toLocaleTimeString()`.                                                                                                                                                                          |
-| `getUtcTime`                     | `(): string`                                                          | Returns the UTC time portion (`HH:mm:ss.sssZ`) of the current ISO timestamp.                                                                                                                                        |
-| `parseTTL`                       | `(input: number \| string): number`                                   | Parses a human-readable duration (`"1h"`, `"30m"`, `"7d"`, `"2w"`, `"1mo"`, `"1y"`, etc.) into seconds. A numeric input is returned as-is (assumed to already be seconds). Throws on an unrecognized string format. |
-| `verifyUrl`                      | `(url: string): URL \| undefined`                                     | Attempts to parse `url` as a `URL`, returning `undefined` instead of throwing when it is invalid.                                                                                                                   |
-| `isFileUrl`                      | `(url: string): boolean`                                              | Returns whether `url` parses to the `file:` protocol.                                                                                                                                                               |
-| `getProcessedParams`             | `(searchParams: URLSearchParams): object`                             | Converts `URLSearchParams` into a plain object: simple keys map to a single value, repeated keys map to an array, and bracket-style keys (`keyA[subKeyA]=a`) map to nested objects.                                 |
-| `searchParamsPropertyDescriptor` | `(searchParams: URLSearchParams): PropertyDescriptor & ThisType<any>` | Builds a lazily-computed `get`/`set` property descriptor backed by `getProcessedParams`, for use with `Object.defineProperty` on a class or object that wraps `URLSearchParams`.                                    |
+| Symbol                           | Signature                                                             | Description                                                                                                                                                                                                                                                                                                                                       |
+| -------------------------------- | --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `getISODate`                     | `(): string`                                                          | Returns the current local date as `YYYY-MM-DD`.                                                                                                                                                                                                                                                                                                   |
+| `getLocalTime`                   | `(): string`                                                          | Returns `new Date().toLocaleTimeString()`.                                                                                                                                                                                                                                                                                                        |
+| `getUtcTime`                     | `(): string`                                                          | Returns the UTC time portion (`HH:mm:ss.sssZ`) of the current ISO timestamp.                                                                                                                                                                                                                                                                      |
+| `parseTTL`                       | `(input: number \| string): number`                                   | Parses a human-readable duration (`"1h"`, `"30m"`, `"7d"`, `"2w"`, `"1mo"`, `"1y"`, etc.) into seconds. A numeric input is returned as-is (assumed to already be seconds). Throws on an unrecognized string format.                                                                                                                               |
+| `verifyUrl`                      | `(url: string): URL \| undefined`                                     | Attempts to parse `url` as a `URL`, returning `undefined` instead of throwing when it is invalid.                                                                                                                                                                                                                                                 |
+| `isFileUrl`                      | `(url: string): boolean`                                              | Returns whether `url` parses to the `file:` protocol.                                                                                                                                                                                                                                                                                             |
+| `getProcessedParams`             | `(searchParams: URLSearchParams): object`                             | Converts `URLSearchParams` into a plain object: simple keys map to a single value, repeated keys map to an array, and bracket-style keys (`keyA[subKeyA]=a`) map to nested objects.                                                                                                                                                               |
+| `toSearchParams`                 | `(params: Record<string, unknown>): URLSearchParams`                  | Builds a `URLSearchParams` from a plain object — the reverse of `getProcessedParams`, using the same conventions so the two round-trip. Arrays become duplicate keys, nested objects use bracket notation, `null`/`undefined` values are skipped.                                                                                                 |
+| `searchParamsPropertyDescriptor` | `(searchParams: URLSearchParams): PropertyDescriptor & ThisType<any>` | Builds a lazily-computed `get`/`set` property descriptor backed by `getProcessedParams`, for use with `Object.defineProperty` on a class or object that wraps `URLSearchParams`.                                                                                                                                                                  |
+| `interpolateUrl`                 | `(url: string, record: Record<string, unknown>): string`              | Interpolates `{{field}}`/`{{nested.path}}` placeholders in a URL template (see [Templates & interpolation](#templates--interpolation)). The path portion is interpolated as plain text; each query segment whose value is exactly one placeholder is expanded via `toSearchParams` (arrays/nested objects included) instead of being stringified. |
 
 ```typescript
 import { getISODate, getLocalTime, getUtcTime } from 'jsr:@zanix/utils@[version]/helpers'
@@ -215,12 +217,113 @@ isFileUrl(import.meta.url) // true when running a local module
 ```
 
 ```typescript
-import { getProcessedParams } from 'jsr:@zanix/utils@[version]/helpers'
+import { getProcessedParams, toSearchParams } from 'jsr:@zanix/utils@[version]/helpers'
 
 getProcessedParams(new URLSearchParams('?keyA=a&keyB=b')) // { keyA: 'a', keyB: 'b' }
 getProcessedParams(new URLSearchParams('?keyA=a&keyA=b')) // { keyA: ['a', 'b'] }
 getProcessedParams(new URLSearchParams('keyA[subKeyA]=a&keyA[subKeyB]=b'))
 // { keyA: { subKeyA: 'a', subKeyB: 'b' } }
+
+// toSearchParams is the reverse direction, using the same conventions
+toSearchParams({ keyA: 'a', keyB: ['x', 'y'] }).toString() // 'keyA=a&keyB=x&keyB=y'
+toSearchParams({ keyA: { subKeyA: 'a' } }).toString() // 'keyA%5BsubKeyA%5D=a'
+```
+
+```typescript
+import { interpolateUrl } from 'jsr:@zanix/utils@[version]/helpers'
+
+interpolateUrl('https://x.com/{{id}}?tags={{tags}}', { id: '42', tags: ['a', 'b'] })
+// 'https://x.com/42?tags=a&tags=b'
+
+interpolateUrl('https://x.com?address={{address}}', {
+  address: { city: 'Bogotá', zip: '110111' },
+})
+// 'https://x.com?address%5Bcity%5D=Bogot%C3%A1&address%5Bzip%5D=110111'
+```
+
+## Templates & interpolation
+
+Generic `{{field}}`/`{{nested.path}}` placeholder resolution, used internally by `interpolateUrl`
+(see [Dates & URLs](#dates--urls)) but reusable for interpolating any string/object/array against
+a record.
+
+| Symbol                  | Signature                                           | Description                                                                                                                                                                                                                                                                                                                        |
+| ----------------------- | --------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `getPath`               | `(record: any, path: string): unknown`              | Resolves a dot-separated path (array indices included, e.g. `'items.0.name'`) against `record`.                                                                                                                                                                                                                                    |
+| `matchWholePlaceholder` | `(value: string): string \| null`                   | Returns the field path if `value` is exactly one `{{field}}` placeholder (nothing before or after it), or `null` otherwise (mixed text, multiple placeholders, or none).                                                                                                                                                           |
+| `interpolate`           | `<T>(value: T, record: Record<string, unknown>): T` | Resolves `{{field}}`/`{{nested.path}}` placeholders in `value` against `record`. A string that is _exactly_ one placeholder resolves to the field's real value (any type); a string mixing a placeholder with other text always substitutes as a string. Arrays/objects are walked recursively; any other value is returned as-is. |
+
+```typescript
+import { interpolate } from 'jsr:@zanix/utils@[version]/helpers'
+
+interpolate('Bearer {{token}}', { token: 'abc123' }) // 'Bearer abc123'
+interpolate('{{amount}}', { amount: 42 }) // 42 (real type preserved, not stringified)
+interpolate({ id: '{{user.id}}' }, { user: { id: 7 } }) // { id: 7 }
+```
+
+## Routes
+
+| Symbol       | Signature                 | Description                                                                                                                                                                       |
+| ------------ | ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `cleanRoute` | `(route: string): string` | Normalizes a route path: trims whitespace, converts backslashes to slashes, collapses repeated slashes, ensures a single leading `/`, strips a trailing slash, and lowercases it. |
+
+```typescript
+import { cleanRoute } from 'jsr:@zanix/utils@[version]/helpers'
+
+cleanRoute('///folder1/folder2//file') // '/folder1/folder2/file'
+cleanRoute('  \\API\\Users\\  ') // '/api/users'
+cleanRoute('') // '/'
+```
+
+## URL params
+
+| Symbol             | Signature                        | Description                                                                                                                                                                                                                                                                  |
+| ------------------ | -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `processUrlParams` | `<T extends unknown>(obj: T): T` | Recursively `decodeURIComponent`s every string value inside an object or array, in place. Non-string values are untouched. If decoding throws partway through (a malformed `%` sequence), the error is swallowed and the object is returned as-is, decoded up to that point. |
+
+```typescript
+import { processUrlParams } from 'jsr:@zanix/utils@[version]/helpers'
+
+processUrlParams({ user: 'John%20Doe', tags: ['NodeJS%20Dev'] })
+// { user: 'John Doe', tags: ['NodeJS Dev'] }
+```
+
+## Concurrency
+
+| Symbol        | Signature                                                                                                                    | Description                                                                                                                                                              |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `Semaphore`   | `class Semaphore { constructor(permits: number); acquire(): Promise<void>; release(): boolean; permits: number }`            | Limits concurrent access to a resource to a fixed number of permits; tasks beyond that limit queue until one is released.                                                |
+| `LockManager` | `class LockManager { constructor(permitsPerKey?: number); withLock<T>(key: string, fn: () => T \| Promise<T>): Promise<T> }` | Manages one `Semaphore` per key (default 1 permit, i.e. an exclusive lock), so calls for the same key never run concurrently while different keys still run in parallel. |
+
+```typescript
+import { LockManager, Semaphore } from 'jsr:@zanix/utils@[version]/helpers'
+
+const semaphore = new Semaphore(2) // allow 2 concurrent tasks
+await semaphore.acquire()
+try {
+  // ...work...
+} finally {
+  semaphore.release()
+}
+
+const lockManager = new LockManager() // exclusive lock per key
+await lockManager.withLock(`user:${userId}`, async () => {
+  // only one update runs at a time for this userId
+  await saveToDatabase(data)
+})
+```
+
+## Cron
+
+| Symbol         | Signature                                                         | Description                                                                                                                                                                                       |
+| -------------- | ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `nextCronDate` | `(cronExpr: string, fromDate?: Date): Promise<Date \| undefined>` | Computes the next execution `Date` after `fromDate` (default: now) matching a 6-field cron expression (`second minute hour day month weekday`). Returns `undefined` if the expression is invalid. |
+
+```typescript
+import { nextCronDate } from 'jsr:@zanix/utils@[version]/helpers'
+
+await nextCronDate('0 */15 * * * *') // next run at the next quarter-hour mark
+await nextCronDate('not a cron expr') // undefined
 ```
 
 ## Build

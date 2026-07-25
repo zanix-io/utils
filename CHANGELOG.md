@@ -7,6 +7,27 @@ adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [2.3.0] - 2026-07-24
+
+### Added
+
+- `toSearchParams`: builds a `URLSearchParams` from a plain object — the reverse direction of
+  `getProcessedParams`, using the same array/nested-object conventions so the two round-trip.
+- `interpolateUrl`: interpolates `{{field}}`/`{{nested.path}}` placeholders in a URL template. The
+  path portion is interpolated as plain text; a query value that is exactly one placeholder is
+  expanded via `toSearchParams` (arrays become repeated keys, nested objects use bracket notation)
+  instead of being stringified.
+- New template-interpolation primitives (`getPath`, `matchWholePlaceholder`, `interpolate`) for
+  resolving `{{field}}`/`{{nested.path}}` placeholders against a record — the building blocks
+  behind `interpolateUrl`, also usable standalone.
+- `Semaphore` and `LockManager`: concurrency primitives for limiting simultaneous access to a
+  resource (fixed permit count) and for exclusive per-key locking.
+- `nextCronDate`: computes the next execution `Date` matching a 6-field cron expression
+  (`second minute hour day month weekday`).
+- `cleanRoute`: normalizes a route path (backslashes, repeated slashes, whitespace, casing).
+- `processUrlParams`: recursively `decodeURIComponent`s every string value inside an object or
+  array, in place.
+
 ## [2.2.17] - 2026-07-23
 
 ### Fixed

@@ -1,4 +1,10 @@
-import { getProcessedParams, searchParamsPropertyDescriptor, verifyUrl } from 'utils/urls.ts'
+import {
+  getProcessedParams,
+  interpolateUrl,
+  searchParamsPropertyDescriptor,
+  toSearchParams,
+  verifyUrl,
+} from 'utils/urls.ts'
 import { assertEquals, assertStrictEquals } from '@std/assert'
 
 Deno.test('verifyUrl - parses valid URLs and returns undefined for invalid ones', () => {
@@ -129,4 +135,109 @@ Deno.test('computedSearchParams should process urlsearch params', () => {
       subKeyBB: { '0': 'd', '1': 'ef', subKeyBF: ['d', 'ef'], subKeyBE: 'e' },
     },
   })
+})
+
+Deno.test('toSearchParams - simple key-value pairs', () => {
+  const params = toSearchParams({ keyA: 'a', keyB: 'b' })
+  assertEquals(params.toString(), 'keyA=a&keyB=b')
+})
+
+Deno.test('toSearchParams - array values become duplicate keys', () => {
+  const params = toSearchParams({ keyA: ['a', 'b'] })
+  assertEquals(params.toString(), 'keyA=a&keyA=b')
+})
+
+Deno.test('toSearchParams - nested objects use bracket notation', () => {
+  const params = toSearchParams({ keyA: { subKeyA: 'a', subKeyB: 'b' } })
+  assertEquals(params.get('keyA[subKeyA]'), 'a')
+  assertEquals(params.get('keyA[subKeyB]'), 'b')
+})
+
+Deno.test('toSearchParams - skips null/undefined values entirely', () => {
+  const params = toSearchParams({ keyA: 'a', keyB: null, keyC: undefined })
+  assertEquals(params.toString(), 'keyA=a')
+})
+
+Deno.test('toSearchParams - non-string primitives are stringified', () => {
+  const params = toSearchParams({ amount: 42, active: false })
+  assertEquals(params.get('amount'), '42')
+  assertEquals(params.get('active'), 'false')
+})
+
+Deno.test('toSearchParams round-trips with getProcessedParams for simple pairs', () => {
+  const built = toSearchParams({ keyA: 'a', keyB: 'b' })
+  assertEquals(getProcessedParams(new URLSearchParams(built.toString())), {
+    keyA: 'a',
+    keyB: 'b',
+  })
+})
+
+Deno.test('toSearchParams round-trips with getProcessedParams for arrays', () => {
+  const built = toSearchParams({ keyA: ['a', 'b'] })
+  assertEquals(getProcessedParams(new URLSearchParams(built.toString())), {
+    keyA: ['a', 'b'],
+  })
+})
+
+Deno.test('toSearchParams round-trips with getProcessedParams for nested objects', () => {
+  const built = toSearchParams({ keyA: { subKeyA: 'a', subKeyB: 'b' } })
+  assertEquals(getProcessedParams(new URLSearchParams(built.toString())), {
+    keyA: { subKeyA: 'a', subKeyB: 'b' },
+  })
+})
+
+Deno.test('interpolateUrl interpolates a URL with no query string like a plain string', () => {
+  assertEquals(
+    interpolateUrl('https://x.com/{{id}}', { id: '42' }),
+    'https://x.com/42',
+  )
+})
+
+Deno.test('interpolateUrl interpolates the path portion before the query string', () => {
+  assertEquals(
+    interpolateUrl('https://x.com/{{id}}?a=1', { id: '42' }),
+    'https://x.com/42?a=1',
+  )
+})
+
+Deno.test('interpolateUrl substitutes a mixed-text query value as a string', () => {
+  assertEquals(
+    interpolateUrl('https://x.com?value={{amount}}', { amount: 42 }),
+    'https://x.com?value=42',
+  )
+})
+
+Deno.test('interpolateUrl expands an array whole-value placeholder into repeated keys', () => {
+  const result = interpolateUrl('https://x.com?tags={{tags}}', { tags: ['a', 'b', 'c'] })
+  assertEquals(result, 'https://x.com?tags=a&tags=b&tags=c')
+})
+
+Deno.test('interpolateUrl expands a nested-object placeholder using bracket notation', () => {
+  const result = interpolateUrl('https://x.com?address={{address}}', {
+    address: { city: 'Bogotá', zip: '110111' },
+  })
+  assertEquals(result, 'https://x.com?address%5Bcity%5D=Bogot%C3%A1&address%5Bzip%5D=110111')
+})
+
+Deno.test('interpolateUrl keeps a simple whole-value string placeholder as a plain param', () => {
+  assertEquals(
+    interpolateUrl('https://x.com?email={{email}}', { email: 'a@b.com' }),
+    'https://x.com?email=a%40b.com',
+  )
+})
+
+Deno.test('interpolateUrl preserves multiple query params, mixing plain and array values', () => {
+  const result = interpolateUrl('https://x.com?page=1&tags={{tags}}', { tags: ['a', 'b'] })
+  assertEquals(result, 'https://x.com?page=1&tags=a&tags=b')
+})
+
+Deno.test('interpolateUrl interpolates the query key itself', () => {
+  assertEquals(
+    interpolateUrl('https://x.com?{{keyName}}=1', { keyName: 'page' }),
+    'https://x.com?page=1',
+  )
+})
+
+Deno.test('interpolateUrl returns just the path when the query string is empty', () => {
+  assertEquals(interpolateUrl('https://x.com?', {}), 'https://x.com')
 })
