@@ -12,11 +12,12 @@ import {
   encryptRSA,
   generateRSAKeys,
   signHMAC,
+  signHMACBytes,
   signRSA,
   verifyHMAC,
   verifyRSA,
 } from 'modules/helpers/encryption/asymmetric/mod.ts'
-import { base64ToUint8Array, uint8ArrayToHEX } from 'utils/encoders.ts'
+import { base64ToUint8Array, stringToUint8Array, uint8ArrayToHEX } from 'utils/encoders.ts'
 import { decrypt, encrypt } from 'modules/helpers/encryption/mod.ts'
 import { assertFalse, assertNotEquals } from '@std/assert'
 
@@ -266,4 +267,27 @@ Deno.test('Verify HMAC signature', async () => {
   assertFalse(resultFalse)
   assertFalse(resultFalse2)
   assert(resultTrue)
+})
+
+Deno.test({
+  name: 'signHMACBytes defaults to SHA-1 and matches the well-known HMAC-SHA1 test vector',
+  fn: async () => {
+    const key = stringToUint8Array('key')
+    const data = stringToUint8Array('The quick brown fox jumps over the lazy dog')
+    const expectedSignature = 'de7c9b85b8b78aa6bc8a7a36f70a90701c9db4d9'
+
+    const signature = await signHMACBytes(key, data)
+
+    assertEquals(uint8ArrayToHEX(signature), expectedSignature)
+  },
+})
+
+Deno.test('signHMACBytes supports other hash algorithms too', async () => {
+  const key = stringToUint8Array('my-secret-key')
+  const data = stringToUint8Array('header.payload')
+
+  const bytesSignature = await signHMACBytes(key, data, 'SHA-256')
+  const stringSignature = await signHMAC('header.payload', 'my-secret-key', 'SHA-256')
+
+  assertEquals(uint8ArrayToHEX(bytesSignature), uint8ArrayToHEX(stringSignature))
 })

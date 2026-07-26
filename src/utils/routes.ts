@@ -6,6 +6,7 @@
  * any trailing slash. The result is also converted to lowercase.
  *
  * @param {string} route - The raw route path to clean.
+ * @param {string} keepCase - Whether to preserve the original letter casing. If false, the route is normalized to lowercase.
  * @returns {string} A normalized route string starting with `/`.
  *
  * @example
@@ -16,13 +17,16 @@
  * cleanRoute("  \\API\\Users\\  ")
  * // → "/api/users"
  *
+ * cleanRoute("  \\API\\Users\\  ", true)
+ * // → "/API/Users"
+ *
  * cleanRoute("")
  * // → "/"
  * ```
  *
  * @category helpers
  */
-export function cleanRoute(route: string): string {
+export function cleanRoute(route: string, keepCase?: boolean): string {
   let result = ''
   let prevChar = ''
   route = route.trim()
@@ -49,5 +53,7 @@ export function cleanRoute(route: string): string {
   // Remove trailing slash
   if (result.length > 1 && result.endsWith('/')) result = result.slice(0, -1)
 
-  return result.toLowerCase() || '/'
+  if (!result) return '/'
+
+  return keepCase ? result : result.toLowerCase()
 }

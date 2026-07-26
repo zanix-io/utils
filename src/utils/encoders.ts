@@ -218,6 +218,80 @@ export const base64UrlDecode = <S extends boolean = false>(
   return (toString ? uint8ArrayToString(byteArray) : byteArray) as never
 }
 
+const BASE32_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567'
+
+/**
+ * Encodes a `Uint8Array` into a Base32 string (RFC 4648), using the uppercase `A-Z2-7` alphabet
+ * with no padding — the conventional format for secrets shown to/typed into authenticator apps
+ * (TOTP) and similar systems.
+ *
+ * @param {Uint8Array} bytes - The raw bytes to encode.
+ * @returns {string} The Base32-encoded string.
+ *
+ * @example
+ * const encoded = base32Encode(new TextEncoder().encode('hello'));
+ * console.log(encoded); // Output: 'NBSWY3DP'
+ */
+export const base32Encode = (bytes: Uint8Array): string => {
+  let bits = 0
+  let value = 0
+  let output = ''
+
+  for (const byte of bytes) {
+    value = (value << 8) | byte
+    bits += 8
+
+    while (bits >= 5) {
+      output += BASE32_ALPHABET[(value >>> (bits - 5)) & 0x1f]
+      bits -= 5
+    }
+  }
+
+  if (bits > 0) {
+    output += BASE32_ALPHABET[(value << (5 - bits)) & 0x1f]
+  }
+
+  return output
+}
+
+/**
+ * Decodes a Base32-encoded string (RFC 4648) into a `Uint8Array`. Tolerant of lowercase input and
+ * optional `=` padding, since not every producer (QR generators, manual entry) emits the same
+ * casing/padding.
+ *
+ * @param {string} input - The Base32-encoded string to decode.
+ * @returns {Uint8Array} The decoded bytes.
+ * @throws {Error} If `input` contains a character outside the Base32 alphabet.
+ *
+ * @example
+ * const decoded = base32Decode('NBSWY3DP');
+ * console.log(new TextDecoder().decode(decoded)); // Output: 'hello'
+ */
+export const base32Decode = (input: string): Uint8Array => {
+  const clean = input.toUpperCase().replace(/=+$/, '')
+
+  let bits = 0
+  let value = 0
+  const bytes: number[] = []
+
+  for (const char of clean) {
+    const index = BASE32_ALPHABET.indexOf(char)
+    if (index === -1) {
+      throw new Error(`Invalid Base32 character: '${char}'`)
+    }
+
+    value = (value << 5) | index
+    bits += 5
+
+    if (bits >= 8) {
+      bytes.push((value >>> (bits - 8)) & 0xff)
+      bits -= 8
+    }
+  }
+
+  return new Uint8Array(bytes)
+}
+
 /** Check if is valid ZanixHex */
 export const isZanixHex: (str: string) => boolean = (str: string): boolean =>
   /^Zx[0-9a-fA-F]+$/.test(str)

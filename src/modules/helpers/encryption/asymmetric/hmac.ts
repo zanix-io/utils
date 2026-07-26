@@ -58,3 +58,36 @@ export const verifyHMAC = async (
   const generatedSignature = await signHMAC(data, secret, hash)
   return compareUint8Arrays(generatedSignature, signature)
 }
+
+/**
+ * Generates a HMAC signature over raw bytes, supporting the full {@link HashAlgorithm} range
+ * (including `'SHA-1'`, which {@link signHMAC} deliberately excludes since JWT has no HS1
+ * algorithm).
+ *
+ * Unlike {@link signHMAC}, both the key and the data are taken as `Uint8Array` instead of a
+ * UTF-8 `string` — a key that's arbitrary random bytes (e.g. a TOTP secret) would be corrupted by
+ * round-tripping it through a JS string, since bytes ≥128 don't map back to themselves through
+ * UTF-8 encode/decode.
+ *
+ * @param {Uint8Array} key - The raw HMAC key bytes.
+ * @param {Uint8Array} data - The raw data bytes to sign.
+ * @param {HashAlgorithm} [hash='SHA-1'] - The hash algorithm to use with HMAC. Default is `'SHA-1'`.
+ * @returns {Promise<Uint8Array>} The generated HMAC signature as a `Uint8Array`.
+ *
+ * @example
+ * ```ts
+ * const signature = await signHMACBytes(keyBytes, dataBytes, 'SHA-1');
+ * ```
+ */
+export const signHMACBytes = async (
+  key: Uint8Array<ArrayBuffer>,
+  data: Uint8Array<ArrayBuffer>,
+  hash: HashAlgorithm = 'SHA-1',
+): Promise<Uint8Array> => {
+  const algorithmConfig = { name: 'HMAC', hash: { name: hash } }
+
+  const cryptoKey = await crypto.subtle.importKey('raw', key, algorithmConfig, false, ['sign'])
+  const signatureBuffer = await crypto.subtle.sign('HMAC', cryptoKey, data)
+
+  return new Uint8Array(signatureBuffer)
+}

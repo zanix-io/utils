@@ -1,6 +1,6 @@
 // deno-lint-ignore-file no-explicit-any
 import { assertEquals } from '@std/assert'
-import { getPath, interpolate, matchWholePlaceholder } from 'utils/templates.ts'
+import { getPath, interpolate, interpolateEnv, matchWholePlaceholder } from 'utils/templates.ts'
 
 Deno.test('getPath resolves a nested dot-path, including array indices', () => {
   assertEquals(getPath({ items: [{ name: 'a' }] }, 'items.0.name'), 'a')
@@ -98,4 +98,78 @@ Deno.test('interpolate stringifies a non-string field mixed with other text', ()
     interpolate('https://x.com?active={{active}}', { active: false }),
     'https://x.com?active=false',
   )
+})
+
+Deno.test('interpolate leaves a ${{ENV_VAR}} placeholder untouched', () => {
+  assertEquals(interpolate('Bearer ${{TOKEN}}', {}), 'Bearer ${{TOKEN}}')
+  assertEquals(interpolate('${{TOKEN}}', {}), '${{TOKEN}}')
+})
+
+Deno.test('interpolateEnv replaces a whole-string ${{VAR}} placeholder', () => {
+  Deno.env.set('TEST_INTERPOLATE_ENV_VAR', 'my-secret-key')
+  try {
+    assertEquals(interpolateEnv('${{TEST_INTERPOLATE_ENV_VAR}}'), 'my-secret-key')
+  } finally {
+    Deno.env.delete('TEST_INTERPOLATE_ENV_VAR')
+  }
+})
+
+Deno.test('interpolateEnv replaces a ${{VAR}} placeholder embedded in surrounding text', () => {
+  Deno.env.set('TEST_INTERPOLATE_ENV_VAR', 'abc')
+  try {
+    assertEquals(interpolateEnv('Bearer ${{TEST_INTERPOLATE_ENV_VAR}}'), 'Bearer abc')
+  } finally {
+    Deno.env.delete('TEST_INTERPOLATE_ENV_VAR')
+  }
+})
+
+Deno.test('interpolateEnv replaces multiple ${{VAR}} placeholders in the same string', () => {
+  Deno.env.set('TEST_ENV_HOST', 'example.com')
+  Deno.env.set('TEST_ENV_PATH', 'api')
+  Deno.env.set('TEST_ENV_TOKEN', 'xyz')
+  try {
+    assertEquals(
+      interpolateEnv('${{TEST_ENV_HOST}}/${{TEST_ENV_PATH}}/${{TEST_ENV_TOKEN}}'),
+      'example.com/api/xyz',
+    )
+  } finally {
+    Deno.env.delete('TEST_ENV_HOST')
+    Deno.env.delete('TEST_ENV_PATH')
+    Deno.env.delete('TEST_ENV_TOKEN')
+  }
+})
+
+Deno.test('interpolateEnv substitutes the literal text "undefined" for an unset variable', () => {
+  Deno.env.delete('TEST_INTERPOLATE_ENV_MISSING')
+  assertEquals(interpolateEnv('${{TEST_INTERPOLATE_ENV_MISSING}}'), 'undefined')
+  assertEquals(interpolateEnv('Bearer ${{TEST_INTERPOLATE_ENV_MISSING}}'), 'Bearer undefined')
+})
+
+Deno.test('interpolateEnv walks plain objects and arrays recursively', () => {
+  Deno.env.set('TEST_ENV_TOKEN', 'abc')
+  try {
+    const result = interpolateEnv({
+      headers: { authorization: 'Bearer ${{TEST_ENV_TOKEN}}' },
+      body: { apiUrl: '${{TEST_ENV_TOKEN}}' },
+      list: ['${{TEST_ENV_TOKEN}}'],
+    })
+    assertEquals(result, {
+      headers: { authorization: 'Bearer abc' },
+      body: { apiUrl: 'abc' },
+      list: ['abc'],
+    })
+  } finally {
+    Deno.env.delete('TEST_ENV_TOKEN')
+  }
+})
+
+Deno.test('interpolateEnv leaves non-string primitives untouched', () => {
+  assertEquals(interpolateEnv(42), 42)
+  assertEquals(interpolateEnv(true), true)
+  assertEquals(interpolateEnv(null), null)
+  assertEquals(interpolateEnv(undefined), undefined)
+})
+
+Deno.test('interpolateEnv leaves a {{field}} model placeholder untouched', () => {
+  assertEquals(interpolateEnv('{{email}}'), '{{email}}')
 })

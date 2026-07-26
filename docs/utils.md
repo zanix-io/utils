@@ -10,6 +10,8 @@ Import encoding utilities from the `/helpers` subpath:
 
 ```ts
 import {
+  base32Decode,
+  base32Encode,
   base64ToUint8Array,
   base64UrlDecode,
   base64UrlEncode,
@@ -43,6 +45,8 @@ import {
 | `hexToUint8Array`    | `(hex: string) => Uint8Array`                                 | Converts a hexadecimal string into a `Uint8Array`. Strips internal whitespace and lower-cases the input first. Throws `Error('Hex string must have an even length')` if the cleaned string has an odd length. |
 | `base64UrlEncode`    | `(input: string \| Uint8Array) => string`                     | Encodes a string or `Uint8Array` into Base64 and makes it URL-safe by replacing `+` with `-`, `/` with `_`, and stripping trailing `=` padding. Useful for JWTs and URL-embedded tokens.                      |
 | `base64UrlDecode`    | `(input: string, toString?: boolean) => Uint8Array \| string` | Decodes a Base64 URL-safe string. Returns a `Uint8Array` by default; pass `toString: true` to get a decoded UTF-8 string instead.                                                                             |
+| `base32Encode`       | `(bytes: Uint8Array) => string`                               | Encodes a `Uint8Array` into Base32 (RFC 4648), using the uppercase `A-Z2-7` alphabet with no padding — the conventional format for secrets shown to/typed into authenticator apps (TOTP).                     |
+| `base32Decode`       | `(input: string) => Uint8Array`                               | Decodes a Base32 string (RFC 4648) into a `Uint8Array`. Tolerant of lowercase input and optional `=` padding. Throws if a character outside the Base32 alphabet is found.                                     |
 | `isZanixHex`         | `(str: string) => boolean`                                    | Checks whether a string matches the internal Zanix hex format `Zx` followed by one or more hex digits (`/^Zx[0-9a-fA-F]+$/`).                                                                                 |
 | `compareUint8Arrays` | `(a: Uint8Array, b: Uint8Array) => boolean`                   | Compares two `Uint8Array`s for equality, byte by byte. Returns `false` immediately if their lengths differ.                                                                                                   |
 
@@ -57,6 +61,20 @@ console.log(decodedBytes) // Uint8Array with the bytes of "Hello, World!"
 
 const decodedString = base64UrlDecode(encoded, true)
 console.log(decodedString) // 'Hello, World!'
+```
+
+### Base32 encoding
+
+```ts
+const encoded = base32Encode(stringToUint8Array('hello'))
+console.log(encoded) // 'NBSWY3DP' (unpadded)
+
+const decoded = base32Decode(encoded)
+console.log(uint8ArrayToString(decoded)) // 'hello'
+
+// Tolerant of lowercase input and optional '=' padding
+base32Decode('nbswy3dp') // same bytes as above
+base32Decode('MZXW6YQ=') // padded input also decodes correctly
 ```
 
 ### String / Uint8Array conversion

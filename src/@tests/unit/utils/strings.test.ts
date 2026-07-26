@@ -1,4 +1,6 @@
 import {
+  base32Decode,
+  base32Encode,
   base64UrlDecode,
   base64UrlEncode,
   capitalize,
@@ -56,4 +58,23 @@ Deno.test('base64 url encode should encode and decode correctly', () => {
   const stringDecoded = base64UrlDecode(resultString, true)
 
   assertEquals(input, stringDecoded)
+})
+
+Deno.test('base32Encode matches the RFC 4648 test vectors (unpadded)', () => {
+  const encode = (s: string) => base32Encode(stringToUint8Array(s))
+
+  assertEquals(encode(''), '')
+  assertEquals(encode('f'), 'MY')
+  assertEquals(encode('fo'), 'MZXQ')
+  assertEquals(encode('foo'), 'MZXW6')
+  assertEquals(encode('foob'), 'MZXW6YQ')
+  assertEquals(encode('foobar'), 'MZXW6YTBOI')
+})
+
+Deno.test('base32Decode reverses base32Encode, tolerating lowercase and padding', () => {
+  assertEquals(uint8ArrayToString(base32Decode('MZXW6YTBOI')), 'foobar')
+  assertEquals(uint8ArrayToString(base32Decode('mzxw6ytboi')), 'foobar') // lowercase
+  assertEquals(uint8ArrayToString(base32Decode('MZXW6YQ=')), 'foob') // padded
+
+  assertThrows(() => base32Decode('this-is-not-base32!'), Error, 'Invalid Base32 character')
 })

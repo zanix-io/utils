@@ -7,6 +7,29 @@ adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [2.4.0] - 2026-07-25
+
+### Added
+
+- `base32Encode`/`base32Decode`: RFC 4648 Base32 codec (uppercase `A-Z2-7` alphabet, unpadded
+  encode, lowercase/padding-tolerant decode) — the format authenticator-app secrets (TOTP) are
+  conventionally shown in.
+- `signHMACBytes`: a raw-bytes HMAC helper supporting the full `HashAlgorithm` range, including
+  `'SHA-1'`, which `signHMAC` deliberately excludes (JWT has no HS1 algorithm). Takes the key and
+  data as `Uint8Array` instead of `signHMAC`'s UTF-8 `string`, since round-tripping an arbitrary
+  binary key through a JS string would corrupt bytes ≥128.
+- `interpolateEnv`: resolves `${{ENV_VAR}}` placeholders against `Deno.env`, recursing into
+  arrays/objects the same way `interpolate` does. A separate convention from `interpolate`'s
+  `{{field}}` so both can coexist in the same string — an unset variable is substituted as the
+  literal text `'undefined'` rather than throwing.
+
+### Changed
+
+- `interpolate`: no longer matches `{{...}}` when immediately preceded by `$`, so `${{ENV_VAR}}`
+  placeholders are left untouched for `interpolateEnv` to resolve instead of being treated as
+  `interpolate`'s own field syntax.
+- `cleanRoute`: Added the `keepCase` option to preserve the original route casing during normalization.
+
 ## [2.3.0] - 2026-07-24
 
 ### Added

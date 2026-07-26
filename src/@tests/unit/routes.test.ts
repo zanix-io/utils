@@ -8,4 +8,5 @@ Deno.test('cleanRoute should return the correct route', () => {
   assertEquals(cleanRoute('Mayus/ROute/'), '/mayus/route')
   assertEquals(cleanRoute(''), '/')
   assertEquals(cleanRoute('\\api\\users\\'), '/api/users')
+  assertEquals(cleanRoute('\\API\\Users\\', true), '/API/Users')
 })

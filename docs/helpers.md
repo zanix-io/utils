@@ -247,11 +247,12 @@ Generic `{{field}}`/`{{nested.path}}` placeholder resolution, used internally by
 (see [Dates & URLs](#dates--urls)) but reusable for interpolating any string/object/array against
 a record.
 
-| Symbol                  | Signature                                           | Description                                                                                                                                                                                                                                                                                                                        |
-| ----------------------- | --------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `getPath`               | `(record: any, path: string): unknown`              | Resolves a dot-separated path (array indices included, e.g. `'items.0.name'`) against `record`.                                                                                                                                                                                                                                    |
-| `matchWholePlaceholder` | `(value: string): string \| null`                   | Returns the field path if `value` is exactly one `{{field}}` placeholder (nothing before or after it), or `null` otherwise (mixed text, multiple placeholders, or none).                                                                                                                                                           |
-| `interpolate`           | `<T>(value: T, record: Record<string, unknown>): T` | Resolves `{{field}}`/`{{nested.path}}` placeholders in `value` against `record`. A string that is _exactly_ one placeholder resolves to the field's real value (any type); a string mixing a placeholder with other text always substitutes as a string. Arrays/objects are walked recursively; any other value is returned as-is. |
+| Symbol                  | Signature                                           | Description                                                                                                                                                                                                                                                                                                                                                                                                  |
+| ----------------------- | --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `getPath`               | `(record: any, path: string): unknown`              | Resolves a dot-separated path (array indices included, e.g. `'items.0.name'`) against `record`.                                                                                                                                                                                                                                                                                                              |
+| `matchWholePlaceholder` | `(value: string): string \| null`                   | Returns the field path if `value` is exactly one `{{field}}` placeholder (nothing before or after it), or `null` otherwise (mixed text, multiple placeholders, or none).                                                                                                                                                                                                                                     |
+| `interpolate`           | `<T>(value: T, record: Record<string, unknown>): T` | Resolves `{{field}}`/`{{nested.path}}` placeholders in `value` against `record`. A string that is _exactly_ one placeholder resolves to the field's real value (any type); a string mixing a placeholder with other text always substitutes as a string. Arrays/objects are walked recursively; any other value is returned as-is. Skips `${{...}}` (leading `$`), leaving that syntax for `interpolateEnv`. |
+| `interpolateEnv`        | `<T>(value: T): T`                                  | Resolves `${{ENV_VAR}}` placeholders in `value` against `Deno.env`, a separate convention from `interpolate`'s `{{field}}` so both can appear in the same string without either resolving the other's placeholders. An unset variable is substituted as the literal text `'undefined'` rather than throwing. Arrays/objects are walked recursively; any other value is returned as-is.                       |
 
 ```typescript
 import { interpolate } from 'jsr:@zanix/utils@[version]/helpers'
@@ -259,19 +260,31 @@ import { interpolate } from 'jsr:@zanix/utils@[version]/helpers'
 interpolate('Bearer {{token}}', { token: 'abc123' }) // 'Bearer abc123'
 interpolate('{{amount}}', { amount: 42 }) // 42 (real type preserved, not stringified)
 interpolate({ id: '{{user.id}}' }, { user: { id: 7 } }) // { id: 7 }
+interpolate('Bearer ${{TOKEN}}', {}) // 'Bearer ${{TOKEN}}' (left untouched)
+```
+
+```typescript
+import { interpolateEnv } from 'jsr:@zanix/utils@[version]/helpers'
+
+Deno.env.set('API_KEY', 'my-secret-key')
+interpolateEnv('Bearer ${{API_KEY}}') // 'Bearer my-secret-key'
+interpolateEnv('Bearer ${{MISSING}}') // 'Bearer undefined' (unset variable)
+interpolateEnv({ headers: { authorization: 'Bearer ${{API_KEY}}' } })
+// { headers: { authorization: 'Bearer my-secret-key' } }
 ```
 
 ## Routes
 
-| Symbol       | Signature                 | Description                                                                                                                                                                       |
-| ------------ | ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `cleanRoute` | `(route: string): string` | Normalizes a route path: trims whitespace, converts backslashes to slashes, collapses repeated slashes, ensures a single leading `/`, strips a trailing slash, and lowercases it. |
+| Symbol       | Signature                                    | Description                                                                                                                                                                       |
+| ------------ | -------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `cleanRoute` | `(route: string, keepCase?: string): string` | Normalizes a route path: trims whitespace, converts backslashes to slashes, collapses repeated slashes, ensures a single leading `/`, strips a trailing slash, and lowercases it. |
 
 ```typescript
 import { cleanRoute } from 'jsr:@zanix/utils@[version]/helpers'
 
 cleanRoute('///folder1/folder2//file') // '/folder1/folder2/file'
 cleanRoute('  \\API\\Users\\  ') // '/api/users'
+cleanRoute('  \\API\\Users\\  ', true) // '/API/Users'
 cleanRoute('') // '/'
 ```
 
