@@ -10,7 +10,8 @@
 /**
  * General-purpose helpers for the Zanix ecosystem: config and path resolution, file utilities,
  * date/URL/encoding helpers, the Zanix project-tree and namespace helpers, GitHub/editor
- * scaffolding automation, and cryptography (encryption and masking).
+ * scaffolding automation, cryptography (encryption and masking), and code-to-storage sync
+ * reconciliation (`planCodeSync`).
  *
  * @module zanixHelpers
  */
@@ -40,3 +41,4 @@ export * from 'utils/encoders.ts'
 export * from './encryption/mod.ts'
 export * from './masking/mod.ts'
 export * from 'utils/ttl.ts'
+export * from 'utils/sync.ts'

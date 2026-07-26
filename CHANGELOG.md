@@ -7,6 +7,12 @@ adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [2.4.1] - 2026-07-26
+
+### Added
+
+- Added `planCodeSync`, a storage-agnostic helper for reconciling code-defined entries with persisted records while preserving manual edits. Introduced the accompanying `StaticSyncEntry`, `PersistedSyncEntry`, and `SyncPlan` helper types for reusable code-to-storage synchronization logic.
+
 ## [2.4.0] - 2026-07-25
 
 ### Added
