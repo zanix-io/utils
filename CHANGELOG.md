@@ -7,6 +7,20 @@ adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [2.4.2] - 2026-07-26
+
+### Added
+
+- Re-exported `LoggerOptions`, `LoggerFunctionOptions`, `LoggerFileOptions`,
+  `SaveDataFunctionOptions`, `SaveDataFile`, and `SaveDataFileOptions` from `@zanix/utils/types` —
+  previously internal-only types needed to annotate a custom `Logger` `storage.save` factory's
+  return type without reaching into `@zanix/utils`'s own internals.
+- Documented a sixth `Logger` storage style in [docs/logger.md](docs/logger.md#6-building-a-reusable-storage-backend):
+  packaging a reusable storage backend as a factory function that returns a `SaveDataFunction`
+  (e.g. `@zanix/datamaster`'s `elasticsearchLogSave`), plus guidance on aliasing the default
+  formatter's `timestamp` field to a backend-specific convention (e.g. Elastic Common Schema's
+  `@timestamp`) instead of synthesizing a new one.
+
 ## [2.4.1] - 2026-07-26
 
 ### Added

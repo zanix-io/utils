@@ -45,8 +45,14 @@ export type {
   DefaultResponse,
   Formatter as LoggerFormatter,
   LoggerData,
+  LoggerFileOptions,
+  LoggerFunctionOptions,
   LoggerMethods,
+  LoggerOptions,
+  SaveDataFile,
+  SaveDataFileOptions,
   SaveDataFunction as LoggerSaveData,
+  SaveDataFunctionOptions,
 } from 'typings/logger.ts'
 
 /** The base internal `Logger` class that `Logger` (from `@zanix/utils/logger`) extends. */

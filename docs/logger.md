@@ -24,7 +24,7 @@ logger.success('Migration completed')
 
 ## Creating a custom Logger
 
-Instantiating `new Logger(options)` lets you fully control how (and whether) logs are stored. All five configuration styles below are supported by the `storage` option.
+Instantiating `new Logger(options)` lets you fully control how (and whether) logs are stored. All six configuration styles below are supported by the `storage` option.
 
 ### 1. Custom save function
 
@@ -114,6 +114,52 @@ logger.info('Some info without saving', 'noSave')
 
 Remember that `debug` and `success` are excluded from persistence by default regardless of the storage strategy, so `noSave`/`storage: false` mainly matter for `info`, `warn` and `error`.
 
+### 6. Building a reusable storage backend
+
+Style 1 (custom save function) works well for a one-off sink written inline, but a backend meant
+to be shared across projects — a database, a message queue, a search/observability service — reads
+better as a small **factory**: a function that takes your own options object and _returns_ a
+`SaveDataFunction`. From `Logger`'s point of view the result is indistinguishable from writing the
+function by hand (style 1); the factory just saves every caller from re-implementing the same
+plumbing (buffering, retries, batching, ...) themselves:
+
+```ts
+import type { SaveDataFunction } from 'jsr:@zanix/utils@[version]/types'
+
+function myBackendSave(options: MyBackendOptions): SaveDataFunction {
+  // set up whatever the backend needs once (a client, a buffer, ...), reading `options` here
+  return async (context) => {
+    const data = context.getFmtLog()
+    // send `data` to the backend
+  }
+}
+```
+
+```ts
+import { Logger } from 'jsr:@zanix/utils@[version]/logger'
+
+const logger = new Logger({ storage: { save: myBackendSave({/* your options */}) } })
+```
+
+This is deliberately **not** a third special shape recognized by `Logger` itself (unlike style 2's
+plain options object, which `Logger` only understands because file-based storage is its own
+built-in default) — `Logger` stays unaware of what any particular backend is or does, keeping
+`@zanix/utils` free of a dependency on that backend's client/SDK. A real example following this
+exact pattern is `@zanix/datamaster`'s `elasticsearchLogSave` (from its `/observability` subpath),
+which persists logs to Elasticsearch/OpenSearch via `@zanix/datamaster`'s own connector
+conventions, entirely outside of `@zanix/utils`.
+
+One detail worth knowing if you're writing a backend like this: `getFmtLog()`'s default output
+already includes a `timestamp` field (an ISO-8601 string). A backend that talks to a system with
+its own timestamp convention — for instance, Elasticsearch/OpenSearch's `@timestamp`, which Kibana/
+OpenSearch Dashboards look for by default — can simply alias that existing field
+(`{ ...data, '@timestamp': data.timestamp }`) instead of generating a new one at send time. Since a
+fully custom `formatter` can omit `timestamp` entirely (or name it something else), a backend doing
+this kind of aliasing should fall back to synthesizing its own timestamp only when nothing suitable
+is already present — that way it works with the default formatter, a custom one that keeps a
+timestamp under a different name, and one that has no time field at all, without `Logger` ever
+needing to know why.
+
 ## Accessing the logger globally
 
 Creating a `new Logger()` instance stores it both on `globalThis` and on the `Zanix` (`Znx`) namespace, unless you pass `disableGlobalAssign: true`. This means the most recently created instance becomes accessible from anywhere via `Znx.logger` or `self.logger`, without importing it explicitly:
@@ -144,4 +190,4 @@ declare global {
 ## See also
 
 - [Errors](./errors.md)
-- [Types reference](./types.md) — `LoggerFormatter`, `LoggerSaveData`, `LoggerMethods`, `LoggerData`, `DefaultResponse`, `DefaultFormattedLog`, `BaseFormattedLog`
+- [Types reference](./types.md) — `LoggerFormatter`, `LoggerSaveData`, `LoggerMethods`, `LoggerData`, `DefaultResponse`, `DefaultFormattedLog`, `BaseFormattedLog`, `LoggerOptions`, `LoggerFunctionOptions`, `LoggerFileOptions`, `SaveDataFunctionOptions`, `SaveDataFile`, `SaveDataFileOptions`
