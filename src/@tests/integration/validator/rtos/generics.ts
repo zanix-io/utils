@@ -1,3 +1,5 @@
+// deno-coverage-ignore-file
+
 import { BaseRTO, Expose, IsNumberString, IsString, Validation } from 'modules/validations/mod.ts'
 import { IsNumber } from 'modules/validations/decorators/numbers/is-number.ts'
 

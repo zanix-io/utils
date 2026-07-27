@@ -1,3 +1,5 @@
+// deno-coverage-ignore-file
+
 import { BaseRTO, Expose, IsString } from 'modules/validations/mod.ts'
 
 export class StringsRTO extends BaseRTO<{ stringPropExpose: string }> {

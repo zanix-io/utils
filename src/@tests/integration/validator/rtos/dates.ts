@@ -1,3 +1,5 @@
+// deno-coverage-ignore-file
+
 import { BaseRTO, IsDate, MaxDate, MinDate } from 'modules/validations/mod.ts'
 
 export class DatesRTO extends BaseRTO {
