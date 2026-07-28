@@ -7,6 +7,28 @@ adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [2.4.3] - 2026-07-28
+
+### Added
+
+- Added a dedicated **Network & IP utilities** documentation page covering IPv4 helpers, CIDR parsing and matching, client IP normalization, and trusted proxy header extraction.
+- Documented the IP-related helpers:
+  - `TrustedHeader`
+  - `ParsedCidr`
+  - `ipv4ToInt`
+  - `parseCidr`
+  - `isIpInParsedCidr`
+  - `isIpInCidr`
+  - `normalizeClientIp`
+  - `getClientIp`
+
+### Changed
+
+- Split the documentation into smaller, topic-focused pages for easier navigation.
+- Moved the **GitHub automation** reference from `helpers.md` to a dedicated `github.md` page.
+- Moved the **Build** reference from `helpers.md` to a dedicated `build.md` page.
+- Updated the cross-references in `helpers.md` to point to the new documentation pages.
+
 ## [2.4.2] - 2026-07-26
 
 ### Added

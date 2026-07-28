@@ -9,7 +9,7 @@
 
 /**
  * General-purpose helpers for the Zanix ecosystem: config and path resolution, file utilities,
- * date/URL/encoding helpers, the Zanix project-tree and namespace helpers, GitHub/editor
+ * date/URL/encoding/network helpers, the Zanix project-tree and namespace helpers, GitHub/editor
  * scaffolding automation, cryptography (encryption and masking), and code-to-storage sync
  * reconciliation (`planCodeSync`).
  *
@@ -37,6 +37,7 @@ export * from './github/files/main.ts'
 export * from './github/prepare.ts'
 export * from './editor/vscode.ts'
 export * from 'utils/urls.ts'
+export * from 'utils/network.ts'
 export * from 'utils/encoders.ts'
 export * from './encryption/mod.ts'
 export * from './masking/mod.ts'

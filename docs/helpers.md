@@ -74,49 +74,6 @@ collectFiles('./src', ['.gql', '.graphql'], (path, content) => {
 })
 ```
 
-## GitHub automation
-
-Scaffolding for `.github` hooks, workflows, and the base `.gitignore`. Each individual helper accepts a `baseFolder`/`baseRoot` pair (`BaseGithubHelperOptions`), but **there is no single shared default for `baseFolder`** — every helper defaults it differently depending on what it creates (hooks default to `.github/hooks`, the publish workflow defaults to `.github/workflows`). `prepareGithub` is the orchestrator that wires all of them together in one call.
-
-| Symbol                        | Signature                                                                   | Description                                                                                                                                                                                                                                                                                                                             |
-| ----------------------------- | --------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `PrepareGithubOptions` (type) | `{ legacyHooks?, usePrecommit?, publishWorkflow?, gitIgnoreBase? }`         | Options accepted by `prepareGithub`.                                                                                                                                                                                                                                                                                                    |
-| `prepareGithub`               | `(options?: PrepareGithubOptions & { root?: string }): Promise<boolean[]>`  | Initializes the git repo if needed, then creates the publish workflow, the base `.gitignore`, the `pre-commit` and `pre-push` hooks, and — when `usePrecommit` is truthy — the `pre-commit` framework YAML. Returns the boolean creation result of each step, in that order.                                                            |
-| `createGitWorkflow`           | `(options?: WorkflowOptions): Promise<boolean>`                             | Creates the `publish.yml` GitHub Actions workflow. Only generates a file for `projectType: 'library'` (the default); for other project types it logs a warning and returns `false` without writing anything. Defaults `baseFolder` to `.github/workflows` and `mainBranch` to `master`.                                                 |
-| `createIgnoreBaseFile`        | `(options?: Omit<BaseGithubHelperOptions, 'baseFolder'>): Promise<boolean>` | Writes a base `.gitignore` file at the project root (or `baseRoot`).                                                                                                                                                                                                                                                                    |
-| `createPreCommitHook`         | `(options: PreCommitHookOptions): Promise<boolean>`                         | Writes a `pre-commit` git hook that runs `deno fmt` and `deno lint` on staged files, and symlinks it into `.git/hooks` (unless `createLink: false`). Defaults `baseFolder` to `.github/hooks`. `filePatterns.lint` defaults to `['ts', 'tsx', 'js', 'jsx']` and `filePatterns.fmt` defaults to that same list plus `'md'` and `'json'`. |
-| `createPrePushHook`           | `(options?: HookOptions): Promise<boolean>`                                 | Writes a `pre-push` git hook that runs `deno test`, and symlinks it into `.git/hooks`. Defaults `baseFolder` to `.github/hooks`.                                                                                                                                                                                                        |
-
-```typescript
-import { prepareGithub } from 'jsr:@zanix/utils@[version]/helpers'
-
-// Sets up the publish workflow, .gitignore, and legacy pre-commit/pre-push hooks
-const results = await prepareGithub()
-
-// Using the `pre-commit` framework instead of the legacy hook, plus a custom main branch
-await prepareGithub({
-  usePrecommit: true,
-  publishWorkflow: { mainBranch: 'main' },
-})
-```
-
-```typescript
-import { createPreCommitHook, createPrePushHook } from 'jsr:@zanix/utils@[version]/helpers'
-
-await createPreCommitHook({
-  filePatterns: { lint: ['ts', 'tsx'], fmt: ['ts', 'tsx', 'md'] },
-})
-
-await createPrePushHook({ createLink: false })
-```
-
-```typescript
-import { createGitWorkflow, createIgnoreBaseFile } from 'jsr:@zanix/utils@[version]/helpers'
-
-await createGitWorkflow({ mainBranch: 'main', projectType: 'library' })
-await createIgnoreBaseFile()
-```
-
 ## Editor
 
 | Symbol               | Signature                                               | Description                                                                                                                                                  |
@@ -339,54 +296,6 @@ await nextCronDate('0 */15 * * * *') // next run at the next quarter-hour mark
 await nextCronDate('not a cron expr') // undefined
 ```
 
-## Build
-
-| Symbol                | Signature                                                                                      | Description                                                                                    |
-| --------------------- | ---------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| `compileAndObfuscate` | `(options?: Partial<CompilerOptions>): void \| Promise<{ error?: unknown; message?: string }>` | Bundles a file with esbuild and optionally obfuscates the output with `javascript-obfuscator`. |
-
-`options` accepts (all optional):
-
-| Option       | Default                   | Description                                                                                        |
-| ------------ | ------------------------- | -------------------------------------------------------------------------------------------------- |
-| `inputFile`  | Zanix `mod.ts` path       | The source file to compile.                                                                        |
-| `outputFile` | Zanix `.dist` bundle path | Where the compiled (and possibly obfuscated) file is written.                                      |
-| `obfuscate`  | `false`                   | Whether to run the output through `javascript-obfuscator`.                                         |
-| `useWorker`  | `false`                   | Whether to run the build inside a `WorkerManager` background worker instead of the current thread. |
-| `minify`     | `true`                    | Whether esbuild minifies the output.                                                               |
-| `bundle`     | `true`                    | Whether esbuild bundles all dependencies into a single file.                                       |
-| `platform`   | `'neutral'`               | esbuild platform target (`'node' \| 'neutral' \| 'browser'`).                                      |
-| `npm`        | `''`                      | Comma-separated list of npm packages to keep external (not bundled).                               |
-| `plugins`    | `() => []`                | Extra esbuild plugins to include alongside the built-in Deno/npm loaders.                          |
-| `callback`   | `() => {}`                | Invoked with `{ error?, message? }` once the build finishes (in both the direct and worker paths). |
-
-This function requires `allow-read`, `allow-env`, `allow-write`, and `allow-run`.
-
-```typescript
-import { compileAndObfuscate } from 'jsr:@zanix/utils@[version]/helpers'
-
-await compileAndObfuscate() // esbuild, using Zanix default input/output paths
-```
-
-```typescript
-import { compileAndObfuscate } from 'jsr:@zanix/utils@[version]/helpers'
-
-await compileAndObfuscate({
-  inputFile: './src/mod.ts',
-  outputFile: './.dist/mod.js',
-  obfuscate: true,
-  npm: 'esbuild,javascript-obfuscator',
-  callback: ({ error, message }) => console.log(message ?? error),
-})
-```
-
-```typescript
-import { compileAndObfuscate } from 'jsr:@zanix/utils@[version]/helpers'
-
-// Runs the build in a background worker instead of blocking the current thread
-compileAndObfuscate({ useWorker: true, obfuscate: true })
-```
-
 ## Misc
 
 | Symbol         | Signature                | Description                                                                                                       |
@@ -439,6 +348,9 @@ mockedGetConfigDir() // "/mock/root/dir/config.json"
 
 ## See also
 
+- [GitHub automation](./github.md)
+- [Build](./build.md)
+- [Network & IP utilities](./network.md)
 - [Types reference](./types.md)
 - [Utils](./utils.md)
 - [Encryption & Masking](./encryption-masking.md)
