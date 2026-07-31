@@ -8,14 +8,14 @@ let commonTree: ZanixFolderTree | undefined
 export const getCommonTree = (root: string, type?: ZanixProjectsFull): ZanixFolderTree => {
   if (root === commonTree?.FOLDER) return commonTree
 
-  const mainFiles = ['README.md']
+  const mainFiles = ['README.md', 'CHANGELOG.md', 'LICENSE']
   if (type === 'library') mainFiles.push(MAIN_MODULE)
 
   commonTree = ZanixTree.create<ZanixFolderTree>(root, {
     templates: { base: { files: mainFiles, jsr: '@zanix/utils' } },
     subfolders: {
       '.dist': {},
-      docs: { templates: { base: { files: ['CHANGELOG.md', 'LICENSE'], jsr: '@zanix/utils' } } },
+      docs: { templates: { base: { files: ['see-more.md'], jsr: '@zanix/utils' } } },
       src: {
         subfolders: {
           '@tests': {

@@ -7,6 +7,29 @@ adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [2.4.4] - 2026-07-30
+
+### Fixed
+
+- `createGitWorkflow`'s custom `mainBranch` replacement only patched the first `${MAIN_BRANCH}`
+  placeholder in the generated `publish.yml`, leaving the second occurrence (the `push.branches`
+  trigger) as the literal, unresolved placeholder instead of the custom branch name. The
+  replacement is now applied globally, so both the `pull_request` and `push` triggers pick up the
+  custom branch.
+- The Zanix **server** project scaffold attributed its `jobs` and `repositories` (model/seeder)
+  templates to `@zanix/server`, even though their content demonstrates `registerCronJob` and
+  `registerModel` — APIs owned by `@zanix/asyncmq` and `@zanix/datamaster` respectively. Since both
+  of those libraries depend on `@zanix/server`, claiming ownership there implied a circular
+  dependency in the generated project's template metadata. Ownership is now attributed to whichever
+  library actually owns each API.
+
+### Changed
+
+- The common Zanix project scaffold now generates `CHANGELOG.md` and `LICENSE` at the project root
+  (alongside `README.md`) instead of under `docs/`, and seeds `docs/` with a starter `see-more.md`
+  guide for project-specific documentation links. The generated `README.md` template links to it
+  and was updated to match the new root-level `CHANGELOG.md`/`LICENSE` paths.
+
 ## [2.4.3] - 2026-07-28
 
 ### Added

@@ -14,8 +14,9 @@
 4. [Basic Usage](#basic-usage)
 5. [Documentation](#documentation)
 6. [Contributing](#contributing)
-7. [License](#license)
-8. [Resources](#resources)
+7. [Changelog](#changelog)
+8. [License](#license)
+9. [Resources](#resources)
 
 ## Description
 
@@ -71,7 +72,11 @@ Refer to the full documentation for more advanced usage and examples.
 
 ## Documentation
 
-For more details and examples, check out the [official project documentation](https://github.com/[repo-name]).
+For additional information, see:
+
+- [`<Title 1>`](./docs/see-more.md) — Short description.
+
+Check out the [official project documentation](https://github.com/[repo-name]).
 
 ## Contributing
 
@@ -84,11 +89,11 @@ If you'd like to contribute to the project, follow these steps:
 
 ## Changelog
 
-For a detailed list of changes, refer to the [CHANGELOG](./docs/CHANGELOG.md).
+For a detailed list of changes, refer to the [CHANGELOG](./CHANGELOG.md).
 
 ## License
 
-This project is licensed under the **MIT License**. See the [LICENSE](./docs/LICENSE) file for more details.
+This project is licensed under the **MIT License**. See the [LICENSE](./LICENSE) file for more details.
 
 ## Resources
 

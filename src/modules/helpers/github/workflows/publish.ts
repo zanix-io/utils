@@ -21,6 +21,6 @@ export function createGitWorkflow(
 
   return createWorkflow(
     { filename, ...opts },
-    (content) => content.replace('${MAIN_BRANCH}', mainBranch),
+    (content) => content.replace(/\$\{MAIN_BRANCH\}/g, mainBranch),
   )
 }

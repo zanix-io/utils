@@ -85,7 +85,12 @@ Deno.test('Github create publish workflow yaml validation', async () => {
 
   const content = await Deno.readTextFile(defaultFolder + '/publish.yml')
 
-  assert(content.includes('- myCustomBranch'))
+  assert(content.includes(`pull_request:
+    branches:
+      - myCustomBranch
+  push:
+    branches:
+      - myCustomBranch`))
 
   await Deno.remove(defaultFolder, { recursive: true })
 })
