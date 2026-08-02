@@ -76,3 +76,27 @@ Deno.test('collectFiles: should find only .gql and .graphql files', () => {
 
   Deno.removeSync(temporaryFolder, { recursive: true })
 })
+
+Deno.test('collectFiles: accepts an array of roots and finds matches across all of them', () => {
+  const dirA = Deno.makeTempDirSync()
+  const dirB = Deno.makeTempDirSync()
+
+  Deno.writeTextFileSync(join(dirA, 'a.gql'), 'content of a.gql')
+  Deno.writeTextFileSync(join(dirA, 'ignored.txt'), 'ignored')
+  Deno.writeTextFileSync(join(dirB, 'b.graphql'), 'content of b.graphql')
+
+  const foundFiles: { path: string; content: string }[] = []
+
+  collectFiles([dirA, dirB], ['.gql', '.graphql'], (path, content) => {
+    foundFiles.push({ path, content })
+  })
+
+  assertEquals(foundFiles.length, 2)
+  assertArrayIncludes(
+    foundFiles.map((p) => p.path.replace(/\\/g, '/')),
+    [`${dirA}/a.gql`.replace(/\\/g, '/'), `${dirB}/b.graphql`.replace(/\\/g, '/')],
+  )
+
+  Deno.removeSync(dirA, { recursive: true })
+  Deno.removeSync(dirB, { recursive: true })
+})

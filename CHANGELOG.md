@@ -7,6 +7,13 @@ adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [2.4.5] - 2026-08-01
+
+### Changed
+
+- `collectFiles` now accepts a single root path or an array of roots, traversing all of them for
+  matching files instead of requiring a separate call per directory.
+
 ## [2.4.4] - 2026-07-30
 
 ### Fixed

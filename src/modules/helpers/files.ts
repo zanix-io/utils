@@ -64,19 +64,19 @@ export async function readFileFromCurrentUrl(
  * Efficiently and recursively traverses a directory tree, reading only files
  * with matching extensions, and executing a callback for each one.
  *
- * @param {string} root - Root directory to begin traversal.
+ * @param {string | string[]} root - Root directory (or directories) to begin traversal from.
  * @param {string[]} extensions - File extensions to match (e.g. ['.gql', '.graphql']).
  * @param {(path: string, content: string) => void} callback - Called for each matched file,
  *   with the file's content and full path.
  */
 export function collectFiles(
-  root: string,
+  root: string | string[],
   extensions: string[],
   callback: (path: string, content: string) => void,
 ) {
   const extSet = new Set(extensions) // lookup in O(1)
 
-  const stack = [root] // manual stack for tail-call optimization
+  const stack = Array.isArray(root) ? [...root] : [root] // manual stack for tail-call optimization
 
   while (stack.length) {
     // deno-lint-ignore no-non-null-assertion
