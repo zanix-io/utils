@@ -1,6 +1,0 @@
-repos:
-  - repo: https://github.com/zanix-io/utils
-    rev: 'v2.1.2'
-    hooks:
-      - id: pre-commit
-      - id: pre-push

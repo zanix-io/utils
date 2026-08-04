@@ -22,24 +22,6 @@ export type ZanixSrcTree<T extends ZanixProjectsFull> = T extends keyof ZanixSrc
 export type ZanixProjectSrc<T extends ZanixProjectsFull> = T extends 'library' | undefined ? {}
   : { zanix: ZanixBaseFolder }
 
-type ZanixSubfolderOptions<S> = S extends { subfolders: infer U }
-  ? U extends Record<string, unknown>
-    ? { subfolders: { [K in keyof U]: ZanixTreeFolderOptions<U[K]> } }
-  : object
-  : object
-
-type ZanixTemplateOptions<S> = S extends { templates: unknown } ? ZanixFolderOptions : {}
-
-export type ZanixFolderOptions = {
-  templates: {
-    [name in ZanixTemplates]: {
-      files: string[]
-      jsr?: keyof ZanixLibraries
-    }
-  }
-}
-
-export type ZanixTreeFolderOptions<S> = ZanixSubfolderOptions<S> & ZanixTemplateOptions<S>
 /** A record of generated template files, grouped by template category. */
 export type ZanixTemplatesRecord = Record<
   ZanixTemplates,

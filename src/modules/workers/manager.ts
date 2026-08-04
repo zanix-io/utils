@@ -194,9 +194,15 @@ export class WorkerManager {
    */
   public task<T extends TaskFunction>(
     task: T,
-    options: { metaUrl: string; onFinish?: TaskCallback; autoClose?: boolean; timeout?: number },
+    options: {
+      metaUrl: string
+      onFinish?: TaskCallback
+      autoClose?: boolean
+      timeout?: number
+      verbose?: boolean
+    },
   ): { invoke: (...parameters: Parameters<T>) => void } {
-    const { metaUrl, onFinish, autoClose, timeout = 10000 } = options
+    const { metaUrl, verbose, onFinish, autoClose, timeout = 10000 } = options
     const taskName = task.name
 
     return {
@@ -212,6 +218,7 @@ export class WorkerManager {
         this.invokeTask({ taskName, messageId: generateUUID(), parameters, metaUrl }, {
           onFinish,
           autoClose,
+          verbose,
           timeout,
         })
       },

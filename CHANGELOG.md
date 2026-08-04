@@ -7,6 +7,28 @@ adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [2.5.0] - 2026-08-04
+
+### Removed
+
+- **Breaking:** the project-scaffolding cluster moved to `@zanix/cli`, its only real consumer —
+  `compileAndObfuscate` (and the `builder` module), `prepareGithub` (and the `github` module's
+  hooks/workflows/files helpers), `createVSCodeConfig` (and the `editor` module), `getZanixPaths`,
+  `getAllZanixLibrariesInfo`, `ZanixTree`/`BaseZanixTree`, and the per-project-type tree builders
+  (`getServerSrcTree`, `getAppSrcTree`, `getLibrarySrcTree`, `getZnxFolderTree`, `getCommonTree`).
+  Along with them, the option types that described them are no longer exported from `/types`:
+  `CompilerOptions`, `PrepareGithubOptions`, `Editors`, `BaseGithubHelperOptions`, `HookOptions`,
+  `WorkflowOptions`, `PreCommitHookOptions`, `BaseEditorHelperOptions`. The Zanix project/folder
+  `type` definitions themselves (`ZanixFolderTree`, `ZanixServerSrcTree`, `ZanixAppSrcTree`,
+  `ZanixLibrarySrcTree`, `ZanixLibraries`, and related shapes) are unaffected and remain exported
+  from `/types` — only the runtime code that built/consumed them moved.
+- `getSrcDir`, `getSrcName`, and `getLatestRelease` — confirmed unused anywhere in the Zanix
+  ecosystem, removed outright rather than migrated.
+
+### Fixed
+
+- Added a verbose option to WorkerManager for enhanced logging during execution.
+
 ## [2.4.5] - 2026-08-01
 
 ### Changed

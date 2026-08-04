@@ -9,9 +9,12 @@
 
 /**
  * General-purpose helpers for the Zanix ecosystem: config and path resolution, file utilities,
- * date/URL/encoding/network helpers, the Zanix project-tree and namespace helpers, GitHub/editor
- * scaffolding automation, cryptography (encryption and masking), and code-to-storage sync
- * reconciliation (`planCodeSync`).
+ * date/URL/encoding/network helpers, the Zanix namespace helper, cryptography (encryption and
+ * masking), and code-to-storage sync reconciliation (`planCodeSync`).
+ *
+ * The `zanix new`/`zanix generate` project-tree scaffolding and `zanix prepare`'s GitHub/editor
+ * scaffolding automation used to live here — moved to `@zanix/cli` (their only real consumer,
+ * verified ecosystem-wide) as part of an ownership cleanup.
  *
  * @module zanixHelpers
  */
@@ -23,19 +26,10 @@ export * from 'utils/concurrency.ts'
 export * from 'utils/cron.ts'
 export * from 'utils/routes.ts'
 export * from 'utils/params.ts'
-export * from './zanix/tree.ts'
 export * from './zanix/namespace.ts'
-export * from './zanix/info.ts'
 export * from './paths.ts'
 export * from './files.ts'
 export * from './config.ts'
-export * from './builder/mod.ts'
-export * from './github/hooks/pre-commit.ts'
-export * from './github/hooks/pre-push.ts'
-export * from './github/workflows/publish.ts'
-export * from './github/files/main.ts'
-export * from './github/prepare.ts'
-export * from './editor/vscode.ts'
 export * from 'utils/urls.ts'
 export * from 'utils/network.ts'
 export * from 'utils/encoders.ts'

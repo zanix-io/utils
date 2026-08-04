@@ -11,6 +11,7 @@ import {
   timeoutError,
 } from './tasks.ts'
 import 'modules/logger/mod.ts' // initialize logger
+import { assertSpyCalls, stub } from '@std/testing/mock'
 
 console.error = () => {}
 
@@ -177,9 +178,32 @@ Deno.test('Async worker error', async () => {
   await checkHealthy(wm)
 })
 
+Deno.test('Disable verbose on worker manager', async () => {
+  const wm = new WorkerManager()
+
+  const errorStub = stub(console, 'error')
+  const resultError: any = await new Promise((resolve) => {
+    const task = wm.task(inmetiateError, {
+      verbose: false,
+      metaUrl: new URL('./tasks.ts', import.meta.url).href,
+      onFinish: resolve,
+    })
+    task.invoke()
+  })
+
+  assertSpyCalls(errorStub, 0)
+
+  errorStub.restore()
+  assertEquals(resultError.error.message, 'Error')
+
+  // Check worker healthy
+  await checkHealthy(wm)
+})
+
 Deno.test('Inmmediate worker error', async () => {
   const wm = new WorkerManager()
 
+  const errorStub = stub(console, 'error')
   const resultError: any = await new Promise((resolve) => {
     const task = wm.task(inmetiateError, {
       metaUrl: new URL('./tasks.ts', import.meta.url).href,
@@ -188,6 +212,9 @@ Deno.test('Inmmediate worker error', async () => {
     task.invoke()
   })
 
+  assertSpyCalls(errorStub, 1)
+
+  errorStub.restore()
   assertEquals(resultError.error.message, 'Error')
 
   // Check worker healthy

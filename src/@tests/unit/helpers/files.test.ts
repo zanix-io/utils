@@ -1,5 +1,5 @@
-import { collectFiles, fileExists, readFileFromCurrentUrl } from 'modules/helpers/files.ts'
-import { assert, assertArrayIncludes, assertEquals } from '@std/assert'
+import { collectFiles, fileExists } from 'modules/helpers/files.ts'
+import { assertArrayIncludes, assertEquals } from '@std/assert'
 import { join } from '@std/path'
 import { getTemporaryFolder } from 'modules/helpers/paths.ts'
 
@@ -18,22 +18,6 @@ Deno.test('fileExists should return true if the file exists', () => {
 Deno.test('fileExists should return false if the file does not exist', () => {
   const nonExistentFilePath = `${temporaryFolder}/nonExistentFile.txt`
   assertEquals(fileExists(nonExistentFilePath), false) // Assert file does not exist
-})
-
-Deno.test('readFileFromCurrentUrl should return a url file content', async () => {
-  const remoteContent = await readFileFromCurrentUrl(
-    'https://jsr.io/@zanix/utils/1.1.0/src/modules/helpers/github/hooks/scripts/any.txt',
-    'pre-commit.base.sh',
-  )
-
-  assert(remoteContent !== '')
-
-  const localContent = await readFileFromCurrentUrl(
-    import.meta.url,
-    'files.test.ts',
-  )
-
-  assert(localContent.includes('Deno.test'))
 })
 
 Deno.test('collectFiles: should find only .gql and .graphql files', () => {

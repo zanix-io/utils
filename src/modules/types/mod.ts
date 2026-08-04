@@ -69,20 +69,7 @@ export type {
 
 export type { ConfigFile } from 'typings/config.ts'
 
-export type { BaseEditorHelperOptions, Editors } from 'typings/editor.ts'
-
-export type {
-  BaseGithubHelperOptions,
-  HookOptions,
-  PreCommitHookOptions,
-  WorkflowOptions,
-} from 'typings/github.ts'
-
 export type { FormatAvailableFiles, LinterAvailableFiles } from 'typings/files.ts'
-
-export type { PrepareGithubOptions } from 'modules/helpers/github/prepare.ts'
-
-export type { CompilerOptions } from 'typings/builder.ts'
 
 export type {
   DefaultTransformValidationOpts,

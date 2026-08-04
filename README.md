@@ -141,12 +141,12 @@ class UserRTO extends BaseRTO {
 const user = await classValidation(UserRTO, { name: 'Ana', email: 'ana@example.com', age: '30' })
 ```
 
-Other helpers, such as the esbuild-based compiler, are also available:
+Other helpers, such as template interpolation, are also available:
 
 ```typescript
-import { compileAndObfuscate } from 'jsr:@zanix/utils@[version]'
+import { interpolate } from 'jsr:@zanix/utils@[version]'
 
-await compileAndObfuscate() // esbuild
+interpolate('Bearer {{token}}', { token: 'abc123' }) // 'Bearer abc123'
 ```
 
 ## Documentation
@@ -154,7 +154,7 @@ await compileAndObfuscate() // esbuild
 Full guides for every module live under [`docs/`](./docs):
 
 - [Validator](./docs/validator.md) — `BaseRTO`, decorators, and `classValidation`.
-- [Helpers](./docs/helpers.md) — config, files, GitHub, editor, and Zanix-namespace utilities.
+- [Helpers](./docs/helpers.md) — config, file, date/URL, and Zanix-namespace utilities.
 - [Utils](./docs/utils.md) — encoding helpers, regular expressions, and constants.
 - [Encryption & Masking](./docs/encryption-masking.md) — AES/RSA, HMAC, hashing, and masking.
 - [Logger](./docs/logger.md) — the default `Logger` and its storage/formatting options.

@@ -14,10 +14,9 @@ Deno.test('test library main module', async () => {
   assertExists(utils.HttpError)
   assertExists(utils.WorkerManager)
   // Some utils
-  assertExists(utils.createPrePushHook)
-  assertExists(utils.compileAndObfuscate)
-  assertExists(utils.createIgnoreBaseFile)
   assertExists(utils.getTemporaryFolder)
+  assertExists(utils.fileExists)
+  assertExists(utils.getRootDir)
 
   assert(!utils['logger' as never])
 })

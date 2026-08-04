@@ -1,5 +1,3 @@
-import type { Editors } from 'typings/editor.ts'
-
 /**
  * The name of the configuration file used for the Deno project.
  * Defaults to 'deno.json', which contains the project's settings and configurations.
@@ -30,21 +28,3 @@ export const ZANIX_LOGO: string = `\u200B
 \\_____/ \\__,_||_| |_||_|/_/\\_\\                       
 \u200B\n
 `
-
-/**
- * Available constants for internal use only
- */
-
-const GITHUB_HOOKS_FOLDER = '.github/hooks'
-const GITHUB_WORKFLOW_FOLDER = '.github/workflows'
-const GIT_HOOKS_FOLDER = '.git/hooks'
-const editors: Record<Editors, { FOLDER: string; FILENAME: string }> = {
-  vscode: { FOLDER: '.vscode', FILENAME: 'settings.json' },
-}
-
-export default {
-  GITHUB_HOOKS_FOLDER,
-  GITHUB_WORKFLOW_FOLDER,
-  GIT_HOOKS_FOLDER,
-  editors,
-}

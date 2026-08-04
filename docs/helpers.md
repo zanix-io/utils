@@ -1,11 +1,11 @@
 # Helpers
 
-The `helpers` module groups together the everyday utilities used by the Zanix ecosystem and by any Deno project that wants a bit of scaffolding for free: reading and writing the `deno.json(c)` config, resolving project paths, generating GitHub hooks/workflows, editor configuration, the `Znx` global namespace, the recommended Zanix folder tree, date/URL helpers, and the esbuild-based compiler.
+The `helpers` module groups together the everyday utilities used by the Zanix ecosystem and by any Deno project that wants a bit of scaffolding for free: reading and writing the `deno.json(c)` config, resolving project paths, the `Znx` global namespace, date/URL helpers, concurrency primitives, and template interpolation.
 
 Import everything from the `helpers` entrypoint:
 
 ```typescript
-import { getRootDir, prepareGithub, readConfig } from 'jsr:@zanix/utils@[version]/helpers'
+import { getRootDir, getTemporaryFolder, readConfig } from 'jsr:@zanix/utils@[version]/helpers'
 ```
 
 ## Config & Paths
@@ -19,8 +19,6 @@ Helpers to locate the project root, resolve paths relative to the current module
 | `readConfig`         | `(configPath?: string \| null): ConfigFile`                                                                 | Reads and parses (comment-stripped) the `deno` config file. The parsed result is cached in memory; subsequent calls with the same `configPath` reuse the cache. Throws if no config file can be resolved. |
 | `saveConfig`         | `(config: ConfigFile, path?: string \| null): Promise<void>`                                                | Serializes `config` with two-space indentation and writes it to `path` (or the resolved config dir, or `deno.jsonc` as a last resort). Resets the internal `readConfig` cache.                            |
 | `readModuleConfig`   | `(metaUrl: string, isJsonc?: boolean): Promise<ConfigFile>`                                                 | Reads a library's own `deno.json(c)`, either from the local filesystem (when `metaUrl` is a `file:` URL) or by fetching it from the equivalent JSR URL. `isJsonc` defaults to `true`.                     |
-| `getSrcDir`          | `(): string`                                                                                                | Returns the `src` folder path from `getZanixPaths()`, assuming a Zanix project layout.                                                                                                                    |
-| `getSrcName`         | `(): string`                                                                                                | Returns the `src` folder name (`"src"`) from `getZanixPaths()`.                                                                                                                                           |
 | `getFolderName`      | `(uri: string): string`                                                                                     | Extracts the base name (last path segment) from a URI or path.                                                                                                                                            |
 | `getRelativePath`    | `(to: string, from?: string): string`                                                                       | Returns the relative path from `from` (defaults to `getRootDir()`) to `to`.                                                                                                                               |
 | `getPathFromCurrent` | `(callerUrl: string, relativePath: string): string`                                                         | Resolves `relativePath` against the directory of `callerUrl` (typically `import.meta.url`). Converts `file:` URLs to a plain filesystem path.                                                             |
@@ -44,13 +42,6 @@ const config = readConfig(configDir)
 config.version = '1.2.3'
 
 await saveConfig(config, configDir)
-```
-
-```typescript
-import { getSrcDir, getSrcName } from 'jsr:@zanix/utils@[version]/helpers'
-
-getSrcDir() // e.g. "/project/src"
-getSrcName() // "src"
 ```
 
 ```typescript
@@ -79,32 +70,26 @@ collectFiles(['./src', './shared'], ['.gql', '.graphql'], (path, content) => {
 })
 ```
 
-## Editor
+## Zanix namespace
 
-| Symbol               | Signature                                               | Description                                                                                                                                                  |
-| -------------------- | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `createVSCodeConfig` | `(options?: BaseEditorHelperOptions): Promise<boolean>` | Generates a VSCode `settings.json` for the project, pointing it at the resolved `deno.json`/`deno.jsonc` file name. `baseRoot` defaults to the project root. |
+Helpers around the global `Znx` namespace, used internally by the Zanix framework to share
+config/logger state process-wide.
 
-```typescript
-import { createVSCodeConfig } from 'jsr:@zanix/utils@[version]/helpers'
+> **Moved**: the project-tree scaffolding that used to live here (`getZanixPaths`,
+> `getAllZanixLibrariesInfo`, `getLatestVersion`/`getLatestRelease`, `ZanixTree`) and the GitHub/
+> editor bootstrapping helpers (`prepareGithub`, `createVSCodeConfig`, and their supporting
+> functions) were moved to `@zanix/cli` — every real consumer of that code was `cli` itself, never a
+> transversal utility anyone else depended on. See `@zanix/cli`'s own `ENGINEERING.md` §5/§7 for the
+> full reasoning. The `Zanix*SrcTree`/`ZanixFolderTree`/`ZanixLibraries`/etc. **types** describing
+> that folder-tree shape are still exported from `@zanix/utils/types` (see
+> [Types reference](./types.md)) — only the runtime implementation moved.
 
-await createVSCodeConfig()
-```
-
-## Zanix namespace & tree
-
-Helpers around the global `Znx` namespace (used internally by the Zanix framework to share config/logger state process-wide) and the recommended folder structure for Zanix projects.
-
-| Symbol                     | Signature                                                                          | Description                                                                                                                                                                                                                                                                                         |
-| -------------------------- | ---------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Zanix` (type)             | `ZanixGlobal['Znx']`                                                               | The shape of the global `Znx` namespace (`{ config, logger }`).                                                                                                                                                                                                                                     |
-| `canUseZnx`                | `(): boolean`                                                                      | Returns whether the global `Znx` object is currently defined.                                                                                                                                                                                                                                       |
-| `getGlobalZnx`             | `(): Zanix \| undefined`                                                           | Returns the global `Znx` object, or `undefined` if it hasn't been initialized via `setGlobalZnx`.                                                                                                                                                                                                   |
-| `setGlobalZnx`             | `(data: Partial<Zanix>): void`                                                     | Initializes `Znx` on `globalThis` on first call (seeding `config` from the project's `deno.json` `zanix` field, ignoring read errors), then merges `data` into it on every call.                                                                                                                    |
-| `getZanixPaths`            | `<T extends ZanixProjectsFull>(type?: T, projectDir?: string): ZanixFolderTree<T>` | Returns the recommended nested folder structure for a Zanix project. `type` is one of `'server'`, `'app'`, `'library'`, `'app-server'`, `'all'`, or `undefined` for the common structure shared by all project types. `projectDir` defaults to `getRootDir()`. Requires `allow-read`. Experimental. |
-| `getAllZanixLibrariesInfo` | `(): Promise<ZanixLibraries>`                                                      | Fetches the latest published JSR version of every `@zanix/*` library (`app`, `auth`, `asyncmq`, `core`, `datamaster`, `server`, `worker`, `utils`, `notifications`) and returns them keyed by package name. Result is cached after the first call. Intended for CLI/development use.                |
-| `getLatestRelease`         | `(lib: string, username?: string): Promise<string>`                                | Fetches the latest GitHub release tag (e.g. `"2.1.0"`) for `username/lib` via the Shields.io badge endpoint. `username` defaults to `'zanix-io'`. Falls back to `'latest'` on failure.                                                                                                              |
-| `getLatestVersion`         | `(lib: string, username?: string): Promise<string>`                                | Fetches the latest JSR version for `@username/lib` via the Shields.io badge endpoint. `username` defaults to `'@zanix'`. Falls back to `'latest'` on failure.                                                                                                                                       |
+| Symbol         | Signature                      | Description                                                                                                                                                                      |
+| -------------- | ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Zanix` (type) | `ZanixGlobal['Znx']`           | The shape of the global `Znx` namespace (`{ config, logger }`).                                                                                                                  |
+| `canUseZnx`    | `(): boolean`                  | Returns whether the global `Znx` object is currently defined.                                                                                                                    |
+| `getGlobalZnx` | `(): Zanix \| undefined`       | Returns the global `Znx` object, or `undefined` if it hasn't been initialized via `setGlobalZnx`.                                                                                |
+| `setGlobalZnx` | `(data: Partial<Zanix>): void` | Initializes `Znx` on `globalThis` on first call (seeding `config` from the project's `deno.json` `zanix` field, ignoring read errors), then merges `data` into it on every call. |
 
 ```typescript
 import { canUseZnx, getGlobalZnx, setGlobalZnx } from 'jsr:@zanix/utils@[version]/helpers'
@@ -115,24 +100,6 @@ setGlobalZnx({ config: {} })
 
 canUseZnx() // true
 getGlobalZnx() // { config: {}, logger: {} }
-```
-
-```typescript
-import { getZanixPaths } from 'jsr:@zanix/utils@[version]/helpers'
-
-const common = getZanixPaths() // shared structure: docs, src/@tests, src/typings, src/utils, ...
-const serverTree = getZanixPaths('server') // adds src/shared and src/server subtrees
-const fullTree = getZanixPaths('all', '/path/to/project') // every subtree, rooted at a custom project dir
-
-common.subfolders.src.FOLDER // e.g. "/path/to/project/src"
-```
-
-```typescript
-import { getAllZanixLibrariesInfo, getLatestVersion } from 'jsr:@zanix/utils@[version]/helpers'
-
-const version = await getLatestVersion('utils') // e.g. "2.2.14"
-const libraries = await getAllZanixLibrariesInfo()
-// { '@zanix/utils': { version: '2.2.14' }, '@zanix/server': { version: '1.0.3' }, ... }
 ```
 
 ## Dates & URLs
@@ -301,6 +268,39 @@ await nextCronDate('0 */15 * * * *') // next run at the next quarter-hour mark
 await nextCronDate('not a cron expr') // undefined
 ```
 
+## Code-to-storage sync
+
+| Symbol         | Signature                                                                                                                                | Description                                                                                                                                                                                 |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `planCodeSync` | `<V, Id>(staticEntries: StaticSyncEntry<V>[], existing: PersistedSyncEntry<V, Id>[], equals?: (a: V, b: V) => boolean): SyncPlan<V, Id>` | Reconciles code-defined entries against their persisted counterparts, without ever overwriting a manual edit. Pure — no I/O; the caller decides what to actually do with the returned plan. |
+
+For each persisted entry, `planCodeSync` decides one of three outcomes: report it as `toOrphan`
+(its `key` no longer has a matching code-defined entry — the caller decides what that means:
+delete, mark as no longer code-owned, or leave it as-is), report it as `toResync` (the code value
+changed and the persisted value was never edited directly since the last sync), or leave it alone
+(a manual edit, or an entry with no sync history at all, always wins over a later code change).
+Every code-defined entry with no persisted record yet is reported as `toSeed`.
+
+```typescript
+import { planCodeSync } from 'jsr:@zanix/utils@[version]/helpers'
+import type { PersistedSyncEntry, StaticSyncEntry } from 'jsr:@zanix/utils@[version]/helpers'
+
+const staticEntries: StaticSyncEntry<string>[] = [
+  { key: 'welcome', value: 'Hello {{name}}' },
+  { key: 'farewell', value: 'Bye {{name}}' },
+]
+
+const existing: PersistedSyncEntry<string>[] = [
+  { _id: 'a1', key: 'welcome', value: 'Hello {{name}}', lastSyncedValue: 'Hi {{name}}' },
+  { _id: 'a2', key: 'removed', value: 'Old copy' },
+]
+
+const plan = planCodeSync(staticEntries, existing)
+// plan.toOrphan === [{ _id: 'a2' }]              -- 'removed' has no matching code entry
+// plan.toResync === []                            -- 'welcome' was edited manually, left alone
+// plan.toSeed   === [{ key: 'farewell', value: 'Bye {{name}}' }]
+```
+
 ## Misc
 
 | Symbol         | Signature                | Description                                                                                                       |
@@ -353,8 +353,6 @@ mockedGetConfigDir() // "/mock/root/dir/config.json"
 
 ## See also
 
-- [GitHub automation](./github.md)
-- [Build](./build.md)
 - [Network & IP utilities](./network.md)
 - [Types reference](./types.md)
 - [Utils](./utils.md)
