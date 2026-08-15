@@ -52,5 +52,8 @@ export const IsString: ValidationDecorator = function (
     validation = isString
   }
 
-  return defineValidationDecorator(validation, { message: defaultMessage, ...options })
+  return defineValidationDecorator(validation, {
+    message: defaultMessage,
+    ...options,
+  })
 }

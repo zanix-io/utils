@@ -84,14 +84,19 @@ export class ValidationsMetadata {
     opts: ValidationSetupCtx,
   ) {
     const options = this.getValidationSetup(container)
-    Reflect.set(container, this.#validationOptionsKey, { ...options, ...opts, target: container })
+    Reflect.set(container, this.#validationOptionsKey, {
+      ...options,
+      ...opts,
+      target: container,
+    })
   }
 
   /**
    * get validation setup
    */
   public getValidationSetup<T extends BaseRTO>(container: T) {
-    return (Reflect.get(container, this.#validationOptionsKey) || {}) as ValidationSetupCtx
+    return (Reflect.get(container, this.#validationOptionsKey) ||
+      {}) as ValidationSetupCtx
   }
 
   /**
@@ -108,7 +113,10 @@ export class ValidationsMetadata {
   /**
    * get nested properties
    */
-  public getNestedProperties<T extends BaseRTO, K extends 'error' | 'obj'>(container: T, key: K) {
+  public getNestedProperties<T extends BaseRTO, K extends 'error' | 'obj'>(
+    container: T,
+    key: K,
+  ) {
     const keyValue = `${this.#nestedPropsKey}:${key}`
     let values = Reflect.get(container, keyValue)
     if (!values) {
@@ -139,7 +147,10 @@ export class ValidationsMetadata {
     delete error.value?.context
     let currentError = Reflect.get(error.target, key) as ErrorType | undefined
     if (currentError) {
-      this.errorPendingResolve(() => this.addConstraint(error.constraints, currentError), pending)
+      this.errorPendingResolve(
+        () => this.addConstraint(error.constraints, currentError),
+        pending,
+      )
     } else currentError = this.errorPendingResolve(() => error, pending)
 
     Reflect.set(error.target, key, currentError)
@@ -162,11 +173,17 @@ export class ValidationsMetadata {
    * Flush all validations metadata
    */
   public resetAll<T extends BaseRTO>(container: T) {
-    Reflect.deleteProperty(container.constructor.prototype, this.#validationOptionsKey)
+    Reflect.deleteProperty(
+      container.constructor.prototype,
+      this.#validationOptionsKey,
+    )
     Reflect.deleteProperty(container, this.#validationOptionsKey)
     Reflect.deleteProperty(container, this.#exposePropertiesKey)
     Reflect.deleteProperty(container, this.#optionalPropertiesKey)
-    Reflect.deleteProperty(container.constructor.prototype, this.#plainPayloadKey)
+    Reflect.deleteProperty(
+      container.constructor.prototype,
+      this.#plainPayloadKey,
+    )
     Reflect.deleteProperty(container, this.#plainPayloadKey)
     const keys = (Reflect.get(container, this.#errorKey) || []) as string[]
     keys.forEach((key) => Reflect.deleteProperty(container, key))
@@ -180,24 +197,38 @@ export class ValidationsMetadata {
   public resetNested<T extends BaseRTO>(container: T) {
     Reflect.deleteProperty(container, `${this.#nestedPropsKey}:error`)
     Reflect.deleteProperty(container, `${this.#nestedPropsKey}:obj`)
-    Reflect.deleteProperty(container.constructor.prototype, `${this.#nestedPropsKey}:error`)
-    Reflect.deleteProperty(container.constructor.prototype, `${this.#nestedPropsKey}:obj`)
+    Reflect.deleteProperty(
+      container.constructor.prototype,
+      `${this.#nestedPropsKey}:error`,
+    )
+    Reflect.deleteProperty(
+      container.constructor.prototype,
+      `${this.#nestedPropsKey}:obj`,
+    )
   }
 
   /**
    * Add error constraints
    */
-  private addConstraint(constrains: string[], currentError?: Promise<ValidationError | undefined>) {
+  private addConstraint(
+    constrains: string[],
+    currentError?: Promise<ValidationError | undefined>,
+  ) {
     currentError?.then((err) => {
       if (!err) return
-      err.constraints = Array.from(new Set([...err.constraints, ...constrains]))
+      err.constraints = Array.from(
+        new Set([...err.constraints, ...constrains]),
+      )
     })
   }
 
   /**
    * Error resolve as a promise
    */
-  private async errorPendingResolve(toReturn: () => any, pending?: Promise<boolean | undefined>) {
+  private async errorPendingResolve(
+    toReturn: () => any,
+    pending?: Promise<boolean | undefined>,
+  ) {
     if (pending === undefined) return toReturn()
     const isAnError = await pending
     return isAnError ? toReturn() : undefined

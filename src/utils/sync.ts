@@ -72,7 +72,9 @@ export function planCodeSync<V, Id = unknown>(
   existing: PersistedSyncEntry<V, Id>[],
   equals: (a: V, b: V) => boolean = (a, b) => a === b,
 ): SyncPlan<V, Id> {
-  const staticByKey = new Map(staticEntries.map((entry) => [entry.key, entry.value]))
+  const staticByKey = new Map(
+    staticEntries.map((entry) => [entry.key, entry.value]),
+  )
   const existingKeys = new Set(existing.map((entry) => entry.key))
 
   const toOrphan: Array<{ _id: Id }> = []

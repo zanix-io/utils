@@ -31,7 +31,10 @@ Deno.test('baseFormatter keeps processId null when Deno.uid throws', () => {
     uidStub.restore()
   }
 
-  assertEquals((result as { context: { processId: unknown } }).context.processId, null)
+  assertEquals(
+    (result as { context: { processId: unknown } }).context.processId,
+    null,
+  )
 })
 
 Deno.test('baseFormatter falls back to the default formatter when the custom one throws', () => {
@@ -48,4 +51,30 @@ Deno.test('baseFormatter falls back to the default formatter when the custom one
 
   assertEquals(consoleWarn.calls.length, 1)
   assertEquals((result as { message: string }).message, 'message')
+})
+
+Deno.test('baseFormatter serializes an Error passed as extra data on non-error levels', () => {
+  const error = new Error('boom')
+  const result = baseFormatter()('warn', [
+    'Sync failed, continuing without it',
+    error,
+  ]) as {
+    data: unknown[]
+  }
+
+  assertEquals(JSON.parse(JSON.stringify(result.data[0])), {
+    name: 'Error',
+    message: 'boom',
+    stack: error.stack,
+  })
+})
+
+Deno.test('baseFormatter leaves non-Error extra data untouched', () => {
+  const result = baseFormatter()('warn', ['Cache miss', {
+    key: 'user:42',
+  }]) as {
+    data: unknown[]
+  }
+
+  assertEquals(result.data[0], { key: 'user:42' })
 })

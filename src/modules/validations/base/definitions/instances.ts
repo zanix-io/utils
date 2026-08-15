@@ -8,6 +8,9 @@ export const validationInstance = function (this: any, exposedValues: BaseRTO) {
   return {
     ...exposedValues,
     ...this,
-    constructor: { prototype: this.constructor.prototype, name: this.constructor.name },
+    constructor: {
+      prototype: this.constructor.prototype,
+      name: this.constructor.name,
+    },
   }
 }

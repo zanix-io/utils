@@ -53,7 +53,10 @@ export function minDateArray(date: Date, values: Date[]): boolean {
  *
  * @category validations
  */
-export const MinDate: ValidationDecorator<Date, DefaultTransformValidationOpts> = function (
+export const MinDate: ValidationDecorator<
+  Date,
+  DefaultTransformValidationOpts
+> = function (
   date: Date,
   options = {},
 ): ValidationDecoratorDefinition {

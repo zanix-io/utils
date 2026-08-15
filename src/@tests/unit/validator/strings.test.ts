@@ -48,12 +48,24 @@ Deno.test('Validates isUUID and isUUIDArray functions', () => {
   assertEquals(isUUID('9b2f0d5b-3a3e-4c2d-b4d6-8e6f5a1c2e7'), false)
 
   assertEquals(
-    isUUIDArray(['9b2f0d5b-3a3e-4c2d-b4d6-8e6f5a1c2e79', '9b2f0d5b-3a3e-4c2d-b4d6-8e6f5a1c2379']),
+    isUUIDArray([
+      '9b2f0d5b-3a3e-4c2d-b4d6-8e6f5a1c2e79',
+      '9b2f0d5b-3a3e-4c2d-b4d6-8e6f5a1c2379',
+    ]),
     true,
   )
-  assertEquals(isUUIDArray('9b2f0d5b-3a3e-4c2d-b4d6-8e6f5a1c2e79' as never), false)
-  assertEquals(isUUIDArray('9b2f0d5b-3a3e-4c2d-b4d6-8e6f5a1c2e' as never), false)
-  assertEquals(isUUIDArray(['9b2f0d5b-3a3e-4c2d-b4d6-8e6f5a1c2e79', '']), false)
+  assertEquals(
+    isUUIDArray('9b2f0d5b-3a3e-4c2d-b4d6-8e6f5a1c2e79' as never),
+    false,
+  )
+  assertEquals(
+    isUUIDArray('9b2f0d5b-3a3e-4c2d-b4d6-8e6f5a1c2e' as never),
+    false,
+  )
+  assertEquals(
+    isUUIDArray(['9b2f0d5b-3a3e-4c2d-b4d6-8e6f5a1c2e79', '']),
+    false,
+  )
 })
 
 Deno.test('Validates string length and length string array', () => {
@@ -72,8 +84,14 @@ Deno.test('Validates regular expression match ', () => {
   assertEquals(match(emailRegex, 'pepito@gmail.'), false)
 
   assertEquals(matchArray(emailRegex, 'pepito@gmail.com' as never), false)
-  assertEquals(matchArray(emailRegex, ['pepito@gmail.com', 'juan@pablo.com']), true)
-  assertEquals(matchArray(emailRegex, ['pepito@gmail.com', 'juan@pablo']), false)
+  assertEquals(
+    matchArray(emailRegex, ['pepito@gmail.com', 'juan@pablo.com']),
+    true,
+  )
+  assertEquals(
+    matchArray(emailRegex, ['pepito@gmail.com', 'juan@pablo']),
+    false,
+  )
 })
 
 Deno.test('Validates phone match ', () => {
@@ -91,6 +109,9 @@ Deno.test('Validates url match ', () => {
   assertEquals(isUrl('http:/www'), false)
 
   assertEquals(isUrlArray('http://www.zanix.co' as never), false)
-  assertEquals(isUrlArray(['http://www.zanix.co', 'http://www.zanix.mx']), true)
+  assertEquals(
+    isUrlArray(['http://www.zanix.co', 'http://www.zanix.mx']),
+    true,
+  )
   assertEquals(isUrlArray(['http://www.zanix.co', 'CSXS']), false)
 })

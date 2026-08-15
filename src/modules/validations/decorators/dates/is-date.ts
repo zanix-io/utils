@@ -61,7 +61,10 @@ export function isDateArray(values: Date[]): boolean {
  * @category validations
  */
 
-export const IsDate: ValidationDecorator<undefined, DefaultTransformValidationOpts> = function (
+export const IsDate: ValidationDecorator<
+  undefined,
+  DefaultTransformValidationOpts
+> = function (
   options = {},
 ): ValidationDecoratorDefinition {
   const { transform = true, ...opts } = options

@@ -36,7 +36,9 @@ export function isPhoneArray(value: string[]): boolean {
  *
  * @category validations
  */
-export const IsPhone: ValidationDecorator = function (options = {}): ValidationDecoratorDefinition {
+export const IsPhone: ValidationDecorator = function (
+  options = {},
+): ValidationDecoratorDefinition {
   let defaultMessage
   let validation
 
@@ -48,5 +50,8 @@ export const IsPhone: ValidationDecorator = function (options = {}): ValidationD
     validation = isPhone
   }
 
-  return defineValidationDecorator(validation, { message: defaultMessage, ...options })
+  return defineValidationDecorator(validation, {
+    message: defaultMessage,
+    ...options,
+  })
 }

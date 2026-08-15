@@ -29,7 +29,13 @@ function importRSAKey(
     ? ['decrypt']
     : ['sign']
 
-  return crypto.subtle.importKey(format, binary, { name: algorithm, hash }, false, usages)
+  return crypto.subtle.importKey(
+    format,
+    binary,
+    { name: algorithm, hash },
+    false,
+    usages,
+  )
 }
 
 async function exportRSAKey(key: CryptoKey, type: 'spki' | 'pkcs8') {
@@ -88,7 +94,10 @@ export async function generateRSAKeys<T extends HashAlgorithm>(
  *
  * @returns {Promise<string | string[]>} A base64 string containing the encripted message.
  */
-export function encryptRSA<T extends string | string[]>(message: T, publicKey: string): Promise<T> {
+export function encryptRSA<T extends string | string[]>(
+  message: T,
+  publicKey: string,
+): Promise<T> {
   return baseEncrypt(message, async (input) => {
     const encodedValue = stringToUint8Array(input)
 

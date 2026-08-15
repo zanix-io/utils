@@ -19,7 +19,9 @@ Deno.test('Validates metadata actions.', async () => {
   const { target: _, ...data } = metadata.getValidationSetup(dtoContainer)
   assertEquals(data, setup)
 
-  metadata.setExposedProperties(dtoContainer, { 'property 1': 'property value' })
+  metadata.setExposedProperties(dtoContainer, {
+    'property 1': 'property value',
+  })
   metadata.getExposedProperties(dtoContainer)['property 0'] = 'property value 0' as never
   assertEquals(metadata.getExposedProperties(dtoContainer), {
     'property 1': 'property value',
@@ -111,14 +113,20 @@ Deno.test('Validates metadata errors.', async () => {
     target: dtoContainer,
     property: 'error property 3',
     value: 'error value 3 async validation fail',
-    constraints: ['error constraint 3 async validation fail', 'constraint accepted'], // first constraint should be avoid, is the same constraint
+    constraints: [
+      'error constraint 3 async validation fail',
+      'constraint accepted',
+    ], // first constraint should be avoid, is the same constraint
   }, Promise.resolve(true))
 
   metadata.setValidationError({
     target: dtoContainer,
     property: 'error property 3',
     value: 'error value 3 not proceed',
-    constraints: ['error constraint 3 not proceed', 'error constraint 3 neigther proceed'],
+    constraints: [
+      'error constraint 3 not proceed',
+      'error constraint 3 neigther proceed',
+    ],
   }, Promise.resolve(false))
 
   metadata.setValidationError({

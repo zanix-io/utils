@@ -117,7 +117,9 @@ export function uint8ArrayToBase64(uint8Array: Uint8Array): string {
  * @returns - uint8Array encoded
  */
 export function uint8ArrayToHEX(uint8Array: Uint8Array): string {
-  return [...uint8Array].map((byte) => byte.toString(16).padStart(2, '0')).join('')
+  return [...uint8Array].map((byte) => byte.toString(16).padStart(2, '0')).join(
+    '',
+  )
 }
 
 /**
@@ -183,7 +185,9 @@ export function base64ToUint8Array(base64: string): Uint8Array<ArrayBuffer> {
  * console.log(encodedBytes); // Output: 'SGVsbG8sIFdvcmxkIQ'
  */
 export const base64UrlEncode = (input: string | Uint8Array): string => {
-  const base64 = btoa(input instanceof Uint8Array ? String.fromCharCode(...input) : input)
+  const base64 = btoa(
+    input instanceof Uint8Array ? String.fromCharCode(...input) : input,
+  )
   return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
 }
 

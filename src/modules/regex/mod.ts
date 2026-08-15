@@ -24,7 +24,9 @@ Object.assign(regexModule, { default: undefined })
  *
  * @module zanixRegex
  */
-const regex = Object.freeze(regexModule) as Readonly<Omit<typeof regexBaseModule, 'default'>>
+const regex = Object.freeze(regexModule) as Readonly<
+  Omit<typeof regexBaseModule, 'default'>
+>
 export default regex
 
 export * from 'utils/regex.ts'

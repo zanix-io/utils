@@ -38,7 +38,9 @@ export function isArrayOfArray(value: unknown[][]): boolean {
  *
  * @category validations
  */
-export const IsArray: ValidationDecorator = function (options = {}): ValidationDecoratorDefinition {
+export const IsArray: ValidationDecorator = function (
+  options = {},
+): ValidationDecoratorDefinition {
   let defaultMessage
   let validation
 
@@ -50,5 +52,8 @@ export const IsArray: ValidationDecorator = function (options = {}): ValidationD
     validation = isArray
   }
 
-  return defineValidationDecorator(validation, { message: defaultMessage, ...options })
+  return defineValidationDecorator(validation, {
+    message: defaultMessage,
+    ...options,
+  })
 }

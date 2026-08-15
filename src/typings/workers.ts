@@ -15,11 +15,13 @@ export type TaskCallbackResponse = {
  */
 export type TaskCallback = (response: TaskCallbackResponse) => void
 
-export type TaskMessage = Omit<Parameters<NonNullable<Worker['onmessage']>>[0], 'data'> & {
-  data: {
-    messageId: string
-    metaUrl: string
-    taskName: string
-    parameters: Parameters<TaskFunction>
+export type TaskMessage =
+  & Omit<Parameters<NonNullable<Worker['onmessage']>>[0], 'data'>
+  & {
+    data: {
+      messageId: string
+      metaUrl: string
+      taskName: string
+      parameters: Parameters<TaskFunction>
+    }
   }
-}

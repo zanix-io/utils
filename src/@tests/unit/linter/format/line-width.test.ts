@@ -21,7 +21,9 @@ Deno.test('line-width plugin should report line width violations', () => {
 
   assertEquals({ ...mainDiagnostic }, {
     id: 'deno-fmt-plugin/line-width',
-    message: linterMessageFormat('The line exceeds the maximum allowed width of 100 characters.'),
+    message: linterMessageFormat(
+      'The line exceeds the maximum allowed width of 100 characters.',
+    ),
     range: [0, 103],
     hint: 'Consider reviewing the formatting plugin.',
     fix: [],

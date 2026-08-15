@@ -36,7 +36,9 @@ export function isUUIDArray(value: string[]): boolean {
  *
  * @category validations
  */
-export const IsUUID: ValidationDecorator = function (options = {}): ValidationDecoratorDefinition {
+export const IsUUID: ValidationDecorator = function (
+  options = {},
+): ValidationDecoratorDefinition {
   let defaultMessage
   let validation
 
@@ -48,5 +50,8 @@ export const IsUUID: ValidationDecorator = function (options = {}): ValidationDe
     validation = isUUID
   }
 
-  return defineValidationDecorator(validation, { message: defaultMessage, ...options })
+  return defineValidationDecorator(validation, {
+    message: defaultMessage,
+    ...options,
+  })
 }

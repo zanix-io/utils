@@ -107,7 +107,10 @@ Deno.test('Nested RTO multiple levels and full data', async () => {
     },
   })
 
-  assertEquals(data2.First?.Second[0].stringPropWithDefaults, 'altered default')
+  assertEquals(
+    data2.First?.Second[0].stringPropWithDefaults,
+    'altered default',
+  )
   assertEquals(data2.NumbersDefaultArray[0].numberValue, '1')
   assertEquals(data2.NumbersDefaultArray[1].numberValue, '2')
 })

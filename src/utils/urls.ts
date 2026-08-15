@@ -77,7 +77,11 @@ export const getProcessedParams = (searchParams: URLSearchParams): object => {
     processedSearch[key] = values
   }
 
-  const nestedProcessor = (key: string, values: string | string[], allValues: string[]) => {
+  const nestedProcessor = (
+    key: string,
+    values: string | string[],
+    allValues: string[],
+  ) => {
     // deno-lint-ignore no-non-null-assertion
     const matchs = key.match(keyPartsRegex)!
     const length = matchs.length
@@ -137,7 +141,9 @@ export const getProcessedParams = (searchParams: URLSearchParams): object => {
  *
  * @category helpers
  */
-export const toSearchParams = (params: Record<string, unknown>): URLSearchParams => {
+export const toSearchParams = (
+  params: Record<string, unknown>,
+): URLSearchParams => {
   const searchParams = new URLSearchParams()
 
   const append = (key: string, value: unknown): void => {
@@ -182,7 +188,10 @@ export const toSearchParams = (params: Record<string, unknown>): URLSearchParams
  *
  * @category helpers
  */
-export const interpolateUrl = (url: string, record: Record<string, unknown>): string => {
+export const interpolateUrl = (
+  url: string,
+  record: Record<string, unknown>,
+): string => {
   const separatorIndex = url.indexOf('?')
   if (separatorIndex === -1) return interpolate(url, record)
 
@@ -202,7 +211,9 @@ export const interpolateUrl = (url: string, record: Record<string, unknown>): st
     const wholePath = matchWholePlaceholder(rawValue)
     if (wholePath !== null) {
       const resolved = getPath(record, wholePath)
-      for (const [finalKey, finalValue] of toSearchParams({ [key]: resolved })) {
+      for (
+        const [finalKey, finalValue] of toSearchParams({ [key]: resolved })
+      ) {
         searchParams.append(finalKey, finalValue)
       }
       continue

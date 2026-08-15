@@ -41,6 +41,7 @@ export abstract class BaseRTO<Context extends object = object> {
   protected context: Context
 
   constructor() {
-    this.context = validationsMetadata.getValidationSetup(this.constructor.prototype).context
+    this.context = validationsMetadata.getValidationSetup(this.constructor.prototype)
+      .context
   }
 }

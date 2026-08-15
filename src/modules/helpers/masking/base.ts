@@ -67,11 +67,19 @@ const masking = (
 
     return `${additionalInfo}${masked}`
   } catch {
-    return method(input)
+    try {
+      return method(input)
+    } catch {
+      return input
+    }
   }
 }
 
-export const baseMask: BaseMaskingFunction = (input, method, { startAfter, endBefore } = {}) => {
+export const baseMask: BaseMaskingFunction = (
+  input,
+  method,
+  { startAfter, endBefore } = {},
+) => {
   const originalLength = input.length
   const additionalInfo = `${input.length}${MASKING_SEPARATOR}`
   return masking(input, method, {
@@ -82,7 +90,11 @@ export const baseMask: BaseMaskingFunction = (input, method, { startAfter, endBe
   })
 }
 
-export const baseUnmask: BaseMaskingFunction = (input, method, { startAfter, endBefore } = {}) => {
+export const baseUnmask: BaseMaskingFunction = (
+  input,
+  method,
+  { startAfter, endBefore } = {},
+) => {
   if (input.includes(MASKING_SEPARATOR)) {
     const [length, value] = input.split(MASKING_SEPARATOR)
 

@@ -86,5 +86,8 @@ export function Validation<T extends BaseRTO = BaseRTO>(
     ? (property: string) => `All values of '${property}' must be follow validation rules.`
     : (property: string) => `'${property}' must be follow validation rules.`
 
-  return defineValidationDecorator(validation, { message: defaultMessage, ...options })
+  return defineValidationDecorator(validation, {
+    message: defaultMessage,
+    ...options,
+  })
 }

@@ -72,7 +72,10 @@ export function getRelativePath(to: string, from?: string): string {
  *
  * @category helpers
  */
-export function getPathFromCurrent(callerUrl: string, relativePath: string): string {
+export function getPathFromCurrent(
+  callerUrl: string,
+  relativePath: string,
+): string {
   const path = join(callerUrl, '..', relativePath)
 
   if (isFileUrl(callerUrl)) return fromFileUrl(path)

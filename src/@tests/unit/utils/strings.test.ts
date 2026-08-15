@@ -37,14 +37,21 @@ Deno.test('stripComments removes block and line comments but keeps quoted conten
   assertEquals(stripComments('/* block comment */{"a": 1}'), '{"a": 1}')
   assertEquals(stripComments('  // full line comment\n{"a": 1}'), '\n{"a": 1}')
   assertEquals(stripComments('{"a": 1} // trailing comment'), '{"a": 1}')
-  assertEquals(stripComments('{"note": "//not a comment"}'), '{"note": "//not a comment"}')
+  assertEquals(
+    stripComments('{"note": "//not a comment"}'),
+    '{"note": "//not a comment"}',
+  )
 })
 
 Deno.test('hexToUint8Array converts hex strings and rejects odd length', () => {
   assertEquals(hexToUint8Array('48 65'), new Uint8Array([0x48, 0x65]))
   assertEquals(hexToUint8Array('FF00'), new Uint8Array([0xff, 0x00]))
 
-  assertThrows(() => hexToUint8Array('abc'), Error, 'Hex string must have an even length')
+  assertThrows(
+    () => hexToUint8Array('abc'),
+    Error,
+    'Hex string must have an even length',
+  )
 })
 
 Deno.test('base64 url encode should encode and decode correctly', () => {
@@ -76,5 +83,9 @@ Deno.test('base32Decode reverses base32Encode, tolerating lowercase and padding'
   assertEquals(uint8ArrayToString(base32Decode('mzxw6ytboi')), 'foobar') // lowercase
   assertEquals(uint8ArrayToString(base32Decode('MZXW6YQ=')), 'foob') // padded
 
-  assertThrows(() => base32Decode('this-is-not-base32!'), Error, 'Invalid Base32 character')
+  assertThrows(
+    () => base32Decode('this-is-not-base32!'),
+    Error,
+    'Invalid Base32 character',
+  )
 })

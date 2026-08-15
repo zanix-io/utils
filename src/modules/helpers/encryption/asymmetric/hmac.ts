@@ -32,10 +32,20 @@ export const signHMAC = async (
   const algorithmConfig = { name: 'HMAC', hash: { name: hash } }
 
   // Import the key into a CryptoKey object
-  const cryptoKey = await crypto.subtle.importKey('raw', key, algorithmConfig, false, ['sign'])
+  const cryptoKey = await crypto.subtle.importKey(
+    'raw',
+    key,
+    algorithmConfig,
+    false,
+    ['sign'],
+  )
 
   // Sign the data and return the signature as a Uint8Array
-  const signatureBuffer = await crypto.subtle.sign('HMAC', cryptoKey, dataBuffer)
+  const signatureBuffer = await crypto.subtle.sign(
+    'HMAC',
+    cryptoKey,
+    dataBuffer,
+  )
 
   return new Uint8Array(signatureBuffer)
 }
@@ -86,7 +96,13 @@ export const signHMACBytes = async (
 ): Promise<Uint8Array> => {
   const algorithmConfig = { name: 'HMAC', hash: { name: hash } }
 
-  const cryptoKey = await crypto.subtle.importKey('raw', key, algorithmConfig, false, ['sign'])
+  const cryptoKey = await crypto.subtle.importKey(
+    'raw',
+    key,
+    algorithmConfig,
+    false,
+    ['sign'],
+  )
   const signatureBuffer = await crypto.subtle.sign('HMAC', cryptoKey, data)
 
   return new Uint8Array(signatureBuffer)

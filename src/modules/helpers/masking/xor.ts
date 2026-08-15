@@ -15,7 +15,10 @@ import { ZANIX_PREFIX } from './base.ts'
  * @param mask
  * @returns {Uint8Array<ArrayBuffer>}
  */
-function xorMasking(inputBuffer: Uint8Array<ArrayBuffer>, mask: string): Uint8Array<ArrayBuffer> {
+function xorMasking(
+  inputBuffer: Uint8Array<ArrayBuffer>,
+  mask: string,
+): Uint8Array<ArrayBuffer> {
   const maskBuffer = stringToUint8Array(mask)
 
   const result = new Uint8Array(inputBuffer.length)

@@ -47,7 +47,9 @@ export async function generateAESKey(length: AESLength = 128): Promise<string> {
     ['encrypt', 'decrypt'], // Key usages (encryption and decryption)
   )
 
-  return uint8ArrayToBase64(new Uint8Array(await crypto.subtle.exportKey('raw', key)))
+  return uint8ArrayToBase64(
+    new Uint8Array(await crypto.subtle.exportKey('raw', key)),
+  )
 }
 
 /**
@@ -66,7 +68,9 @@ export async function generateCustomAESKey<S extends boolean = true>(
 
   const adjustedLength = AES_LENGTHS.find((length) => keyBuffer.length <= length) || 32
 
-  const hashBuffer = new Uint8Array(await crypto.subtle.digest('SHA-256', keyBuffer))
+  const hashBuffer = new Uint8Array(
+    await crypto.subtle.digest('SHA-256', keyBuffer),
+  )
 
   // Create the ArrayBuffer
   const adjustedBuffer = new Uint8Array(adjustedLength)

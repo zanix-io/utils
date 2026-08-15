@@ -3,7 +3,11 @@ import { assert, assertExists } from '@std/assert'
 
 Deno.test('getPathFromCurrent should return a path relative to the executing script', () => {
   assert(getPathFromCurrent(import.meta.url, 'test.ts').startsWith(Deno.cwd()))
-  assert(getPathFromCurrent(import.meta.url, './script/test.ts').endsWith('/script/test.ts'))
+  assert(
+    getPathFromCurrent(import.meta.url, './script/test.ts').endsWith(
+      '/script/test.ts',
+    ),
+  )
   assert(getPathFromCurrent(import.meta.url, '') !== import.meta.url)
 
   assertExists(

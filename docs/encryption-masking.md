@@ -1,16 +1,19 @@
 # Encryption & Masking
 
-The `/helpers` subpath ships cryptographic and obfuscation utilities for four different needs.
-Use **symmetric AES encryption** when both sides share (or can share) the same secret key and you
-need the fastest reversible protection. Use **asymmetric RSA encryption** when you need to encrypt
-with a public key that anyone can hold while only the private key holder can decrypt — or when you
-need digital signatures (RSA-PSS, or HMAC for a symmetric-secret signature). Use **unidirectional
-hashing** for values that must never be recovered, such as passwords, where you only ever need to
-validate a match. Use **masking** when you need to obscure a value for logs or partial display
-(reversible with `xor`, permanently destructive with `hard`).
+The `/helpers` subpath ships cryptographic and obfuscation utilities for four
+different needs. Use **symmetric AES encryption** when both sides share (or can
+share) the same secret key and you need the fastest reversible protection. Use
+**asymmetric RSA encryption** when you need to encrypt with a public key that
+anyone can hold while only the private key holder can decrypt — or when you need
+digital signatures (RSA-PSS, or HMAC for a symmetric-secret signature). Use
+**unidirectional hashing** for values that must never be recovered, such as
+passwords, where you only ever need to validate a match. Use **masking** when
+you need to obscure a value for logs or partial display (reversible with `xor`,
+permanently destructive with `hard`).
 
-All functions are asynchronous (they rely on the Web Crypto API) except `mask`, `unmask`, `signRSA`'s
-key import, and `verifyRSA`, which are still `Promise`-based since `crypto.subtle` itself is async.
+All functions are asynchronous (they rely on the Web Crypto API) except `mask`,
+`unmask`, `signRSA`'s key import, and `verifyRSA`, which are still
+`Promise`-based since `crypto.subtle` itself is async.
 
 ```ts
 import { encrypt, generateAESKey } from 'jsr:@zanix/utils@[version]/helpers'
@@ -54,7 +57,8 @@ const encryptedMany = await encryptAES(['hello', 'world'], key)
 const decryptedMany = await decryptAES(encryptedMany, key)
 ```
 
-The generic `encrypt`/`decrypt` wrappers let you defer the AES-vs-RSA choice to the key you pass in:
+The generic `encrypt`/`decrypt` wrappers let you defer the AES-vs-RSA choice to
+the key you pass in:
 
 ```ts
 import { decrypt, encrypt, generateAESKey } from 'jsr:@zanix/utils@[version]/helpers'
@@ -68,9 +72,10 @@ console.log(decrypted) // "hello world"
 
 ## Asymmetric encryption (RSA)
 
-RSA encryption uses `RSA-OAEP`, while RSA signing uses `RSA-PSS`. `signHMAC`/`verifyHMAC` are
-included here because they live alongside the RSA module in the source tree, but HMAC is a
-**symmetric** primitive: signing and verifying use the same secret.
+RSA encryption uses `RSA-OAEP`, while RSA signing uses `RSA-PSS`.
+`signHMAC`/`verifyHMAC` are included here because they live alongside the RSA
+module in the source tree, but HMAC is a **symmetric** primitive: signing and
+verifying use the same secret.
 
 | Function                                          | Description                                                                                                                                                                                                                                                                                                                                                                                                           |
 | ------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -105,9 +110,10 @@ const isValid = await verifyRSA('hello world', signature, publicKey)
 console.log(isValid) // true
 ```
 
-The generic `encrypt`/`decrypt` wrappers documented above also accept RSA keys directly (public key
-for `encrypt`, private key for `decrypt`), either by passing `type: 'RSA'` or by relying on the
-automatic PEM detection (`-----BEGIN...`):
+The generic `encrypt`/`decrypt` wrappers documented above also accept RSA keys
+directly (public key for `encrypt`, private key for `decrypt`), either by
+passing `type: 'RSA'` or by relying on the automatic PEM detection
+(`-----BEGIN...`):
 
 ```ts
 import { decrypt, encrypt } from 'jsr:@zanix/utils@[version]/helpers'
@@ -128,21 +134,26 @@ const isValid = await verifyHMAC('header.payload', signature, secret)
 console.log(isValid) // true
 ```
 
-`signHMACBytes` takes raw bytes for both the key and the data, so it can sign with a binary secret
-without corrupting it through a string round-trip (e.g. a TOTP secret decoded from Base32):
+`signHMACBytes` takes raw bytes for both the key and the data, so it can sign
+with a binary secret without corrupting it through a string round-trip (e.g. a
+TOTP secret decoded from Base32):
 
 ```ts
 import { signHMACBytes } from 'jsr:@zanix/utils@[version]/helpers'
 
 const keyBytes = base32Decode('JBSWY3DPEHPK3PXP')
-const signature = await signHMACBytes(keyBytes, new TextEncoder().encode('counter-value'))
+const signature = await signHMACBytes(
+  keyBytes,
+  new TextEncoder().encode('counter-value'),
+)
 ```
 
 ## Unidirectional hashing
 
-`generateHash`/`validateHash` use the SHA family and are intended for values that should never be
-decrypted back, such as passwords. The strength is controlled by an `EncryptionLevel`, which maps
-to a hash algorithm and an iteration count:
+`generateHash`/`validateHash` use the SHA family and are intended for values
+that should never be decrypted back, such as passwords. The strength is
+controlled by an `EncryptionLevel`, which maps to a hash algorithm and an
+iteration count:
 
 | Level                | Algorithm | Iterations |
 | -------------------- | --------- | ---------- |
@@ -171,15 +182,18 @@ console.log(isInvalid) // false
 
 ## Masking
 
-`mask`/`unmask` obscure part (or all) of a string or array of strings. Two algorithms are supported:
+`mask`/`unmask` obscure part (or all) of a string or array of strings. Two
+algorithms are supported:
 
-- **`'xor'`** (default) — reversible. The masked value can be restored with `unmask` using the same
-  key.
-- **`'hard'`** — irreversible. Masked characters are replaced with the `mask` value (which should be
-  a single character; if a longer string is passed, only its first character is used and a warning
-  is logged). Once masked with `'hard'`, the original value cannot be recovered — calling `unmask`
-  with `algorithm: 'hard'` simply returns the masked value unchanged and logs a warning. Because of
-  this, the public `unmask` type only accepts `'xor'` for `algorithm`.
+- **`'xor'`** (default) — reversible. The masked value can be restored with
+  `unmask` using the same key.
+- **`'hard'`** — irreversible. Masked characters are replaced with the `mask`
+  value (which should be a single character; if a longer string is passed, only
+  its first character is used and a warning is logged). Once masked with
+  `'hard'`, the original value cannot be recovered — calling `unmask` with
+  `algorithm: 'hard'` simply returns the masked value unchanged and logs a
+  warning. Because of this, the public `unmask` type only accepts `'xor'` for
+  `algorithm`.
 
 | Function                        | Description                                                                                                                                                                                                                                                 |
 | ------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -190,14 +204,20 @@ console.log(isInvalid) // false
 import { mask, unmask } from 'jsr:@zanix/utils@[version]/helpers'
 
 // Reversible masking (default 'xor')
-const masked = mask('4111 1111 1111 1234', 'my-secret', { startAfter: 0, endBefore: 4 })
+const masked = mask('4111 1111 1111 1234', 'my-secret', {
+  startAfter: 0,
+  endBefore: 4,
+})
 console.log(masked) // e.g. "Zx1a2b3c... 1234"
 
 const original = unmask(masked, 'my-secret', { endBefore: 4 })
 console.log(original) // "4111 1111 1111 1234"
 
 // Irreversible masking
-const hardMasked = mask('4111 1111 1111 1234', '*', { algorithm: 'hard', endBefore: 4 })
+const hardMasked = mask('4111 1111 1111 1234', '*', {
+  algorithm: 'hard',
+  endBefore: 4,
+})
 console.log(hardMasked) // "**************** 1234"
 
 // unmask on a 'hard'-masked value returns it unchanged and logs a warning
@@ -211,6 +231,6 @@ const maskedMany = mask(['secret-1', 'secret-2'], 'my-secret')
 ## See also
 
 - [Helpers](./helpers.md)
-- [Types reference](./types.md) — `EncryptionLevel`, `AESLength`, `HashAlgorithm`,
-  `MaskingOptions`, `UnMaskingOptions`, `MaskingAlgorithms`, `ValidRSAKeysOptions`,
-  `ValidRSAModulusLength`
+- [Types reference](./types.md) — `EncryptionLevel`, `AESLength`,
+  `HashAlgorithm`, `MaskingOptions`, `UnMaskingOptions`, `MaskingAlgorithms`,
+  `ValidRSAKeysOptions`, `ValidRSAModulusLength`

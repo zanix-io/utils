@@ -5,7 +5,11 @@ import { isoDateRegex } from 'utils/regex.ts'
 /**
  * Function to define if a file should be deleted
  */
-export const shouldBeDeleted = (fileName: string, now: number, expirationDays: number) => {
+export const shouldBeDeleted = (
+  fileName: string,
+  now: number,
+  expirationDays: number,
+) => {
   const logDate = extractLogDate(fileName)
   if (!logDate) return true
   const fileDate = new Date(logDate).getTime() // Extract the date from the filename
@@ -17,7 +21,9 @@ export const shouldBeDeleted = (fileName: string, now: number, expirationDays: n
  * Function to extract log date
  */
 export const extractLogDate = (file: string) => {
-  const match = file.match(new RegExp(isoDateRegex.source.replace('^', '').replace('$', '')))
+  const match = file.match(
+    new RegExp(isoDateRegex.source.replace('^', '').replace('$', '')),
+  )
 
   return match?.[0]
 }
@@ -25,7 +31,10 @@ export const extractLogDate = (file: string) => {
 /**
  * Function to clean up expired log files
  */
-export const cleanupExpiredLogs = async (logsDir: string, expirationTime: `${number}d`) => {
+export const cleanupExpiredLogs = async (
+  logsDir: string,
+  expirationTime: `${number}d`,
+) => {
   if (lastLogFilename === getLogFileName()) return
 
   await Deno.mkdir(logsDir, { recursive: true })

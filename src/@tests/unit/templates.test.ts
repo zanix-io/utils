@@ -78,9 +78,12 @@ Deno.test('interpolate leaves non-string primitives untouched', () => {
 Deno.test('interpolate preserves the real type when the whole value is one placeholder', () => {
   assertEquals(interpolate<any>('{{amount}}', { amount: 42 }), 42)
   assertEquals(interpolate<any>('{{active}}', { active: false }), false)
-  assertEquals(interpolate<any>('{{address}}', { address: { city: 'Bogotá' } }), {
-    city: 'Bogotá',
-  })
+  assertEquals(
+    interpolate<any>('{{address}}', { address: { city: 'Bogotá' } }),
+    {
+      city: 'Bogotá',
+    },
+  )
   assertEquals(interpolate<any>('{{tags}}', { tags: ['a', 'b'] }), ['a', 'b'])
 })
 
@@ -108,7 +111,10 @@ Deno.test('interpolate leaves a ${{ENV_VAR}} placeholder untouched', () => {
 Deno.test('interpolateEnv replaces a whole-string ${{VAR}} placeholder', () => {
   Deno.env.set('TEST_INTERPOLATE_ENV_VAR', 'my-secret-key')
   try {
-    assertEquals(interpolateEnv('${{TEST_INTERPOLATE_ENV_VAR}}'), 'my-secret-key')
+    assertEquals(
+      interpolateEnv('${{TEST_INTERPOLATE_ENV_VAR}}'),
+      'my-secret-key',
+    )
   } finally {
     Deno.env.delete('TEST_INTERPOLATE_ENV_VAR')
   }
@@ -117,7 +123,10 @@ Deno.test('interpolateEnv replaces a whole-string ${{VAR}} placeholder', () => {
 Deno.test('interpolateEnv replaces a ${{VAR}} placeholder embedded in surrounding text', () => {
   Deno.env.set('TEST_INTERPOLATE_ENV_VAR', 'abc')
   try {
-    assertEquals(interpolateEnv('Bearer ${{TEST_INTERPOLATE_ENV_VAR}}'), 'Bearer abc')
+    assertEquals(
+      interpolateEnv('Bearer ${{TEST_INTERPOLATE_ENV_VAR}}'),
+      'Bearer abc',
+    )
   } finally {
     Deno.env.delete('TEST_INTERPOLATE_ENV_VAR')
   }
@@ -129,7 +138,9 @@ Deno.test('interpolateEnv replaces multiple ${{VAR}} placeholders in the same st
   Deno.env.set('TEST_ENV_TOKEN', 'xyz')
   try {
     assertEquals(
-      interpolateEnv('${{TEST_ENV_HOST}}/${{TEST_ENV_PATH}}/${{TEST_ENV_TOKEN}}'),
+      interpolateEnv(
+        '${{TEST_ENV_HOST}}/${{TEST_ENV_PATH}}/${{TEST_ENV_TOKEN}}',
+      ),
       'example.com/api/xyz',
     )
   } finally {
@@ -141,8 +152,14 @@ Deno.test('interpolateEnv replaces multiple ${{VAR}} placeholders in the same st
 
 Deno.test('interpolateEnv substitutes the literal text "undefined" for an unset variable', () => {
   Deno.env.delete('TEST_INTERPOLATE_ENV_MISSING')
-  assertEquals(interpolateEnv('${{TEST_INTERPOLATE_ENV_MISSING}}'), 'undefined')
-  assertEquals(interpolateEnv('Bearer ${{TEST_INTERPOLATE_ENV_MISSING}}'), 'Bearer undefined')
+  assertEquals(
+    interpolateEnv('${{TEST_INTERPOLATE_ENV_MISSING}}'),
+    'undefined',
+  )
+  assertEquals(
+    interpolateEnv('Bearer ${{TEST_INTERPOLATE_ENV_MISSING}}'),
+    'Bearer undefined',
+  )
 })
 
 Deno.test('interpolateEnv walks plain objects and arrays recursively', () => {

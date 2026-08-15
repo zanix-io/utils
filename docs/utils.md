@@ -1,8 +1,17 @@
 # Utils
 
-This guide documents the low-level building blocks shipped by `@zanix/utils`: binary/string encoding helpers, project-wide constants, and reusable regular expressions. These symbols have no single dedicated entrypoint — encoders are re-exported from the `/helpers` subpath, while constants and regular expressions each ship their own subpath with a frozen default export plus matching named exports.
+This guide documents the low-level building blocks shipped by `@zanix/utils`:
+binary/string encoding helpers, project-wide constants, and reusable regular
+expressions. These symbols have no single dedicated entrypoint — encoders are
+re-exported from the `/helpers` subpath, while constants and regular expressions
+each ship their own subpath with a frozen default export plus matching named
+exports.
 
-Several higher-level features in the library build directly on top of these primitives. For example, the `IsEmail`, `IsUrl`, and `IsUUID` decorators documented in [Validator](./validator.md) use `emailRegex`, `urlRegex`, and `uuidRegex` internally, and the config-loading helpers documented in [Helpers](./helpers.md) rely on `stripComments` and the `CONFIG_FILE` constant.
+Several higher-level features in the library build directly on top of these
+primitives. For example, the `IsEmail`, `IsUrl`, and `IsUUID` decorators
+documented in [Validator](./validator.md) use `emailRegex`, `urlRegex`, and
+`uuidRegex` internally, and the config-loading helpers documented in
+[Helpers](./helpers.md) rely on `stripComments` and the `CONFIG_FILE` constant.
 
 ## Encoding
 
@@ -95,7 +104,8 @@ hexToUint8Array('abc') // throws: Hex string must have an even length
 
 ### Stripping comments
 
-`stripComments` removes real `//` and `/* ... */` comments but preserves `//`-looking content that appears inside a quoted string value:
+`stripComments` removes real `//` and `/* ... */` comments but preserves
+`//`-looking content that appears inside a quoted string value:
 
 ```ts
 stripComments('/* block comment */{"a": 1}') // '{"a": 1}'
@@ -104,7 +114,8 @@ stripComments('{"a": 1} // trailing comment') // '{"a": 1}'
 stripComments('{"note": "//not a comment"}') // '{"note": "//not a comment"}' (unchanged)
 ```
 
-Use it with trusted input only — it is meant for JSONC-style config files, not for sanitizing untrusted code.
+Use it with trusted input only — it is meant for JSONC-style config files, not
+for sanitizing untrusted code.
 
 ### Capitalization
 
@@ -115,30 +126,35 @@ capitalizeWords('the quick brown fox') // 'The Quick Brown Fox'
 
 ## Constants
 
-Import the frozen default export, named exports, or both from the `/constants` subpath:
+Import the frozen default export, named exports, or both from the `/constants`
+subpath:
 
 ```ts
 import zanixConstants, { CONFIG_FILE } from 'jsr:@zanix/utils@[version]/constants'
 ```
 
-`zanixConstants` is a `Readonly` object exposing the same values as the named exports below.
+`zanixConstants` is a `Readonly` object exposing the same values as the named
+exports below.
 
-| Name                | Value                              | Description                                                                                                                    |
-| ------------------- | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| `CONFIG_FILE`       | `'deno.json'`                      | Name of the configuration file used for the Deno project.                                                                      |
-| `DISTRIBUTION_FILE` | `'app.mjs'`                        | Default distribution file name used for compilations.                                                                          |
-| `MAIN_MODULE`       | `'mod.ts'`                         | Default main module file name.                                                                                                 |
-| `ZANIX_LOGO`        | ASCII-art string of the ZANIX logo | Text representation of the ZANIX logo, wrapped in zero-width space characters, intended for display in console output or logs. |
+| Name                | Value                              | Description                                                                                                                                                                 |
+| ------------------- | ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `CONFIG_FILE`       | `'deno.json'`                      | Name of the configuration file used for the Deno project.                                                                                                                   |
+| `DISTRIBUTION_FILE` | `'app.mjs'`                        | Default distribution file name used for compilations.                                                                                                                       |
+| `MAIN_MODULE`       | `'mod.ts'`                         | Default main module file name.                                                                                                                                              |
+| `ZNX_FLAGS`         | `['use comet']`                    | Zanix directive-prologue flags — the flag names the linter's `use-znx-flags` rule accepts as a file's first statement. See [Linter plugins](./linter.md#deno-zanix-plugin). |
+| `ZANIX_LOGO`        | ASCII-art string of the ZANIX logo | Text representation of the ZANIX logo, wrapped in zero-width space characters, intended for display in console output or logs.                                              |
 
 ## Regular expressions
 
-Import the frozen default export, named exports, or both from the `/regex` subpath:
+Import the frozen default export, named exports, or both from the `/regex`
+subpath:
 
 ```ts
 import zanixRegex, { emailRegex } from 'jsr:@zanix/utils@[version]/regex'
 ```
 
-`zanixRegex` is a `Readonly` object exposing the same patterns as the named exports below.
+`zanixRegex` is a `Readonly` object exposing the same patterns as the named
+exports below.
 
 | Name                  | Purpose                                                                                                                                                                              | Example match                               |
 | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------- |
@@ -186,3 +202,5 @@ securePasswordRegex.test('weakpass') // false — no uppercase letter and no dig
 
 - [Helpers](./helpers.md)
 - [Validator](./validator.md)
+- [Linter plugins](./linter.md#deno-zanix-plugin) — `use-znx-flags` validates
+  `ZNX_FLAGS` usage.

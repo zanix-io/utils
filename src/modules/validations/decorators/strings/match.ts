@@ -58,5 +58,8 @@ export const Match: ValidationDecorator<RegExp> = function (
     validation = (value: string) => match(regex, value)
   }
 
-  return defineValidationDecorator(validation, { message: defaultMessage, ...options })
+  return defineValidationDecorator(validation, {
+    message: defaultMessage,
+    ...options,
+  })
 }

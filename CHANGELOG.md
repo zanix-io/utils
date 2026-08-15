@@ -2,10 +2,138 @@
 
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) and this project
-adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
+The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
+and this project adheres to
+[Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [2.6.0] - 2026-08-15
+
+### Added
+
+- **Redaction for errors and logs**: `redactSensitiveData`, `createRedactor`,
+  and `setDefaultRedactOptions` (from `/errors`), plus the accompanying
+  `RedactOptions` type. Every log (console and whatever storage strategy is
+  configured) and every `serializeError`/ `serializeMultipleErrors` call now
+  redacts credential-shaped fields (`authorization`, `cookie`, `password`,
+  `token`, `secret`, `apiKey`, and similar names, matched case-insensitively) by
+  default, and converts a raw `Headers`/`Request` value to its safe, named
+  fields before that same key-based redaction applies — covering a case
+  `JSON.stringify` alone would miss, since Deno's own console inspector still
+  prints a `Headers`/`Request`'s full contents even though it serializes to `{}`
+  under `JSON.stringify`. `Logger` gets a new `redact` option (`true` by
+  default) to control this per instance; `setDefaultRedactOptions` changes the
+  shared, process-wide fallback that any caller without its own explicit
+  `redact` falls back to — notably `serializeError` calls with no `redact` of
+  their own, e.g. `@zanix/server`'s client-facing error responses, which
+  previously had no way to share a `Logger`'s custom redaction pattern at all.
+  Documented in [docs/logger.md](docs/logger.md#redacting-sensitive-data) and
+  [docs/errors.md](docs/errors.md#serializing-errors).
+- `use-znx-flags`: a new `deno-zanix-plugin` lint rule validating Zanix
+  directive-prologue flags (a bare string-literal expression statement as a
+  file's first statement, the same grammar slot as `'use strict'`) against a new
+  `ZNX_FLAGS` constant — currently just `'use comet'`, the marker
+  `@zanix/space`'s `cometPlugin` looks for. An unrecognized flag in that
+  position is now a lint error instead of silently doing nothing. Documented in
+  [docs/linter.md](docs/linter.md#deno-zanix-plugin) and
+  [docs/utils.md](docs/utils.md#constants).
+- `jsxImportSource` compiler option on `ConfigFile['compilerOptions']` — the
+  module specifier `jsx: 'react-jsx'`/`'react-jsxdev'` imports its runtime
+  helpers from, required alongside those two modes.
+- `WorkerManager`'s constructor now accepts an optional second `createWorker`
+  argument, a factory used in place of the default `getWebProcessWorker`
+  whenever the pool needs a new worker — mainly useful for tests that need to
+  simulate worker behavior (e.g. forcing an error) without a real Web Worker.
+  Documented in [docs/workers.md](docs/workers.md#custom-worker-creation).
+- `WorkerManager`'s constructor options gain
+  `permissions?: Deno.PermissionOptions` — restricts what every worker THIS pool
+  creates may do (`net`/`read`/`write`/`env`/`run`/`ffi`/`sys`), forwarded as-is
+  to `Worker`'s own `deno.permissions` option (a worker's permissions can never
+  exceed its parent's own — Deno's own API enforces that). Omit entirely (the
+  default) for unchanged, unrestricted behavior. Real sandboxing for
+  untrusted/CPU-bound task code — not a CPU-time or memory quota, which Deno's
+  `Worker` API has no option for today; `options.timeout` remains the only
+  available protection against a runaway task. Requires the still-unstable
+  `worker-options` Deno feature (this package's own `deno.jsonc` now declares
+  `"unstable": ["worker-options"]`; any consumer using `permissions` needs the
+  same, either via config or `--unstable-worker-options`) and, since an explicit
+  permission object replaces the whole set rather than inheriting unlisted
+  categories, must itself grant enough `read`/`net` for the worker to import its
+  own task module in the first place. Documented in
+  [docs/workers.md](docs/workers.md#restricting-a-workers-permissions-real-sandboxing).
+
+### Changed
+
+- **Breaking:** the `ZanixProjects` project-type union changed shape: `'app'`
+  (previously the `@zanix/space`-predecessor frontend-app type, backed by
+  `ZanixAppSrcTree`) is now `'space'`, and `'app-server'` is now
+  `'space-server'`. `'app'` is repurposed for a lightweight, non-runnable
+  package type, treated the same as `'library'` (see below) — it has no
+  dedicated entry in `ZanixSrcTreeMap`. `ZanixAppSrcTree` is replaced by
+  `ZanixSpaceSrcTree`, matching `@zanix/space`'s real, implemented conventions
+  (file-based routing under `routes/`, selective-hydration components under
+  `comets/`) instead of the previous `Components/Layout/Pages/resources` shape,
+  which was never reconciled against `@zanix/space`'s actual implementation.
+  `ZanixSrcTreeMap`/ `ZanixFolderTree` updated to match. Documented in
+  [docs/types.md](docs/types.md#zanix-framework-types).
+- Default log-file storage (`baseSaveData`) now also skips creating a log file
+  for `'app'`-type projects, the same way it already did for `'library'` — like
+  a library, an `'app'` package isn't necessarily a deployed long-running
+  process on its own.
+- The default logger formatter now serializes any `Error` instance passed as
+  extra data to `info`/`warn` (previously only `error` handled this), preventing
+  it from silently collapsing to `{}` when persisted — `Error`'s own properties
+  are non-enumerable, so a naive `JSON.stringify` drops them.
+- `nextCronDate`'s field parser (`parseField`) now skips an invalid or empty
+  numeric field (an empty string, a non-numeric range/step/single value) instead
+  of adding `NaN` to the resulting set. The "invalid cron expression" log
+  message changed from "empty field" to "no valid values found for a field" to
+  match.
+
+### Removed
+
+- **Breaking:** `hash` removed from `ConfigFile['zanix']` and from
+  `ZanixGlobal['Znx']['config']`. It was only ever written (by `@zanix/cli`'s
+  `baseZnxConfig`/`configAdaptation`), never read by any real consumer anywhere
+  in the ecosystem — confirmed by an exhaustive audit. `ZanixProjectSrc` (the
+  type that added a `zanix: ZanixBaseFolder` folder-tree entry to
+  `ZanixFolderTree` for non-library project types) is also removed —
+  `@zanix/cli`'s `zanix new` no longer scaffolds a `zanix/` folder (its
+  `config.ts`/`secrets.sqlite` content was always empty, fetched from an
+  `@zanix/core` `src/templates/` that has never had any content).
+
+### Fixed
+
+- `WorkerManager`'s timeout handling never actually settled the task: on a
+  genuine timeout it terminated the worker but never called `onFinish`, so any
+  caller awaiting the result (any Promise-wrapping caller of
+  `.task(...).invoke(...)`) would hang forever instead of ever rejecting. A
+  related bug left the terminated worker's pool slot parked in `'busy'` status
+  forever unless a queued task happened to be waiting when the timeout fired —
+  otherwise it could later be silently handed a new task by round-robin
+  selection, which would then hang too, since a terminated worker can never
+  respond. Both are fixed: a timeout now always calls `onFinish` with an error,
+  and always replaces the slot with a fresh worker regardless of whether a task
+  was queued.
+- `readModuleConfig` ignored its own `metaUrl` parameter for local files and
+  read `deno.jsonc` relative to `Deno.cwd()` instead — contrary to its
+  documented contract. This made `@zanix/cli` (the only real consumer) silently
+  fail to identify itself (wrong or missing name/version) whenever invoked from
+  a directory other than its own, when run from a local `file:` path rather than
+  a `deno install`ed JSR module. Now resolves by walking up from `metaUrl`'s own
+  directory, mirroring how the JSR-fetch branch already strips a module subpath
+  down to its package root.
+- `HttpError` threw evaluating its own module (`@zanix/utils/errors`) outside
+  Deno, since it directly referenced `Deno.errors.Http` at the class-declaration
+  level — a real crash importing the module from browser-run code (e.g.
+  `@zanix/space`'s `defineComet`), confirmed the hard way, since ESM evaluates a
+  whole module's top-level code regardless of which export a consumer actually
+  uses. `HttpError` now extends a new `HttpErrorBase` that resolves to
+  `Deno.errors.Http` only when `Deno` exists, falling back to plain `Error`
+  otherwise — `HttpError`'s own public behavior
+  (`.message`/`.status`/`.stack`/`.cause`/`.meta`/`.code`) is unaffected either
+  way, since every one of those is set directly in its own constructor.
 
 ## [2.5.1] - 2026-08-04
 
@@ -17,19 +145,23 @@ adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ### Removed
 
-- **Breaking:** the project-scaffolding cluster moved to `@zanix/cli`, its only real consumer —
-  `compileAndObfuscate` (and the `builder` module), `prepareGithub` (and the `github` module's
-  hooks/workflows/files helpers), `createVSCodeConfig` (and the `editor` module), `getZanixPaths`,
-  `getAllZanixLibrariesInfo`, `ZanixTree`/`BaseZanixTree`, and the per-project-type tree builders
-  (`getServerSrcTree`, `getAppSrcTree`, `getLibrarySrcTree`, `getZnxFolderTree`, `getCommonTree`).
-  Along with them, the option types that described them are no longer exported from `/types`:
-  `CompilerOptions`, `PrepareGithubOptions`, `Editors`, `BaseGithubHelperOptions`, `HookOptions`,
-  `WorkflowOptions`, `PreCommitHookOptions`, `BaseEditorHelperOptions`. The Zanix project/folder
-  `type` definitions themselves (`ZanixFolderTree`, `ZanixServerSrcTree`, `ZanixAppSrcTree`,
-  `ZanixLibrarySrcTree`, `ZanixLibraries`, and related shapes) are unaffected and remain exported
-  from `/types` — only the runtime code that built/consumed them moved.
-- `getSrcDir`, `getSrcName`, and `getLatestRelease` — confirmed unused anywhere in the Zanix
-  ecosystem, removed outright rather than migrated.
+- **Breaking:** the project-scaffolding cluster moved to `@zanix/cli`, its only
+  real consumer — `compileAndObfuscate` (and the `builder` module),
+  `prepareGithub` (and the `github` module's hooks/workflows/files helpers),
+  `createVSCodeConfig` (and the `editor` module), `getZanixPaths`,
+  `getAllZanixLibrariesInfo`, `ZanixTree`/`BaseZanixTree`, and the
+  per-project-type tree builders (`getServerSrcTree`, `getAppSrcTree`,
+  `getLibrarySrcTree`, `getZnxFolderTree`, `getCommonTree`). Along with them,
+  the option types that described them are no longer exported from `/types`:
+  `CompilerOptions`, `PrepareGithubOptions`, `Editors`,
+  `BaseGithubHelperOptions`, `HookOptions`, `WorkflowOptions`,
+  `PreCommitHookOptions`, `BaseEditorHelperOptions`. The Zanix project/folder
+  `type` definitions themselves (`ZanixFolderTree`, `ZanixServerSrcTree`,
+  `ZanixAppSrcTree`, `ZanixLibrarySrcTree`, `ZanixLibraries`, and related
+  shapes) are unaffected and remain exported from `/types` — only the runtime
+  code that built/consumed them moved.
+- `getSrcDir`, `getSrcName`, and `getLatestRelease` — confirmed unused anywhere
+  in the Zanix ecosystem, removed outright rather than migrated.
 
 ### Fixed
 
@@ -39,37 +171,43 @@ adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
-- `collectFiles` now accepts a single root path or an array of roots, traversing all of them for
-  matching files instead of requiring a separate call per directory.
+- `collectFiles` now accepts a single root path or an array of roots, traversing
+  all of them for matching files instead of requiring a separate call per
+  directory.
 
 ## [2.4.4] - 2026-07-30
 
 ### Fixed
 
-- `createGitWorkflow`'s custom `mainBranch` replacement only patched the first `${MAIN_BRANCH}`
-  placeholder in the generated `publish.yml`, leaving the second occurrence (the `push.branches`
-  trigger) as the literal, unresolved placeholder instead of the custom branch name. The
-  replacement is now applied globally, so both the `pull_request` and `push` triggers pick up the
-  custom branch.
-- The Zanix **server** project scaffold attributed its `jobs` and `repositories` (model/seeder)
-  templates to `@zanix/server`, even though their content demonstrates `registerCronJob` and
-  `registerModel` — APIs owned by `@zanix/asyncmq` and `@zanix/datamaster` respectively. Since both
-  of those libraries depend on `@zanix/server`, claiming ownership there implied a circular
-  dependency in the generated project's template metadata. Ownership is now attributed to whichever
-  library actually owns each API.
+- `createGitWorkflow`'s custom `mainBranch` replacement only patched the first
+  `${MAIN_BRANCH}` placeholder in the generated `publish.yml`, leaving the
+  second occurrence (the `push.branches` trigger) as the literal, unresolved
+  placeholder instead of the custom branch name. The replacement is now applied
+  globally, so both the `pull_request` and `push` triggers pick up the custom
+  branch.
+- The Zanix **server** project scaffold attributed its `jobs` and `repositories`
+  (model/seeder) templates to `@zanix/server`, even though their content
+  demonstrates `registerCronJob` and `registerModel` — APIs owned by
+  `@zanix/asyncmq` and `@zanix/datamaster` respectively. Since both of those
+  libraries depend on `@zanix/server`, claiming ownership there implied a
+  circular dependency in the generated project's template metadata. Ownership is
+  now attributed to whichever library actually owns each API.
 
 ### Changed
 
-- The common Zanix project scaffold now generates `CHANGELOG.md` and `LICENSE` at the project root
-  (alongside `README.md`) instead of under `docs/`, and seeds `docs/` with a starter `see-more.md`
-  guide for project-specific documentation links. The generated `README.md` template links to it
-  and was updated to match the new root-level `CHANGELOG.md`/`LICENSE` paths.
+- The common Zanix project scaffold now generates `CHANGELOG.md` and `LICENSE`
+  at the project root (alongside `README.md`) instead of under `docs/`, and
+  seeds `docs/` with a starter `see-more.md` guide for project-specific
+  documentation links. The generated `README.md` template links to it and was
+  updated to match the new root-level `CHANGELOG.md`/`LICENSE` paths.
 
 ## [2.4.3] - 2026-07-28
 
 ### Added
 
-- Added a dedicated **Network & IP utilities** documentation page covering IPv4 helpers, CIDR parsing and matching, client IP normalization, and trusted proxy header extraction.
+- Added a dedicated **Network & IP utilities** documentation page covering IPv4
+  helpers, CIDR parsing and matching, client IP normalization, and trusted proxy
+  header extraction.
 - Documented the IP-related helpers:
   - `TrustedHeader`
   - `ParsedCidr`
@@ -82,144 +220,174 @@ adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
-- Split the documentation into smaller, topic-focused pages for easier navigation.
-- Moved the **GitHub automation** reference from `helpers.md` to a dedicated `github.md` page.
-- Moved the **Build** reference from `helpers.md` to a dedicated `build.md` page.
-- Updated the cross-references in `helpers.md` to point to the new documentation pages.
+- Split the documentation into smaller, topic-focused pages for easier
+  navigation.
+- Moved the **GitHub automation** reference from `helpers.md` to a dedicated
+  `github.md` page.
+- Moved the **Build** reference from `helpers.md` to a dedicated `build.md`
+  page.
+- Updated the cross-references in `helpers.md` to point to the new documentation
+  pages.
 
 ## [2.4.2] - 2026-07-26
 
 ### Added
 
 - Re-exported `LoggerOptions`, `LoggerFunctionOptions`, `LoggerFileOptions`,
-  `SaveDataFunctionOptions`, `SaveDataFile`, and `SaveDataFileOptions` from `@zanix/utils/types` —
-  previously internal-only types needed to annotate a custom `Logger` `storage.save` factory's
-  return type without reaching into `@zanix/utils`'s own internals.
-- Documented a sixth `Logger` storage style in [docs/logger.md](docs/logger.md#6-building-a-reusable-storage-backend):
-  packaging a reusable storage backend as a factory function that returns a `SaveDataFunction`
-  (e.g. `@zanix/datamaster`'s `elasticsearchLogSave`), plus guidance on aliasing the default
-  formatter's `timestamp` field to a backend-specific convention (e.g. Elastic Common Schema's
-  `@timestamp`) instead of synthesizing a new one.
+  `SaveDataFunctionOptions`, `SaveDataFile`, and `SaveDataFileOptions` from
+  `@zanix/utils/types` — previously internal-only types needed to annotate a
+  custom `Logger` `storage.save` factory's return type without reaching into
+  `@zanix/utils`'s own internals.
+- Documented a sixth `Logger` storage style in
+  [docs/logger.md](docs/logger.md#6-building-a-reusable-storage-backend):
+  packaging a reusable storage backend as a factory function that returns a
+  `SaveDataFunction` (e.g. `@zanix/datamaster`'s `elasticsearchLogSave`), plus
+  guidance on aliasing the default formatter's `timestamp` field to a
+  backend-specific convention (e.g. Elastic Common Schema's `@timestamp`)
+  instead of synthesizing a new one.
 
 ## [2.4.1] - 2026-07-26
 
 ### Added
 
-- Added `planCodeSync`, a storage-agnostic helper for reconciling code-defined entries with persisted records while preserving manual edits. Introduced the accompanying `StaticSyncEntry`, `PersistedSyncEntry`, and `SyncPlan` helper types for reusable code-to-storage synchronization logic.
+- Added `planCodeSync`, a storage-agnostic helper for reconciling code-defined
+  entries with persisted records while preserving manual edits. Introduced the
+  accompanying `StaticSyncEntry`, `PersistedSyncEntry`, and `SyncPlan` helper
+  types for reusable code-to-storage synchronization logic.
 
 ## [2.4.0] - 2026-07-25
 
 ### Added
 
-- `base32Encode`/`base32Decode`: RFC 4648 Base32 codec (uppercase `A-Z2-7` alphabet, unpadded
-  encode, lowercase/padding-tolerant decode) — the format authenticator-app secrets (TOTP) are
-  conventionally shown in.
-- `signHMACBytes`: a raw-bytes HMAC helper supporting the full `HashAlgorithm` range, including
-  `'SHA-1'`, which `signHMAC` deliberately excludes (JWT has no HS1 algorithm). Takes the key and
-  data as `Uint8Array` instead of `signHMAC`'s UTF-8 `string`, since round-tripping an arbitrary
-  binary key through a JS string would corrupt bytes ≥128.
-- `interpolateEnv`: resolves `${{ENV_VAR}}` placeholders against `Deno.env`, recursing into
-  arrays/objects the same way `interpolate` does. A separate convention from `interpolate`'s
-  `{{field}}` so both can coexist in the same string — an unset variable is substituted as the
-  literal text `'undefined'` rather than throwing.
+- `base32Encode`/`base32Decode`: RFC 4648 Base32 codec (uppercase `A-Z2-7`
+  alphabet, unpadded encode, lowercase/padding-tolerant decode) — the format
+  authenticator-app secrets (TOTP) are conventionally shown in.
+- `signHMACBytes`: a raw-bytes HMAC helper supporting the full `HashAlgorithm`
+  range, including `'SHA-1'`, which `signHMAC` deliberately excludes (JWT has no
+  HS1 algorithm). Takes the key and data as `Uint8Array` instead of `signHMAC`'s
+  UTF-8 `string`, since round-tripping an arbitrary binary key through a JS
+  string would corrupt bytes ≥128.
+- `interpolateEnv`: resolves `${{ENV_VAR}}` placeholders against `Deno.env`,
+  recursing into arrays/objects the same way `interpolate` does. A separate
+  convention from `interpolate`'s `{{field}}` so both can coexist in the same
+  string — an unset variable is substituted as the literal text `'undefined'`
+  rather than throwing.
 
 ### Changed
 
-- `interpolate`: no longer matches `{{...}}` when immediately preceded by `$`, so `${{ENV_VAR}}`
-  placeholders are left untouched for `interpolateEnv` to resolve instead of being treated as
-  `interpolate`'s own field syntax.
-- `cleanRoute`: Added the `keepCase` option to preserve the original route casing during normalization.
+- `interpolate`: no longer matches `{{...}}` when immediately preceded by `$`,
+  so `${{ENV_VAR}}` placeholders are left untouched for `interpolateEnv` to
+  resolve instead of being treated as `interpolate`'s own field syntax.
+- `cleanRoute`: Added the `keepCase` option to preserve the original route
+  casing during normalization.
 
 ## [2.3.0] - 2026-07-24
 
 ### Added
 
-- `toSearchParams`: builds a `URLSearchParams` from a plain object — the reverse direction of
-  `getProcessedParams`, using the same array/nested-object conventions so the two round-trip.
-- `interpolateUrl`: interpolates `{{field}}`/`{{nested.path}}` placeholders in a URL template. The
-  path portion is interpolated as plain text; a query value that is exactly one placeholder is
-  expanded via `toSearchParams` (arrays become repeated keys, nested objects use bracket notation)
-  instead of being stringified.
-- New template-interpolation primitives (`getPath`, `matchWholePlaceholder`, `interpolate`) for
-  resolving `{{field}}`/`{{nested.path}}` placeholders against a record — the building blocks
-  behind `interpolateUrl`, also usable standalone.
-- `Semaphore` and `LockManager`: concurrency primitives for limiting simultaneous access to a
-  resource (fixed permit count) and for exclusive per-key locking.
-- `nextCronDate`: computes the next execution `Date` matching a 6-field cron expression
-  (`second minute hour day month weekday`).
-- `cleanRoute`: normalizes a route path (backslashes, repeated slashes, whitespace, casing).
-- `processUrlParams`: recursively `decodeURIComponent`s every string value inside an object or
-  array, in place.
+- `toSearchParams`: builds a `URLSearchParams` from a plain object — the reverse
+  direction of `getProcessedParams`, using the same array/nested-object
+  conventions so the two round-trip.
+- `interpolateUrl`: interpolates `{{field}}`/`{{nested.path}}` placeholders in a
+  URL template. The path portion is interpolated as plain text; a query value
+  that is exactly one placeholder is expanded via `toSearchParams` (arrays
+  become repeated keys, nested objects use bracket notation) instead of being
+  stringified.
+- New template-interpolation primitives (`getPath`, `matchWholePlaceholder`,
+  `interpolate`) for resolving `{{field}}`/`{{nested.path}}` placeholders
+  against a record — the building blocks behind `interpolateUrl`, also usable
+  standalone.
+- `Semaphore` and `LockManager`: concurrency primitives for limiting
+  simultaneous access to a resource (fixed permit count) and for exclusive
+  per-key locking.
+- `nextCronDate`: computes the next execution `Date` matching a 6-field cron
+  expression (`second minute hour day month weekday`).
+- `cleanRoute`: normalizes a route path (backslashes, repeated slashes,
+  whitespace, casing).
+- `processUrlParams`: recursively `decodeURIComponent`s every string value
+  inside an object or array, in place.
 
 ## [2.2.17] - 2026-07-23
 
 ### Fixed
 
-- Restored the `@module` tag on the `validator` re-export in `mod.ts` (removed by mistake in
-  2.2.16): the fix for JSR's Overview tab showing that comment instead of `README.md` is the
-  package's "Readme Source" setting on jsr.io, not removing the module doc — removing it broke
-  the "Has module docs in all entrypoints" score item instead.
-- Added the missing `@module` tag (with a real summary) to the 7 entrypoints that never had one:
-  `/helpers`, `/validator`, `/logger`, `/testing`, `/workers`, `/errors`, and `/types`, so every
-  entrypoint declared in `deno.jsonc`'s `exports` now satisfies JSR's module-doc score check.
+- Restored the `@module` tag on the `validator` re-export in `mod.ts` (removed
+  by mistake in 2.2.16): the fix for JSR's Overview tab showing that comment
+  instead of `README.md` is the package's "Readme Source" setting on jsr.io, not
+  removing the module doc — removing it broke the "Has module docs in all
+  entrypoints" score item instead.
+- Added the missing `@module` tag (with a real summary) to the 7 entrypoints
+  that never had one: `/helpers`, `/validator`, `/logger`, `/testing`,
+  `/workers`, `/errors`, and `/types`, so every entrypoint declared in
+  `deno.jsonc`'s `exports` now satisfies JSR's module-doc score check.
 
 ## [2.2.16] - 2026-07-23
 
 ### Fixed
 
-- Removed the `@module` tag from the `validator` re-export in `mod.ts`: JSR's package Overview
-  page prioritizes a `@module`-tagged doc comment on the main entrypoint over the actual
-  `README.md`, which made the Overview show that comment's text instead of the real README.
-- Bumped `actions/checkout` (`v4` → `v5`) and `denoland/setup-deno` (`v1` → `v2`) in the publish
-  workflow and its scaffolding template (`publish.base.yml`), resolving a Node.js 20 deprecation
-  warning on GitHub Actions runners.
+- Removed the `@module` tag from the `validator` re-export in `mod.ts`: JSR's
+  package Overview page prioritizes a `@module`-tagged doc comment on the main
+  entrypoint over the actual `README.md`, which made the Overview show that
+  comment's text instead of the real README.
+- Bumped `actions/checkout` (`v4` → `v5`) and `denoland/setup-deno` (`v1` →
+  `v2`) in the publish workflow and its scaffolding template
+  (`publish.base.yml`), resolving a Node.js 20 deprecation warning on GitHub
+  Actions runners.
 
 ### Changed
 
-- Documented the remaining undocumented private fields on `WorkerManager` (`workers`, `#tasks`,
-  `#workerIx`) and replaced a placeholder comment on `HttpError`/`ApplicationError`'s `_logged`
-  field with a description of its actual purpose (de-duplicating repeated logs of the same error).
+- Documented the remaining undocumented private fields on `WorkerManager`
+  (`workers`, `#tasks`, `#workerIx`) and replaced a placeholder comment on
+  `HttpError`/`ApplicationError`'s `_logged` field with a description of its
+  actual purpose (de-duplicating repeated logs of the same error).
 
 ## [2.2.15] - 2026-07-23
 
 ### Added
 
-- Full public type coverage for the `/types` entrypoint: ~35 previously-internal types are now
-  exported and documented, resolving all `deno doc --lint` `private-type-ref` errors (except a
-  documented exception for the third-party `esbuild` `BuildOptions`/`Plugin` types).
-- `IsBooleanString`/`isBooleanString`/`isBooleanStringArray` are now exported from the `/validator`
-  entrypoint (the decorator existed but was unreachable from outside the package).
-- Complete documentation set under `docs/`: validator, helpers, utils, encryption & masking,
-  logger, workers, errors, linter plugins, and a full types reference, each cross-linked and with
-  runnable examples verified against the real implementation.
-- Expanded test coverage (branch, function, and line) across validation decorators, GitHub/editor
-  helpers, config, masking, and worker/project-tree caching.
+- Full public type coverage for the `/types` entrypoint: ~35 previously-internal
+  types are now exported and documented, resolving all `deno doc --lint`
+  `private-type-ref` errors (except a documented exception for the third-party
+  `esbuild` `BuildOptions`/`Plugin` types).
+- `IsBooleanString`/`isBooleanString`/`isBooleanStringArray` are now exported
+  from the `/validator` entrypoint (the decorator existed but was unreachable
+  from outside the package).
+- Complete documentation set under `docs/`: validator, helpers, utils,
+  encryption & masking, logger, workers, errors, linter plugins, and a full
+  types reference, each cross-linked and with runnable examples verified against
+  the real implementation.
+- Expanded test coverage (branch, function, and line) across validation
+  decorators, GitHub/editor helpers, config, masking, and worker/project-tree
+  caching.
 
 ### Fixed
 
-- `getAppSrcTree`/`getServerSrcTree`/`getCommonTree` memoization never actually cached anything (a
-  missing assignment), so the full Zanix folder tree was rebuilt on every call instead of reusing
-  the cached one.
-- `createPreCommitYaml` was missing an `await`, letting `pre-commit install`/`autoupdate` run
-  before the `.pre-commit-config.yaml` file had finished being written.
-- The `Zanix`/`DefaultLogger` type aliases depended on an ambient global that JSR's slow-types
-  checker cannot resolve, which made `deno publish` fail outright.
-- Corrected several outdated JSDoc comments across `errors`, `workers`, `encryption`, GitHub
-  helpers, and linter plugins: wrong option defaults, swapped RSA public/private key descriptions,
-  descriptions copied from a sibling symbol without updating them, and a reference to a
-  `zanixFlags` rule that no longer exists.
+- `getAppSrcTree`/`getServerSrcTree`/`getCommonTree` memoization never actually
+  cached anything (a missing assignment), so the full Zanix folder tree was
+  rebuilt on every call instead of reusing the cached one.
+- `createPreCommitYaml` was missing an `await`, letting
+  `pre-commit install`/`autoupdate` run before the `.pre-commit-config.yaml`
+  file had finished being written.
+- The `Zanix`/`DefaultLogger` type aliases depended on an ambient global that
+  JSR's slow-types checker cannot resolve, which made `deno publish` fail
+  outright.
+- Corrected several outdated JSDoc comments across `errors`, `workers`,
+  `encryption`, GitHub helpers, and linter plugins: wrong option defaults,
+  swapped RSA public/private key descriptions, descriptions copied from a
+  sibling symbol without updating them, and a reference to a `zanixFlags` rule
+  that no longer exists.
 
 ### Removed
 
-- `src/modules/helpers/environment.ts` and `src/modules/helpers/zanix/flags.ts` — orphaned files
-  with no consumers.
+- `src/modules/helpers/environment.ts` and `src/modules/helpers/zanix/flags.ts`
+  — orphaned files with no consumers.
 
 ## [2.2.14] - 2025-12-19
 
 ### Added
 
-- Worker task modules are now cached after the first import, avoiding a redundant dynamic import
-  on every subsequent call to the same task.
+- Worker task modules are now cached after the first import, avoiding a
+  redundant dynamic import on every subsequent call to the same task.
 
 ## [2.2.13] - 2025-12-17
 
@@ -243,20 +411,31 @@ adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ### Added
 
-- **Private fields support in error classes**: Errors now support private fields, including a new `_logged` field, to improve error tracking and management. This allows better control over whether an error has been logged, preventing duplicate logs.
+- **Private fields support in error classes**: Errors now support private
+  fields, including a new `_logged` field, to improve error tracking and
+  management. This allows better control over whether an error has been logged,
+  preventing duplicate logs.
 
-- **`ApplicationError` class enhancement**: The `ApplicationError` class has been extended to include additional flexibility, improving the structure for handling application-level errors. This allows custom errors to integrate seamlessly with error logging systems and better track error states.
+- **`ApplicationError` class enhancement**: The `ApplicationError` class has
+  been extended to include additional flexibility, improving the structure for
+  handling application-level errors. This allows custom errors to integrate
+  seamlessly with error logging systems and better track error states.
 
 ### Changed
 
-- Updated internal error classes to make use of private fields for tracking error states more effectively.
-- Serialized errors can now include or exclude the stack trace based on the user's selection.
+- Updated internal error classes to make use of private fields for tracking
+  error states more effectively.
+- Serialized errors can now include or exclude the stack trace based on the
+  user's selection.
 
 ## [2.2.4] - 2025-11-19
 
 ### Changed
 
-- Replaced Higher-Order Component (HOC) files with `defs` files to unify module definitions and centralize DSL-based declarations, metadata, and foundational structures. This improves consistency and simplifies the architecture for components like handlers, interactors, providers, and connectors.
+- Replaced Higher-Order Component (HOC) files with `defs` files to unify module
+  definitions and centralize DSL-based declarations, metadata, and foundational
+  structures. This improves consistency and simplifies the architecture for
+  components like handlers, interactors, providers, and connectors.
 
 ## [2.2.3] - 2025-11-17
 
@@ -274,24 +453,29 @@ adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ### Added
 
-- **New asymmetric HMAC signing**: Introduced support for asymmetric HMAC signing, allowing for enhanced security with keys for signature generation and verification.
+- **New asymmetric HMAC signing**: Introduced support for asymmetric HMAC
+  signing, allowing for enhanced security with keys for signature generation and
+  verification.
 
 - **New error handling**: Introduced new custom error types for better error
   management.
 
 ### Changed
 
-- **AES Encryption**: Added support for generating AES keys and performing AES encryption with any key type.
+- **AES Encryption**: Added support for generating AES keys and performing AES
+  encryption with any key type.
 
 ## [2.2.0] - 2025-11-05
 
 ### Changed
 
-- `TaskerManager` has been replaced with the new `WorkerManager`, providing an improved API and extended usage options.
+- `TaskerManager` has been replaced with the new `WorkerManager`, providing an
+  improved API and extended usage options.
 
 ### Added
 
-- Support for different worker execution modes (e.g., auto-closing, background execution).
+- Support for different worker execution modes (e.g., auto-closing, background
+  execution).
 - Simplified task invocation with new helper methods.
 - Improved error handling and lifecycle management for worker tasks.
 
@@ -383,7 +567,8 @@ adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ### Added
 
-- Class validation module. A Validations module for BaseRTO-based requests, using native ECMAScript features.
+- Class validation module. A Validations module for BaseRTO-based requests,
+  using native ECMAScript features.
 
 ## [2.0.9] - 2025-03-20
 
@@ -483,7 +668,8 @@ adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
-- Read file from current URL on `createPreCommitHook`, `createPrePushHook`, `createPublishWorkflow` and `createIgnoreBaseFile`
+- Read file from current URL on `createPreCommitHook`, `createPrePushHook`,
+  `createPublishWorkflow` and `createIgnoreBaseFile`
 
 ## [1.1.0] - 2025-03-10
 
@@ -506,17 +692,20 @@ adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 - A testing module for mocks.
 - A workers module for using basic taskers.
 - Comprehensive documentation for the `Zanix Utils` library.
-- Export of existing modules, making them usable both within and outside the Zanix ecosystem.
+- Export of existing modules, making them usable both within and outside the
+  Zanix ecosystem.
 - Unit tests to ensure the library's functionality and reliability.
 - New `require-access-modifier` rule added to `deno-std-plugin`.
-- New `no-znx-console` rule added to `deno-zanix-plugin`, similar to `no-console`.
+- New `no-znx-console` rule added to `deno-zanix-plugin`, similar to
+  `no-console`.
 - `Zanix` namespace for global use in modules and types.
 
 ### Changed
 
 - Renamed the plugin `deno-standard-plugin` to `deno-std-plugin`.
 - Enabled the `deno-zanix-plugin` as a separate module.
-- Renamed some flags in the `use-znx-flags` validation rule of `deno-zanix-plugin`.
+- Renamed some flags in the `use-znx-flags` validation rule of
+  `deno-zanix-plugin`.
 
 ### Fixed
 
@@ -527,5 +716,5 @@ adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 ### Initial Release
 
 - First version of `Zanix Utils`.
-- Provides linting rules and utilities to improve code quality in projects using the Zanix
-  framework.
+- Provides linting rules and utilities to improve code quality in projects using
+  the Zanix framework.

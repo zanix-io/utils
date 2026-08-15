@@ -1,6 +1,9 @@
 ## IP utilities
 
-Helpers for working with IPv4 addresses and client IP extraction. They include IPv4 parsing, CIDR range matching, client IP normalization, and extraction of the originating client IP from trusted proxy headers such as `CF-Connecting-IP`, `X-Real-IP`, and `X-Forwarded-For`.
+Helpers for working with IPv4 addresses and client IP extraction. They include
+IPv4 parsing, CIDR range matching, client IP normalization, and extraction of
+the originating client IP from trusted proxy headers such as `CF-Connecting-IP`,
+`X-Real-IP`, and `X-Forwarded-For`.
 
 | Symbol                 | Signature                                                               | Description                                                                                                                 |
 | ---------------------- | ----------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |

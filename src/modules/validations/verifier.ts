@@ -35,10 +35,16 @@ export async function validate<T extends BaseRTO>(
 
   delete RTO.prototype.validate // Delete before getNestedProperties
 
-  const nestedObj = validationsMetadata.getNestedProperties(RTO.prototype, 'obj')
+  const nestedObj = validationsMetadata.getNestedProperties(
+    RTO.prototype,
+    'obj',
+  )
   if (nestedObj) Object.assign(obj, nestedObj)
 
-  const nestedErrors = validationsMetadata.getNestedProperties(RTO.prototype, 'error')
+  const nestedErrors = validationsMetadata.getNestedProperties(
+    RTO.prototype,
+    'error',
+  )
 
   if (nestedErrors) {
     const errorLength = errors.length

@@ -20,7 +20,9 @@ Deno.test('Expose validations strings RTO with empty object', async () => {
           plainValue: undefined,
         }])
         assertEquals(err.cause.properties.stringPropArray, [{
-          constraints: ["All values of 'stringPropArray' must be valid strings"],
+          constraints: [
+            "All values of 'stringPropArray' must be valid strings",
+          ],
           value: undefined,
           plainValue: undefined,
         }])
@@ -64,7 +66,10 @@ Deno.test('Expose validations strings RTO with base payload', async () => {
 
   assertEquals(validatedObj.stringPropArray, ['value1', 'value2'])
   assertEquals(validatedObj.stringPropExpose, 'string')
-  assertEquals(validatedObj.stringPropWithInizializer, 'stringPropWithInizializer')
+  assertEquals(
+    validatedObj.stringPropWithInizializer,
+    'stringPropWithInizializer',
+  )
   assertEquals(validatedObj.stringPropWithDefaults, 'default value')
   assertEquals(validatedObj.stringPropOptional, undefined)
   assertEquals(validatedObj['extraneusValue' as never], undefined)
@@ -87,7 +92,10 @@ Deno.test('Expose validations strings RTO with base payload', async () => {
   assertFalse(validatedObjDefault.stringPropArrayOptional)
   assertFalse(validatedObjDefault['context']) // context should be removed
   assertEquals(validatedObjDefault.stringPropExpose, 'string')
-  assertEquals(validatedObjDefault.stringPropWithInizializer, 'stringPropWithInizializer')
+  assertEquals(
+    validatedObjDefault.stringPropWithInizializer,
+    'stringPropWithInizializer',
+  )
   assertEquals(validatedObjDefault.stringPropWithDefaults, 'new value')
   assertEquals(validatedObjDefault.stringPropOptional, 'optional')
   assertFalse(validatedObjDefault['extraneusValue' as never])

@@ -1,8 +1,17 @@
 # Validator
 
-The validator module is the class-validator for `@zanix/utils`, built entirely on native ECMAScript decorators (accessor decorators and `Symbol.metadata`), so it works without `experimentalDecorators`, `reflect-metadata`, or any TypeScript-specific decorator flag. You define a `BaseRTO` (Request Transfer Object) subclass, decorate its accessors with validation decorators, and hand a plain object to `classValidation` to get back a validated, transformed instance or a structured `HttpError`.
+The validator module is the class-validator for `@zanix/utils`, built entirely
+on native ECMAScript decorators (accessor decorators and `Symbol.metadata`), so
+it works without `experimentalDecorators`, `reflect-metadata`, or any
+TypeScript-specific decorator flag. You define a `BaseRTO` (Request Transfer
+Object) subclass, decorate its accessors with validation decorators, and hand a
+plain object to `classValidation` to get back a validated, transformed instance
+or a structured `HttpError`.
 
-Use it to validate and shape any request-shaped payload: HTTP bodies, route params, query strings, message-queue payloads, or config objects. It is the most important module of the package, and every other Zanix package that deals with incoming data (routers, controllers, workers) builds on top of it.
+Use it to validate and shape any request-shaped payload: HTTP bodies, route
+params, query strings, message-queue payloads, or config objects. It is the most
+important module of the package, and every other Zanix package that deals with
+incoming data (routers, controllers, workers) builds on top of it.
 
 ## Quick example
 
@@ -36,15 +45,33 @@ class UserRTO extends BaseRTO {
   accessor nickname: string | undefined
 }
 
-const user = await classValidation(UserRTO, { name: 'Ana', email: 'ana@example.com', age: '30' })
+const user = await classValidation(UserRTO, {
+  name: 'Ana',
+  email: 'ana@example.com',
+  age: '30',
+})
 // user is a UserRTO instance: { name: 'Ana', email: 'ana@example.com', age: 30, nickname: undefined }
 ```
 
-Notice that `name` and `email` are populated automatically from the plain object passed to `classValidation`, even though the constructor never assigns them — this only happens because they pass `expose: true`; without it, a decorator like `IsString`/`IsEmail` still validates the incoming value but the property is left unset on the resulting instance. `age` doesn't need `expose` because it's assigned directly in the constructor, and `IsNumber` (like `IsDate` and their `Min*`/`Max*` counterparts) also self-exposes by default whenever it applies its own transform — see the [Numbers](#numbers) section below. If validation fails, `classValidation` rejects with an `HttpError('BAD_REQUEST', ...)` whose `cause.properties` maps each invalid property to its constraints (see [Errors](./errors.md)):
+Notice that `name` and `email` are populated automatically from the plain object
+passed to `classValidation`, even though the constructor never assigns them —
+this only happens because they pass `expose: true`; without it, a decorator like
+`IsString`/`IsEmail` still validates the incoming value but the property is left
+unset on the resulting instance. `age` doesn't need `expose` because it's
+assigned directly in the constructor, and `IsNumber` (like `IsDate` and their
+`Min*`/`Max*` counterparts) also self-exposes by default whenever it applies its
+own transform — see the [Numbers](#numbers) section below. If validation fails,
+`classValidation` rejects with an `HttpError('BAD_REQUEST', ...)` whose
+`cause.properties` maps each invalid property to its constraints (see
+[Errors](./errors.md)):
 
 ```typescript
 try {
-  await classValidation(UserRTO, { name: 'Ana', email: 'not-an-email', age: '15' })
+  await classValidation(UserRTO, {
+    name: 'Ana',
+    email: 'not-an-email',
+    age: '15',
+  })
 } catch (err) {
   // err.cause.message === 'Request validation error'
   // err.cause.target === 'UserRTO'
@@ -54,9 +81,19 @@ try {
 
 ### `BaseRTO`
 
-Every RTO extends the abstract `BaseRTO` class. It has no properties of its own besides a protected `context` object, which is populated from the `ctx` option passed to `classValidation` (or `{}` by default) and is available to constructors, custom validation functions, and custom messages via `this.context`. All validated properties must be declared as `accessor` fields — plain class fields are not supported because the validation logic hooks into the accessor's getter/setter pair. The resolved value is exposed as a normal own property on the instance (not a getter), unless `exposeValuesAsGetter: true` is passed to `classValidation`.
+Every RTO extends the abstract `BaseRTO` class. It has no properties of its own
+besides a protected `context` object, which is populated from the `ctx` option
+passed to `classValidation` (or `{}` by default) and is available to
+constructors, custom validation functions, and custom messages via
+`this.context`. All validated properties must be declared as `accessor` fields —
+plain class fields are not supported because the validation logic hooks into the
+accessor's getter/setter pair. The resolved value is exposed as a normal own
+property on the instance (not a getter), unless `exposeValuesAsGetter: true` is
+passed to `classValidation`.
 
-RTOs are ordinary classes, so a common way to share and compose fields across several request shapes is to have one RTO extend another instead of repeating the same decorated accessors:
+RTOs are ordinary classes, so a common way to share and compose fields across
+several request shapes is to have one RTO extend another instead of repeating
+the same decorated accessors:
 
 ```typescript
 class PaginationRTO extends BaseRTO {
@@ -76,7 +113,9 @@ class SearchUsersRTO extends PaginationRTO {
 
 ### `classValidation(RTO, plainObject, options?)`
 
-Validates `plainObject` against the given `BaseRTO` subclass and returns a `Promise` that resolves to a validated instance of `RTO`, or rejects if there are validation errors.
+Validates `plainObject` against the given `BaseRTO` subclass and returns a
+`Promise` that resolves to a validated instance of `RTO`, or rejects if there
+are validation errors.
 
 | Option                    | Type                                  | Default                                | Description                                                                                                                                                    |
 | ------------------------- | ------------------------------------- | -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -86,17 +125,37 @@ Validates `plainObject` against the given `BaseRTO` subclass and returns a `Prom
 | `exposeValuesAsGetter`    | `boolean`                             | `false`                                | If `true`, resolved values are exposed as getters instead of plain properties. Not recommended with nested objects, since it can interfere with serialization. |
 | `throwErrors`             | `(errors: ValidationError[]) => void` | throws `HttpError('BAD_REQUEST', ...)` | Custom handler invoked with the raw `ValidationError[]` instead of throwing the default `HttpError`.                                                           |
 
-By default, when there are errors, `classValidation` throws an `HttpError` (see [Errors](./errors.md)) whose `cause` has the shape `{ message: 'Request validation error', target: RTO.name, properties: <formatted errors> }`. Pass `throwErrors` if you want to handle the raw `ValidationError[]` yourself (for example, to log them and return a custom response) instead of the default `HttpError`.
+By default, when there are errors, `classValidation` throws an `HttpError` (see
+[Errors](./errors.md)) whose `cause` has the shape
+`{ message: 'Request validation error', target: RTO.name, properties: <formatted errors> }`.
+Pass `throwErrors` if you want to handle the raw `ValidationError[]` yourself
+(for example, to log them and return a custom response) instead of the default
+`HttpError`.
 
-> In practice, when using a Zanix HTTP framework such as `@zanix/server`, you rarely call `classValidation` yourself. Instead, you declare the RTO on the route/handler config (`Body`, `Params`, `Search` — see `RtoTypes` in the [Types reference](./types.md)) and the framework calls `classValidation` internally, handing you back an already-validated instance. Calling it directly, as shown above, is mainly for using this package's validator standalone (outside a Zanix framework), or for validating a payload outside the request/response cycle (e.g. a message-queue job or a CLI argument).
+> In practice, when using a Zanix HTTP framework such as `@zanix/server`, you
+> rarely call `classValidation` yourself. Instead, you declare the RTO on the
+> route/handler config (`Body`, `Params`, `Search` — see `RtoTypes` in the
+> [Types reference](./types.md)) and the framework calls `classValidation`
+> internally, handing you back an already-validated instance. Calling it
+> directly, as shown above, is mainly for using this package's validator
+> standalone (outside a Zanix framework), or for validating a payload outside
+> the request/response cycle (e.g. a message-queue job or a CLI argument).
 
 ### `defineValidationDecorator(validation, options?)`
 
-The primitive used internally to build every decorator in this module. It turns a validation function into an accessor decorator, wiring the setter (runs on every assignment, applies `transform` and calls `validation`) and the constructor-time `init` hook (applies `expose`/`optional` semantics). Reach for it when none of the built-in decorators fit and you want full control over transform/expose behavior; for most custom checks, `Validation()` (below) is the simpler option.
+The primitive used internally to build every decorator in this module. It turns
+a validation function into an accessor decorator, wiring the setter (runs on
+every assignment, applies `transform` and calls `validation`) and the
+constructor-time `init` hook (applies `expose`/`optional` semantics). Reach for
+it when none of the built-in decorators fit and you want full control over
+transform/expose behavior; for most custom checks, `Validation()` (below) is the
+simpler option.
 
 ```typescript
 const IsPositive = () =>
-  defineValidationDecorator((val: number) => val > 0, { message: 'Must be a positive number' })
+  defineValidationDecorator((val: number) => val > 0, {
+    message: 'Must be a positive number',
+  })
 
 class OrderRTO extends BaseRTO {
   @IsPositive()
@@ -158,12 +217,17 @@ class ContactRTO extends BaseRTO {
   @Length({ min: 8, max: 64 })
   accessor password!: string
 
-  @Match(/^[A-Z]{2}\d{4}$/, { message: (property) => `'${property}' must look like AB1234` })
+  @Match(/^[A-Z]{2}\d{4}$/, {
+    message: (property) => `'${property}' must look like AB1234`,
+  })
   accessor code!: string
 }
 ```
 
-`IsNumberString` and `IsBooleanString` validate that a string _looks like_ a number or a boolean, without converting it — the value stays a `string`. Reach for `IsNumber`/`IsBoolean` instead when you also want the value converted to its native type:
+`IsNumberString` and `IsBooleanString` validate that a string _looks like_ a
+number or a boolean, without converting it — the value stays a `string`. Reach
+for `IsNumber`/`IsBoolean` instead when you also want the value converted to its
+native type:
 
 ```typescript
 class FeatureFlagRTO extends BaseRTO {
@@ -263,7 +327,10 @@ class TagsRTO extends BaseRTO {
 }
 ```
 
-Because `min` defaults to `2` and the underlying check rejects any `min < 1`, always pass an explicit `min: 1` (or higher) to `ArrayLength` when you want to allow single-element arrays — `{ min: 0 }` is not a valid way to express "any length, including empty," it will simply reject every array.
+Because `min` defaults to `2` and the underlying check rejects any `min < 1`,
+always pass an explicit `min: 1` (or higher) to `ArrayLength` when you want to
+allow single-element arrays — `{ min: 0 }` is not a valid way to express "any
+length, including empty," it will simply reject every array.
 
 ## Generic / Enum / Boolean
 
@@ -298,7 +365,10 @@ class AccountRTO extends BaseRTO {
 }
 ```
 
-`EnumType` is typed as a mutable `unknown[]`, so passing a `readonly` array (e.g. a `const` array of allowed literal values, `each: true` array validation against such a list, etc.) doesn't satisfy it directly — cast it, typically as `MY_CONST_ARRAY as unknown as string[]`:
+`EnumType` is typed as a mutable `unknown[]`, so passing a `readonly` array
+(e.g. a `const` array of allowed literal values, `each: true` array validation
+against such a list, etc.) doesn't satisfy it directly — cast it, typically as
+`MY_CONST_ARRAY as unknown as string[]`:
 
 ```typescript
 const ROLES = ['admin', 'user'] as const
@@ -309,7 +379,12 @@ class AccountRTO extends BaseRTO {
 }
 ```
 
-`@Expose()` (or the equivalent `expose: true` option available on every other decorator) is what makes a property auto-populate from the plain object passed to `classValidation`. Reach for the bare `@Expose()` decorator only when a property needs no validation and no transformation logic of its own — for example, a required field with no format constraints, or a defaulted field that should still accept an override from the payload:
+`@Expose()` (or the equivalent `expose: true` option available on every other
+decorator) is what makes a property auto-populate from the plain object passed
+to `classValidation`. Reach for the bare `@Expose()` decorator only when a
+property needs no validation and no transformation logic of its own — for
+example, a required field with no format constraints, or a defaulted field that
+should still accept an override from the payload:
 
 ```typescript
 class ProfileRTO extends BaseRTO {
@@ -329,7 +404,12 @@ class ProfileRTO extends BaseRTO {
 }
 ```
 
-Every other decorator that performs actual validation (`IsString`, `IsEmail`, `IsEnum`, etc.) already exposes the property when you pass `expose: true` in its options — you don't need to stack `@Expose()` on top of them. `IsNumber`, `MinNumber`, `MaxNumber`, `IsDate`, `MinDate`, `MaxDate`, and `ValidateNested` go a step further and expose automatically (with transformation), so `expose` is redundant on those too.
+Every other decorator that performs actual validation (`IsString`, `IsEmail`,
+`IsEnum`, etc.) already exposes the property when you pass `expose: true` in its
+options — you don't need to stack `@Expose()` on top of them. `IsNumber`,
+`MinNumber`, `MaxNumber`, `IsDate`, `MinDate`, `MaxDate`, and `ValidateNested`
+go a step further and expose automatically (with transformation), so `expose` is
+redundant on those too.
 
 ## Nested / Custom validation
 
@@ -343,7 +423,13 @@ Every other decorator that performs actual validation (`IsString`, `IsEmail`, `I
 
 ### Examples
 
-`ValidateNested` composes RTOs. Internally, nested errors are attached as `children` on the parent's raw `ValidationError`; once `classValidation`'s default error formatting runs, they surface as a `{ message, properties }` object under the parent property (see [Errors](./errors.md) for the exact shape). A nested value that is entirely missing produces a `The '<property>' property must be defined.` error unless `optional: true` is set:
+`ValidateNested` composes RTOs. Internally, nested errors are attached as
+`children` on the parent's raw `ValidationError`; once `classValidation`'s
+default error formatting runs, they surface as a `{ message, properties }`
+object under the parent property (see [Errors](./errors.md) for the exact
+shape). A nested value that is entirely missing produces a
+`The '<property>' property must be defined.` error unless `optional: true` is
+set:
 
 ```typescript
 class AddressRTO extends BaseRTO {
@@ -367,16 +453,23 @@ const customer = await classValidation(CustomerRTO, {
 })
 ```
 
-Note that default values on nested accessors are not re-validated, since they were already constructed by code:
+Note that default values on nested accessors are not re-validated, since they
+were already constructed by code:
 
 ```typescript
 class OrderRTO extends BaseRTO {
   @ValidateNested(AddressRTO)
-  accessor shipping: AddressRTO = new AddressRTO({ city: 'Bogotá', country: 'CO' }) // not validated against decorators
+  accessor shipping: AddressRTO = new AddressRTO({
+    city: 'Bogotá',
+    country: 'CO',
+  }) // not validated against decorators
 }
 ```
 
-`Validation` lets you express cross-field or arbitrary rules. The validation function is called with `this` bound to an object that merges the exposed properties with the current instance, so you can compare it against other fields, and `target` inside the custom message gives you the same merged view:
+`Validation` lets you express cross-field or arbitrary rules. The validation
+function is called with `this` bound to an object that merges the exposed
+properties with the current instance, so you can compare it against other
+fields, and `target` inside the custom message gives you the same merged view:
 
 ```typescript
 class RangeRTO extends BaseRTO {
@@ -392,7 +485,10 @@ class RangeRTO extends BaseRTO {
 }
 ```
 
-A common pattern is to wrap `Validation` in your own reusable decorator, the same way `IsPositive` wraps `defineValidationDecorator` above — this is the idiomatic way to build an app-specific decorator (e.g. `IsObjectID` for a database ID format) without touching this package's internals:
+A common pattern is to wrap `Validation` in your own reusable decorator, the
+same way `IsPositive` wraps `defineValidationDecorator` above — this is the
+idiomatic way to build an app-specific decorator (e.g. `IsObjectID` for a
+database ID format) without touching this package's internals:
 
 ```typescript
 import type { ValidationOptions } from 'jsr:@zanix/utils@[version]/types'
@@ -400,10 +496,13 @@ import type { ValidationOptions } from 'jsr:@zanix/utils@[version]/types'
 const OBJECT_ID_REGEX = /^[a-f\d]{24}$/i
 
 const IsObjectID = (options?: ValidationOptions) =>
-  Validation((value) => typeof value === 'string' && OBJECT_ID_REGEX.test(value), {
-    message: (property) => `'${property}' must be a valid ID`,
-    ...options,
-  })
+  Validation(
+    (value) => typeof value === 'string' && OBJECT_ID_REGEX.test(value),
+    {
+      message: (property) => `'${property}' must be a valid ID`,
+      ...options,
+    },
+  )
 
 class GetUserRTO extends BaseRTO {
   @IsObjectID({ expose: true })
@@ -411,9 +510,16 @@ class GetUserRTO extends BaseRTO {
 }
 ```
 
-`this.context`, populated via the `ctx` option of `classValidation`, is also reachable from a `Validation` function or a custom `message` callback through the `target` argument (`target.context`), which is useful for injecting request-scoped data (a logger, a tenant id, etc.) without polluting the payload being validated.
+`this.context`, populated via the `ctx` option of `classValidation`, is also
+reachable from a `Validation` function or a custom `message` callback through
+the `target` argument (`target.context`), which is useful for injecting
+request-scoped data (a logger, a tenant id, etc.) without polluting the payload
+being validated.
 
 ## See also
 
-- [Types reference](./types.md) — full definitions for `ValidationOptions`, `ValidationDecorator`, `ValidationDecoratorDefinition`, `ValidationFunction`, `ValidationError`, and related types.
-- [Errors](./errors.md) — `HttpError`, the exact shape `classValidation` throws on `BAD_REQUEST`, and how to customize error handling with `throwErrors`.
+- [Types reference](./types.md) — full definitions for `ValidationOptions`,
+  `ValidationDecorator`, `ValidationDecoratorDefinition`, `ValidationFunction`,
+  `ValidationError`, and related types.
+- [Errors](./errors.md) — `HttpError`, the exact shape `classValidation` throws
+  on `BAD_REQUEST`, and how to customize error handling with `throwErrors`.

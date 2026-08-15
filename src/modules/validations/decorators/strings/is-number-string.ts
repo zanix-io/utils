@@ -51,5 +51,8 @@ export const IsNumberString: ValidationDecorator = function (
     validation = isNumberString
   }
 
-  return defineValidationDecorator(validation, { message: defaultMessage, ...options })
+  return defineValidationDecorator(validation, {
+    message: defaultMessage,
+    ...options,
+  })
 }

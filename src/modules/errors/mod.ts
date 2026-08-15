@@ -16,5 +16,7 @@
 
 export * from './main.ts'
 export * from './serialize.ts'
+export { DEFAULT_REDACT_PATTERN, setDefaultRedactOptions } from './redact.ts'
+export type { RedactOptions } from 'typings/errors.ts'
 
 export { default as httpStates } from './http-status-codes.ts'

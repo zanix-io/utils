@@ -20,7 +20,10 @@
 
 ## Description
 
-Zanix Utils is a library within the **Zanix** ecosystem, a collection of tools designed for _micro-application_ development. This library provides a set of linting rules and utilities that streamline development and enhance code quality in projects using the **Zanix** framework.
+Zanix Utils is a library within the **Zanix** ecosystem, a collection of tools
+designed for _micro-application_ development. This library provides a set of
+linting rules and utilities that streamline development and enhance code quality
+in projects using the **Zanix** framework.
 
 ## Features
 
@@ -40,7 +43,8 @@ Zanix Utils is a library within the **Zanix** ecosystem, a collection of tools d
 
 ## Installation
 
-To install **Zanix Utils** in your project, use [Deno](https://deno.com/) with the following imports:
+To install **Zanix Utils** in your project, use [Deno](https://deno.com/) with
+the following imports:
 
 ```ts
 import * as utils from 'jsr:@zanix/utils@[version]'
@@ -89,29 +93,37 @@ import * as zanixTypes from 'jsr:@zanix/utils@[version]/types'
 import * as validator from 'jsr:@zanix/utils@[version]/validator'
 ```
 
-This provides clear instructions for installing and using the library, including importing specific plugins. Replace `[version]` with the actual version number when needed.
+This provides clear instructions for installing and using the library, including
+importing specific plugins. Replace `[version]` with the actual version number
+when needed.
 
 ---
 
 **Important:**
 
-1. **Install Deno**: Ensure Deno is installed on your system. If not, follow the [official installation guide](https://docs.deno.com/runtime/getting_started/installation).
+1. **Install Deno**: Ensure Deno is installed on your system. If not, follow the
+   [official installation guide](https://docs.deno.com/runtime/getting_started/installation).
 
-2. **Install VSCode Extension**: If using Visual Studio Code, install the **Deno extension** for syntax highlighting, IntelliSense, and linting. Get it from the [VSCode marketplace](https://marketplace.visualstudio.com/items?itemName=denoland.vscode-deno).
+2. **Install VSCode Extension**: If using Visual Studio Code, install the **Deno
+   extension** for syntax highlighting, IntelliSense, and linting. Get it from
+   the
+   [VSCode marketplace](https://marketplace.visualstudio.com/items?itemName=denoland.vscode-deno).
 
-3. **Add Deno to PATH**: Ensure Deno is in your system’s `PATH` so the plugin works correctly:
+3. **Add Deno to PATH**: Ensure Deno is in your system’s `PATH` so the plugin
+   works correctly:
    - **macOS/Linux**: Add to `.bashrc`, `.zshrc`, or other shell config files:
      ```bash
      export PATH="$PATH:/path/to/deno"
      ```
-   - **Windows**: Add the Deno folder to your system’s `PATH` via Environment Variables.
+   - **Windows**: Add the Deno folder to your system’s `PATH` via Environment
+     Variables.
 
 ---
 
 ## Basic Usage
 
-The most distinctive feature of **Zanix Utils** is its class-validator: define a `BaseRTO`
-subclass, decorate its properties, and validate plain data against it.
+The most distinctive feature of **Zanix Utils** is its class-validator: define a
+`BaseRTO` subclass, decorate its properties, and validate plain data against it.
 
 ```typescript
 import {
@@ -138,7 +150,11 @@ class UserRTO extends BaseRTO {
   accessor age!: number
 }
 
-const user = await classValidation(UserRTO, { name: 'Ana', email: 'ana@example.com', age: '30' })
+const user = await classValidation(UserRTO, {
+  name: 'Ana',
+  email: 'ana@example.com',
+  age: '30',
+})
 ```
 
 Other helpers, such as template interpolation, are also available:
@@ -153,41 +169,57 @@ interpolate('Bearer {{token}}', { token: 'abc123' }) // 'Bearer abc123'
 
 Full guides for every module live under [`docs/`](./docs):
 
-- [Validator](./docs/validator.md) — `BaseRTO`, decorators, and `classValidation`.
-- [Helpers](./docs/helpers.md) — config, file, date/URL, and Zanix-namespace utilities.
-- [Utils](./docs/utils.md) — encoding helpers, regular expressions, and constants.
-- [Encryption & Masking](./docs/encryption-masking.md) — AES/RSA, HMAC, hashing, and masking.
-- [Logger](./docs/logger.md) — the default `Logger` and its storage/formatting options.
+- [Validator](./docs/validator.md) — `BaseRTO`, decorators, and
+  `classValidation`.
+- [Helpers](./docs/helpers.md) — config, file, date/URL, and Zanix-namespace
+  utilities.
+- [Utils](./docs/utils.md) — encoding helpers, regular expressions, and
+  constants.
+- [Encryption & Masking](./docs/encryption-masking.md) — AES/RSA, HMAC, hashing,
+  and masking.
+- [Logger](./docs/logger.md) — the default `Logger` and its storage/formatting
+  options.
 - [Workers](./docs/workers.md) — `WorkerManager` and background task execution.
-- [Errors](./docs/errors.md) — `HttpError`, `ApplicationError`, and error serialization.
-- [Linter plugins](./docs/linter.md) — `deno-fmt-plugin`, `deno-std-plugin`, `deno-test-plugin`, `deno-zanix-plugin`.
+- [Errors](./docs/errors.md) — `HttpError`, `ApplicationError`, and error
+  serialization.
+- [Linter plugins](./docs/linter.md) — `deno-fmt-plugin`, `deno-std-plugin`,
+  `deno-test-plugin`, `deno-zanix-plugin`.
 - [Types reference](./docs/types.md) — the public types exported from `/types`.
 
-For the Zanix framework itself, see the [Zanix organization on GitHub](https://github.com/zanix-io).
+For the Zanix framework itself, see the
+[Zanix organization on GitHub](https://github.com/zanix-io).
 
 ## Contributing
 
 If you'd like to contribute to this library, please follow these steps:
 
-1. Report Issues: If you encounter any bugs or have suggestions for improvement, please open an issue on the GitHub repository. Be sure to provide detailed information to help us understand the problem.
+1. Report Issues: If you encounter any bugs or have suggestions for improvement,
+   please open an issue on the GitHub repository. Be sure to provide detailed
+   information to help us understand the problem.
 
 2. Fork the Repository: Create your own fork of the repository to make changes.
 
-3. Create a New Branch: Create a descriptive branch name for your feature or bug fix.
+3. Create a New Branch: Create a descriptive branch name for your feature or bug
+   fix.
 
-4. Make Your Changes: Implement the feature or fix the bug, ensuring you follow the project's coding style and guidelines.
+4. Make Your Changes: Implement the feature or fix the bug, ensuring you follow
+   the project's coding style and guidelines.
 
-5. Write Tests: If applicable, write tests to verify that your changes work as expected.
+5. Write Tests: If applicable, write tests to verify that your changes work as
+   expected.
 
-6. Submit a Pull Request: Once you're satisfied with your changes, submit a pull request with a clear description of the changes you’ve made.
+6. Submit a Pull Request: Once you're satisfied with your changes, submit a pull
+   request with a clear description of the changes you’ve made.
 
 ## Changelog
 
-For a detailed list of changes, please refer to the [CHANGELOG](./CHANGELOG.md) file.
+For a detailed list of changes, please refer to the [CHANGELOG](./CHANGELOG.md)
+file.
 
 ## License
 
-This library is licensed under the MIT License. See the [LICENSE](./LICENSE) file for more details.
+This library is licensed under the MIT License. See the [LICENSE](./LICENSE)
+file for more details.
 
 ## Resources
 

@@ -36,7 +36,10 @@ Deno.test('Validates general regex', () => {
 
   /** Single quote regex should match strings wrapped in double quotes and not containing single quotes */
   assertMatch('"This is a valid string"', singleQuoteRegex) // Valid case
-  assertNotMatch('"This is an invalid string with a \' single quote"', singleQuoteRegex) // Invalid case with single quote inside
+  assertNotMatch(
+    '"This is an invalid string with a \' single quote"',
+    singleQuoteRegex,
+  ) // Invalid case with single quote inside
   assertNotMatch("'This is a string with single quotes'", singleQuoteRegex) // Should not match strings with single quotes
 
   /** Comment regex should match both single-line and multi-line comments */
@@ -98,9 +101,15 @@ Deno.test('Validates internal regex', () => {
     'https://jsr.io/@zanix/utils/1.0.0/src/modules/helpers/zanix/folders/mod.ts',
     zanixScopeLib,
   )
-  assertMatch('@zanix/utils/1.0.0/src/modules/helpers/zanix/folders/mod.ts', zanixScopeLib)
+  assertMatch(
+    '@zanix/utils/1.0.0/src/modules/helpers/zanix/folders/mod.ts',
+    zanixScopeLib,
+  )
 
-  assertNotMatch('utils/1.0.0/src/modules/helpers/zanix/folders/mod.ts', zanixScopeLib)
+  assertNotMatch(
+    'utils/1.0.0/src/modules/helpers/zanix/folders/mod.ts',
+    zanixScopeLib,
+  )
   assertNotMatch(
     'https://jsr.io/utils/1.0.0/src/modules/helpers/zanix/folders/mod.ts',
     zanixScopeLib,
@@ -118,7 +127,11 @@ Deno.test('Validates internal regex', () => {
 
   /** Nested regex validations */
   assertEquals('key[subkey]'.match(keyPartsRegex), ['key', 'subkey'])
-  assertEquals('key[subkey][subsubkey]'.match(keyPartsRegex), ['key', 'subkey', 'subsubkey'])
+  assertEquals('key[subkey][subsubkey]'.match(keyPartsRegex), [
+    'key',
+    'subkey',
+    'subsubkey',
+  ])
   assertEquals('nosubKeys[]'.match(keyPartsRegex), ['nosubKeys'])
   assertMatch('key[subkey]', keyPartsTestRegex) // Must match
   assertMatch('key[subkey][subsubkey]', keyPartsTestRegex) // Must match

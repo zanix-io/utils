@@ -20,7 +20,10 @@ export function defineExpose(
 ) {
   const exposedValues = validationsMetadata.getExposedProperties(this)
 
-  if (value?.constructor?.prototype._initialized_ && typeof plainValue === 'object') {
+  if (
+    value?.constructor?.prototype._initialized_ &&
+    typeof plainValue === 'object'
+  ) {
     const defaultKeys = Object.keys(value)
 
     // Default keys assignation
@@ -33,7 +36,13 @@ export function defineExpose(
   } else if (!optional && plainValue === undefined) {
     validationsMetadata.setValidationError({
       property,
-      constraints: [messageResult(property, value, validationInstance.call(this, exposedValues))],
+      constraints: [
+        messageResult(
+          property,
+          value,
+          validationInstance.call(this, exposedValues),
+        ),
+      ],
       target: this,
       value,
       plainValue,

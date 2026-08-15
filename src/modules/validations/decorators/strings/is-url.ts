@@ -36,7 +36,9 @@ export function isUrlArray(value: string[]): boolean {
  *
  * @category validations
  */
-export const IsUrl: ValidationDecorator = function (options = {}): ValidationDecoratorDefinition {
+export const IsUrl: ValidationDecorator = function (
+  options = {},
+): ValidationDecoratorDefinition {
   let defaultMessage
   let validation
 
@@ -48,5 +50,8 @@ export const IsUrl: ValidationDecorator = function (options = {}): ValidationDec
     validation = isUrl
   }
 
-  return defineValidationDecorator(validation, { message: defaultMessage, ...options })
+  return defineValidationDecorator(validation, {
+    message: defaultMessage,
+    ...options,
+  })
 }

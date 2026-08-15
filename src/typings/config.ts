@@ -8,7 +8,6 @@ export interface ConfigFile {
   name?: string
   /** Zanix-specific project metadata. */
   zanix?: {
-    hash?: string
     project?: ZanixProjects
   }
   /** The package semantic version. */
@@ -19,6 +18,9 @@ export interface ConfigFile {
   compilerOptions?: {
     /** The JSX transform mode. */
     jsx?: 'react' | 'react-jsx' | 'react-jsxdev' | 'preserve'
+    /** The module specifier `jsx: 'react-jsx'`/`'react-jsxdev'` imports its runtime helpers from
+     * (e.g. `'react'`) — required alongside those two modes, meaningless with `'react'`/`'preserve'`. */
+    jsxImportSource?: string
     strict: boolean
     noImplicitAny: boolean
   }

@@ -13,7 +13,10 @@ const ENV_PLACEHOLDER = /\$\{\{\s*([\w]+)\s*\}\}/g
  */
 export const getPath = (record: any, path: string): unknown =>
   path.split('.').reduce(
-    (value, key) => (value === null || value === undefined ? undefined : value[key]),
+    (
+      value,
+      key,
+    ) => (value === null || value === undefined ? undefined : value[key]),
     record,
   )
 
@@ -48,7 +51,10 @@ export const matchWholePlaceholder = (value: string): string | null => {
  *
  * @category helpers
  */
-export const interpolate = <T>(value: T, record: Record<string, unknown>): T => {
+export const interpolate = <T>(
+  value: T,
+  record: Record<string, unknown>,
+): T => {
   if (typeof value === 'string') {
     const wholePath = matchWholePlaceholder(value)
     if (wholePath !== null) {
@@ -67,7 +73,9 @@ export const interpolate = <T>(value: T, record: Record<string, unknown>): T => 
 
   if (value && typeof value === 'object' && value.constructor === Object) {
     return Object.fromEntries(
-      Object.entries(value).map(([key, val]) => [key, interpolate(val, record)]),
+      Object.entries(value).map((
+        [key, val],
+      ) => [key, interpolate(val, record)]),
     ) as T
   }
 
@@ -102,7 +110,10 @@ export const interpolate = <T>(value: T, record: Record<string, unknown>): T => 
  */
 export const interpolateEnv = <T>(value: T): T => {
   if (typeof value === 'string') {
-    return value.replace(ENV_PLACEHOLDER, (_match, name) => String(Deno.env.get(name))) as T
+    return value.replace(
+      ENV_PLACEHOLDER,
+      (_match, name) => String(Deno.env.get(name)),
+    ) as T
   }
 
   if (Array.isArray(value)) {

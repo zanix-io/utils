@@ -34,7 +34,10 @@ export function mockWrap<F extends Function>(
   // Adding the object context
   Object.entries(context).forEach(([key, value]) => {
     if (typeof value === 'function' && !force) {
-      fnString = fnString.replace(new RegExp(`${key}\\(`, 'g'), ` this.${key}(`)
+      fnString = fnString.replace(
+        new RegExp(`${key}\\(`, 'g'),
+        ` this.${key}(`,
+      )
     } else {
       fnString = fnString.replace(new RegExp(`${key}`, 'g'), `this.${key}`)
     }

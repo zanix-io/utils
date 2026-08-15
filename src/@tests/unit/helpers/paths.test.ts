@@ -65,7 +65,10 @@ Deno.test('getConfigDir returns null when no real config file exists', async () 
 
 Deno.test('getFolderName should return the folder name from a URI', () => {
   assertEquals(getFolderName('/home/user/project/paths.ts'), 'paths.ts')
-  assertEquals(getFolderName('/user/project/another-folder/'), 'another-folder')
+  assertEquals(
+    getFolderName('/user/project/another-folder/'),
+    'another-folder',
+  )
 })
 
 Deno.test('getRelativePath should return the relative path from root to URI', () => {

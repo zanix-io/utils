@@ -29,7 +29,9 @@ export const defineInit = (
     const { expose: exposeDefaults } = validationsMetadata.getValidationSetup(
       this.constructor.prototype,
     )
-    const plainValues = validationsMetadata.getPlainPayload(this.constructor.prototype)
+    const plainValues = validationsMetadata.getPlainPayload(
+      this.constructor.prototype,
+    )
     let plainValue = plainValues[property]
     const isDefault = value !== undefined && plainValue === value // has default value
 
@@ -38,10 +40,20 @@ export const defineInit = (
     // Each array adaptation
     plainValue = (!each || Array.isArray(data)) ? data : data !== undefined ? [data] : undefined
 
-    if (expose) defineExpose.call(this, { property, value, plainValue, optional, messageResult })
+    if (expose) {
+      defineExpose.call(this, {
+        property,
+        value,
+        plainValue,
+        optional,
+        messageResult,
+      })
+    }
 
     if (data === undefined && optional || isDefault) {
-      const optionalProperties = validationsMetadata.getOptionalProperties(this)
+      const optionalProperties = validationsMetadata.getOptionalProperties(
+        this,
+      )
       optionalProperties[property] = true
     }
   }
@@ -75,7 +87,13 @@ export const defineSetter = <T extends BaseRTO = BaseRTO>(
     const constraints = [messageResult(property, val, validationInst)]
 
     const plainValue = validationsMetadata.getPlainPayload(this.constructor.prototype)[property]
-    const error: ValidationError = { constraints, property, target: this, value: val, plainValue }
+    const error: ValidationError = {
+      constraints,
+      property,
+      target: this,
+      value: val,
+      plainValue,
+    }
 
     const optionalProperties = validationsMetadata.getOptionalProperties(this)
     const validate = optionalProperties[property] ||

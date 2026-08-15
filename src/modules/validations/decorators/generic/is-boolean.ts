@@ -48,5 +48,8 @@ export const IsBoolean: ValidationDecorator = function (
     validation = isBoolean
   }
 
-  return defineValidationDecorator(validation, { message: defaultMessage, ...options })
+  return defineValidationDecorator(validation, {
+    message: defaultMessage,
+    ...options,
+  })
 }

@@ -76,5 +76,8 @@ export const IsEnum = (
     defaultMessage = (property: string) => `'${property}' must be a valid enum member`
   }
 
-  return defineValidationDecorator(validation, { message: defaultMessage, ...options })
+  return defineValidationDecorator(validation, {
+    message: defaultMessage,
+    ...options,
+  })
 }

@@ -34,5 +34,6 @@ export type ValidRSAKeysOptions<T extends HashAlgorithm> = {
   /**
    *   The public key módulo 𝑛 size. Defaults to 2048.
    */
-  modulusLength?: 'SHA-512' extends T ? Exclude<ValidRSAModulusLength, 1024> : ValidRSAModulusLength
+  modulusLength?: 'SHA-512' extends T ? Exclude<ValidRSAModulusLength, 1024>
+    : ValidRSAModulusLength
 }

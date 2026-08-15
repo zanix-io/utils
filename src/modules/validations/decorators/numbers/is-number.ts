@@ -50,7 +50,10 @@ export function isNumberArray(values: number[]): boolean {
  *
  * @category validations
  */
-export const IsNumber: ValidationDecorator<undefined, DefaultTransformValidationOpts> = function (
+export const IsNumber: ValidationDecorator<
+  undefined,
+  DefaultTransformValidationOpts
+> = function (
   options = {},
 ): ValidationDecoratorDefinition {
   const { transform = true, ...opts } = options

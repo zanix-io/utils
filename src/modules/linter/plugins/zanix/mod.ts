@@ -7,6 +7,7 @@
  * \_____/ \__,_||_| |_||_|/_/\_\
  */
 
+import zanixFlags from './rules/zanix-flags.ts'
 import zanixLogger from './rules/zanix-logger.ts'
 import zanixImports from './rules/zanix-imports.ts'
 import formatPlugin from '../format/mod.ts'
@@ -33,6 +34,7 @@ import testPlugin from '../test/mod.ts'
  * ```
  * This linter plugin includes rules from the following plugins:
  * @see
+ * - `zanixFlags`: A set of custom rules related to `Zanix` directive-prologue flags.
  * - `zanixLogger`: A set of custom rules related to `Zanix` logger.
  * - `zanixImports`: A set of custom rules related to `Zanix` imports.
  * - `testPlugin`: A set of rules of `deno-test-plugin`.
@@ -47,6 +49,7 @@ import testPlugin from '../test/mod.ts'
 const plugin: Deno.lint.Plugin = {
   name: 'deno-zanix-plugin',
   rules: {
+    ...zanixFlags,
     ...zanixLogger,
     ...zanixImports,
     ...testPlugin.rules,

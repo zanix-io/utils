@@ -1,4 +1,5 @@
 import type { TaskCallback } from 'typings/workers.ts'
+import type { RedactOptions } from 'typings/errors.ts'
 
 /** The type of the global `console` object. */
 export type Console = typeof console
@@ -16,7 +17,10 @@ export type LoggerMethods = 'info' | 'error' | 'warn' | 'debug' | 'success'
 export type LoggerData<Method extends LoggerMethods = 'info'> = Method extends 'success' ? string
   : [
     message: string,
-    ...data: [...Parameters<ConsoleInfo<Exclude<Method, 'success'>>>, noSave?: 'noSave'],
+    ...data: [
+      ...Parameters<ConsoleInfo<Exclude<Method, 'success'>>>,
+      noSave?: 'noSave',
+    ],
   ]
 
 /** The base formatted log object */
@@ -44,7 +48,10 @@ export type Formatter<T extends BaseFormattedLog = BaseFormattedLog> = (
 ) => T
 
 /** The save log data function */
-export type SaveDataFunction<Return extends unknown = unknown, BaseContext = object> = (
+export type SaveDataFunction<
+  Return extends unknown = unknown,
+  BaseContext = object,
+> = (
   context: {
     /**
      * Retrieves a formatted log object.
@@ -56,7 +63,10 @@ export type SaveDataFunction<Return extends unknown = unknown, BaseContext = obj
 ) => Return
 
 /** The save log data options as a function */
-export type SaveDataFunctionOptions<Return extends unknown = unknown, BaseContext = object> = {
+export type SaveDataFunctionOptions<
+  Return extends unknown = unknown,
+  BaseContext = object,
+> = {
   /**
    * This function handles the custom storage of logs after they have been processed and formatted.
    *
@@ -150,6 +160,23 @@ type BaseLoggerOptions<
    */
   disableGlobalAssign?: boolean
   /**
+   * Controls redaction of sensitive-looking data (credential-shaped keys, `Headers`/`Request`
+   * objects) before a log reaches the console or storage. See {@link RedactOptions}.
+   *
+   * @default true
+   *
+   * @example
+   *
+   * ```ts
+   * // Disable entirely — only safe when this logger's output is already fully trusted.
+   * new Logger({ redact: false })
+   *
+   * // Match this codebase's own conventions instead of the built-in pattern.
+   * new Logger({ redact: { pattern: /^(authorization|x-internal-.*)$/i } })
+   * ```
+   */
+  redact?: RedactOptions
+  /**
    * Configuration object for handling the storage of logs or data.
    * Contains settings for formatting the data before saving and specifying the location or path to save the data.
    *
@@ -163,7 +190,10 @@ type BaseLoggerOptions<
     | false
 }
 
-export type LoggerFileOptions<Return extends unknown> = BaseLoggerOptions<Return, 'saveFile'>
+export type LoggerFileOptions<Return extends unknown> = BaseLoggerOptions<
+  Return,
+  'saveFile'
+>
 
 export type LoggerFunctionOptions<Return extends unknown> = BaseLoggerOptions<
   Return,

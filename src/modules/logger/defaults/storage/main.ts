@@ -2,6 +2,7 @@ import type { DefaultResponse, SaveDataFile, SaveDataFunction } from 'typings/lo
 
 import { showMessage } from 'modules/logger/base.ts'
 import { serializeError } from 'modules/errors/serialize.ts'
+import { createRedactor } from 'modules/errors/redact.ts'
 import { WorkerManager } from 'modules/workers/mod.ts'
 import { cleanupExpiredLogs } from './cleanup.ts'
 import { getLogFileName } from './file.ts'
@@ -57,10 +58,18 @@ export const defaultSaveData: SaveDataFunction<
  */
 export function baseSaveData(
   saveDataFunction?: SaveDataFile | SaveDataFunction | false,
+  redact: ReturnType<typeof createRedactor> = createRedactor(),
 ): SaveDataFunction {
-  // Zanix libraries won't save logs unless a custom `saveDataFunction` is provided.
-  // If this is a library project and no function is set, exit early with a no-op.
-  if (Znx.config.project === 'library' && !saveDataFunction) return () => {}
+  // Zanix libraries won't save logs unless a custom `saveDataFunction` is provided. A
+  // `defineZanixApp()` package ('app') gets the same treatment — like a library, it isn't
+  // necessarily a deployed long-running process on its own (a real host runs it, e.g. via
+  // `Zanix.start()`/`.serve()`), so it shouldn't assume a log file destination either.
+  if (
+    (Znx.config.project === 'library' || Znx.config.project === 'app') &&
+    !saveDataFunction
+  ) {
+    return () => {}
+  }
 
   let baseContext: SaveDataFile = {}
   if (typeof saveDataFunction !== 'function') {
@@ -71,10 +80,11 @@ export function baseSaveData(
   const catcher = (e: unknown) =>
     showMessage(
       'warn',
-      'Custom save data function failed. The log could not be saved.',
-      {
-        cause: serializeError(e),
-      },
+      '[Logger]: Custom save data function failed. The log could not be saved.',
+      // `serializeError`'s own `redact: false` avoids re-redacting `e` with its unrelated default
+      // pattern — `redact(...)` below applies this instance's own configured one, once, to the
+      // whole payload.
+      redact({ cause: serializeError(e, { redact: false }) }),
     )
 
   return (context) => {

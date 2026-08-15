@@ -52,7 +52,10 @@ export function minNumberArray(num: number, values: number[]): boolean {
  * ```
  * @category validations
  */
-export const MinNumber: ValidationDecorator<number, DefaultTransformValidationOpts> = function (
+export const MinNumber: ValidationDecorator<
+  number,
+  DefaultTransformValidationOpts
+> = function (
   num: number,
   options = {},
 ): ValidationDecoratorDefinition {

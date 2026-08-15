@@ -1,6 +1,10 @@
 # Helpers
 
-The `helpers` module groups together the everyday utilities used by the Zanix ecosystem and by any Deno project that wants a bit of scaffolding for free: reading and writing the `deno.json(c)` config, resolving project paths, the `Znx` global namespace, date/URL helpers, concurrency primitives, and template interpolation.
+The `helpers` module groups together the everyday utilities used by the Zanix
+ecosystem and by any Deno project that wants a bit of scaffolding for free:
+reading and writing the `deno.json(c)` config, resolving project paths, the
+`Znx` global namespace, date/URL helpers, concurrency primitives, and template
+interpolation.
 
 Import everything from the `helpers` entrypoint:
 
@@ -10,7 +14,9 @@ import { getRootDir, getTemporaryFolder, readConfig } from 'jsr:@zanix/utils@[ve
 
 ## Config & Paths
 
-Helpers to locate the project root, resolve paths relative to the current module, read/write the `deno.json(c)` configuration, and check for the existence of files and folders.
+Helpers to locate the project root, resolve paths relative to the current
+module, read/write the `deno.json(c)` configuration, and check for the existence
+of files and folders.
 
 | Symbol               | Signature                                                                                                   | Description                                                                                                                                                                                               |
 | -------------------- | ----------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -72,15 +78,17 @@ collectFiles(['./src', './shared'], ['.gql', '.graphql'], (path, content) => {
 
 ## Zanix namespace
 
-Helpers around the global `Znx` namespace, used internally by the Zanix framework to share
-config/logger state process-wide.
+Helpers around the global `Znx` namespace, used internally by the Zanix
+framework to share config/logger state process-wide.
 
-> **Moved**: the project-tree scaffolding that used to live here (`getZanixPaths`,
-> `getAllZanixLibrariesInfo`, `getLatestVersion`/`getLatestRelease`, `ZanixTree`) and the GitHub/
-> editor bootstrapping helpers (`prepareGithub`, `createVSCodeConfig`, and their supporting
-> functions) were moved to `@zanix/cli` — every real consumer of that code was `cli` itself, never a
-> transversal utility anyone else depended on. See `@zanix/cli`'s own `ENGINEERING.md` §5/§7 for the
-> full reasoning. The `Zanix*SrcTree`/`ZanixFolderTree`/`ZanixLibraries`/etc. **types** describing
+> **Moved**: the project-tree scaffolding that used to live here
+> (`getZanixPaths`, `getAllZanixLibrariesInfo`,
+> `getLatestVersion`/`getLatestRelease`, `ZanixTree`) and the GitHub/ editor
+> bootstrapping helpers (`prepareGithub`, `createVSCodeConfig`, and their
+> supporting functions) were moved to `@zanix/cli` — every real consumer of that
+> code was `cli` itself, never a transversal utility anyone else depended on.
+> See `@zanix/cli`'s own `ENGINEERING.md` §5/§7 for the full reasoning. The
+> `Zanix*SrcTree`/`ZanixFolderTree`/`ZanixLibraries`/etc. **types** describing
 > that folder-tree shape are still exported from `@zanix/utils/types` (see
 > [Types reference](./types.md)) — only the runtime implementation moved.
 
@@ -161,7 +169,10 @@ toSearchParams({ keyA: { subKeyA: 'a' } }).toString() // 'keyA%5BsubKeyA%5D=a'
 ```typescript
 import { interpolateUrl } from 'jsr:@zanix/utils@[version]/helpers'
 
-interpolateUrl('https://x.com/{{id}}?tags={{tags}}', { id: '42', tags: ['a', 'b'] })
+interpolateUrl('https://x.com/{{id}}?tags={{tags}}', {
+  id: '42',
+  tags: ['a', 'b'],
+})
 // 'https://x.com/42?tags=a&tags=b'
 
 interpolateUrl('https://x.com?address={{address}}', {
@@ -172,9 +183,9 @@ interpolateUrl('https://x.com?address={{address}}', {
 
 ## Templates & interpolation
 
-Generic `{{field}}`/`{{nested.path}}` placeholder resolution, used internally by `interpolateUrl`
-(see [Dates & URLs](#dates--urls)) but reusable for interpolating any string/object/array against
-a record.
+Generic `{{field}}`/`{{nested.path}}` placeholder resolution, used internally by
+`interpolateUrl` (see [Dates & URLs](#dates--urls)) but reusable for
+interpolating any string/object/array against a record.
 
 | Symbol                  | Signature                                           | Description                                                                                                                                                                                                                                                                                                                                                                                                  |
 | ----------------------- | --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -274,12 +285,14 @@ await nextCronDate('not a cron expr') // undefined
 | -------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `planCodeSync` | `<V, Id>(staticEntries: StaticSyncEntry<V>[], existing: PersistedSyncEntry<V, Id>[], equals?: (a: V, b: V) => boolean): SyncPlan<V, Id>` | Reconciles code-defined entries against their persisted counterparts, without ever overwriting a manual edit. Pure — no I/O; the caller decides what to actually do with the returned plan. |
 
-For each persisted entry, `planCodeSync` decides one of three outcomes: report it as `toOrphan`
-(its `key` no longer has a matching code-defined entry — the caller decides what that means:
-delete, mark as no longer code-owned, or leave it as-is), report it as `toResync` (the code value
-changed and the persisted value was never edited directly since the last sync), or leave it alone
-(a manual edit, or an entry with no sync history at all, always wins over a later code change).
-Every code-defined entry with no persisted record yet is reported as `toSeed`.
+For each persisted entry, `planCodeSync` decides one of three outcomes: report
+it as `toOrphan` (its `key` no longer has a matching code-defined entry — the
+caller decides what that means: delete, mark as no longer code-owned, or leave
+it as-is), report it as `toResync` (the code value changed and the persisted
+value was never edited directly since the last sync), or leave it alone (a
+manual edit, or an entry with no sync history at all, always wins over a later
+code change). Every code-defined entry with no persisted record yet is reported
+as `toSeed`.
 
 ```typescript
 import { planCodeSync } from 'jsr:@zanix/utils@[version]/helpers'
@@ -291,7 +304,12 @@ const staticEntries: StaticSyncEntry<string>[] = [
 ]
 
 const existing: PersistedSyncEntry<string>[] = [
-  { _id: 'a1', key: 'welcome', value: 'Hello {{name}}', lastSyncedValue: 'Hi {{name}}' },
+  {
+    _id: 'a1',
+    key: 'welcome',
+    value: 'Hello {{name}}',
+    lastSyncedValue: 'Hi {{name}}',
+  },
   { _id: 'a2', key: 'removed', value: 'Old copy' },
 ]
 
@@ -316,7 +334,9 @@ generateUUID() // e.g. "3fa1c2b0-9c1e-4e2a-8f3e-6f6a6a6c8b21"
 
 ## Testing utilities
 
-`mockWrap` actually lives in `modules/testing/mod.ts`, not in the `helpers` group, but it is the only public symbol exported from that module, so it is documented here rather than in its own file.
+`mockWrap` actually lives in `modules/testing/mod.ts`, not in the `helpers`
+group, but it is the only public symbol exported from that module, so it is
+documented here rather than in its own file.
 
 | Symbol     | Signature                                                                       | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | ---------- | ------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

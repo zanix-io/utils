@@ -4,8 +4,23 @@ import { generateUUID } from 'utils/identifiers.ts'
 // deno-lint-ignore no-explicit-any
 const moduleCache = new Map<string, any>()
 
-export const getWebProcessWorker = (): { worker: Worker; status: 'busy' | 'free' } => {
-  const worker = new Worker(import.meta.url, { type: 'module' })
+/**
+ * Spawns the real worker every `WorkerManager` instance's pool is built from.
+ *
+ * @param permissions Forwarded as-is to `Worker`'s own `deno.permissions` option — restricts what
+ * this ONE worker can do (`net`/`read`/`write`/`env`/`run`/`ffi`/`sys`), independent of every other
+ * worker in the same or a different pool. Omit entirely (the default, unchanged behavior for every
+ * existing caller) to inherit the host process's own full permission set, exactly as before this
+ * parameter existed. A worker's permissions can never exceed its parent's own — Deno's own Worker
+ * API enforces that, not this function.
+ */
+export const getWebProcessWorker = (
+  permissions?: Deno.PermissionOptions,
+): { worker: Worker; status: 'busy' | 'free' } => {
+  const worker = new Worker(import.meta.url, {
+    type: 'module',
+    ...(permissions !== undefined ? { deno: { permissions } } : {}),
+  })
   return { worker, status: 'free' }
 }
 
@@ -51,7 +66,11 @@ self.onmessage = async (e: TaskMessage) => {
 
     if (result instanceof Promise) result = await result
 
-    const response: TaskCallbackResponse = { response: result ?? 'OK', error: null, messageId }
+    const response: TaskCallbackResponse = {
+      response: result ?? 'OK',
+      error: null,
+      messageId,
+    }
     self.postMessage?.(response)
   } catch (error) {
     const response: TaskCallbackResponse = { error, response: null, messageId }

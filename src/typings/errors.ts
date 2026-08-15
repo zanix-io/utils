@@ -35,6 +35,15 @@ export type BaseSerializeError = Partial<{
 export type SerializeError<T extends BaseSerializeError = BaseSerializeError> = T
 
 /**
+ * Controls how {@linkcode redactSensitiveData} treats a value before it reaches a console or a
+ * storage backend: `true` (the default wherever this option appears) redacts using the built-in,
+ * case-insensitive credential-key pattern; `false` disables redaction entirely — only safe when
+ * the output is already fully trusted; `{ pattern }` keeps redaction on but matches key names
+ * against a custom pattern instead of the built-in one.
+ */
+export type RedactOptions = boolean | { pattern?: RegExp }
+
+/**
  * Error options to identify Custom Errors
  */
 export type ErrorOptions = {

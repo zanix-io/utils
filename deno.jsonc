@@ -1,6 +1,6 @@
 {
   "name": "@zanix/utils",
-  "version": "2.5.1",
+  "version": "2.6.0",
   "license": "MIT",
   "nodeModulesDir": "auto",
   "compilerOptions": {
@@ -83,5 +83,9 @@
     "include": [
       "src/@tests/**/*.test.ts"
     ]
-  }
+  },
+  // "worker-options" backs `Worker`'s `deno: { permissions }` — required for the sandboxing
+  // permissions restriction feature (see src/modules/workers/processor.ts) to run at all, in
+  // consumers and in this package's own tests alike, until Deno stabilizes the API.
+  "unstable": ["worker-options"]
 }

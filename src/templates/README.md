@@ -20,7 +20,10 @@
 
 ## Description
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer nec odio. Praesent libero. Sed cursus ante dapibus diam. Sed nisi. Nulla quis sem at nibh elementum imperdiet. Duis sagittis ipsum. Praesent mauris. Fusce nec tellus sed augue semper porta. Mauris massa. Vestibulum lacinia arcu eget nulla.
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer nec odio.
+Praesent libero. Sed cursus ante dapibus diam. Sed nisi. Nulla quis sem at nibh
+elementum imperdiet. Duis sagittis ipsum. Praesent mauris. Fusce nec tellus sed
+augue semper porta. Mauris massa. Vestibulum lacinia arcu eget nulla.
 
 ## Features
 
@@ -37,22 +40,29 @@ To install **[Project Name]** in your project, use the following import:
 import { [function] } from 'jsr:@[repo-name]/[project-name]@[version]'
 ```
 
-This provides a simple way to install the module. Be sure to replace `[version]` with the correct version number.
+This provides a simple way to install the module. Be sure to replace `[version]`
+with the correct version number.
 
 ---
 
 **Important:**
 
-1. **Install Deno**: Ensure Deno is installed on your system. If not, follow the [official installation guide](https://docs.deno.com/runtime/getting_started/installation).
+1. **Install Deno**: Ensure Deno is installed on your system. If not, follow the
+   [official installation guide](https://docs.deno.com/runtime/getting_started/installation).
 
-2. **Install VSCode Extension**: If using Visual Studio Code, install the **Deno extension** for syntax highlighting, IntelliSense, and linting. Get it from the [VSCode marketplace](https://marketplace.visualstudio.com/items?itemName=denoland.vscode-deno).
+2. **Install VSCode Extension**: If using Visual Studio Code, install the **Deno
+   extension** for syntax highlighting, IntelliSense, and linting. Get it from
+   the
+   [VSCode marketplace](https://marketplace.visualstudio.com/items?itemName=denoland.vscode-deno).
 
-3. **Add Deno to PATH**: Ensure Deno is in your system’s `PATH` so the plugin works correctly:
+3. **Add Deno to PATH**: Ensure Deno is in your system’s `PATH` so the plugin
+   works correctly:
    - **macOS/Linux**: Add to `.bashrc`, `.zshrc`, or other shell config files:
      ```bash
      export PATH="$PATH:/path/to/deno"
      ```
-   - **Windows**: Add the Deno folder to your system’s `PATH` via Environment Variables.
+   - **Windows**: Add the Deno folder to your system’s `PATH` via Environment
+     Variables.
 
 ---
 
@@ -82,10 +92,13 @@ Check out the [official project documentation](https://github.com/[repo-name]).
 
 If you'd like to contribute to the project, follow these steps:
 
-1. **Report Issues**: If you find any bugs or have suggestions, open an issue on the GitHub repository.
+1. **Report Issues**: If you find any bugs or have suggestions, open an issue on
+   the GitHub repository.
 2. **Fork the Repo**: Fork the project and create a branch for your changes.
-3. **Make Changes**: Develop new features or fix bugs while adhering to the project’s coding guidelines.
-4. **Submit a Pull Request**: Once your changes are ready, submit a pull request with a clear description of what you’ve done.
+3. **Make Changes**: Develop new features or fix bugs while adhering to the
+   project’s coding guidelines.
+4. **Submit a Pull Request**: Once your changes are ready, submit a pull request
+   with a clear description of what you’ve done.
 
 ## Changelog
 
@@ -93,7 +106,8 @@ For a detailed list of changes, refer to the [CHANGELOG](./CHANGELOG.md).
 
 ## License
 
-This project is licensed under the **MIT License**. See the [LICENSE](./LICENSE) file for more details.
+This project is licensed under the **MIT License**. See the [LICENSE](./LICENSE)
+file for more details.
 
 ## Resources
 

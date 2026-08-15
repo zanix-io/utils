@@ -4,7 +4,11 @@ import type { BaseRTO } from 'modules/validations/base/rto.ts'
 /**
  * Callback function for message validation processor
  */
-export type ValidationMessage = (property: string, value: any, target?: any) => string
+export type ValidationMessage = (
+  property: string,
+  value: any,
+  target?: any,
+) => string
 
 /**
  * Defines the types for request data transfer objects (RTOs).
@@ -106,17 +110,19 @@ export type ValidationOptions = {
 }
 
 /** Validation options for decorators with a boolean-only `transform` flag. */
-export type DefaultTransformValidationOpts = Omit<ValidationOptions, 'transform' | 'expose'> & {
-  /**
-   * A flag indicating whether the value should be transformed into a validator type.
-   * Defaults to `true`, meaning the value will be automatically converted to an specific type.
-   * If set to `false`, value date will remain in its original format.
-   *
-   * @type {boolean}
-   * @default true
-   */
-  transform?: boolean
-}
+export type DefaultTransformValidationOpts =
+  & Omit<ValidationOptions, 'transform' | 'expose'>
+  & {
+    /**
+     * A flag indicating whether the value should be transformed into a validator type.
+     * Defaults to `true`, meaning the value will be automatically converted to an specific type.
+     * If set to `false`, value date will remain in its original format.
+     *
+     * @type {boolean}
+     * @default true
+     */
+    transform?: boolean
+  }
 
 /**
  * Represents the subject of validation.

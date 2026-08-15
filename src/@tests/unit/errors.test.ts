@@ -42,10 +42,16 @@ Deno.test('Validates http error instances', () => {
   validateHttpError('CONFLICT', { message: 'My Custom Message' })
 
   // Custom message error validation with some cause
-  validateHttpError('BAD_GATEWAY', { message: 'My Custom Message', cause: 'unknown' })
+  validateHttpError('BAD_GATEWAY', {
+    message: 'My Custom Message',
+    cause: 'unknown',
+  })
 
   // Error with code and meta options
-  validateHttpError('CONFLICT', { code: 'ERROR_CODE', meta: { data: 'informative' } })
+  validateHttpError('CONFLICT', {
+    code: 'ERROR_CODE',
+    meta: { data: 'informative' },
+  })
 })
 
 Deno.test('Validates internal error instances', () => {
@@ -56,7 +62,10 @@ Deno.test('Validates internal error instances', () => {
   validateInternalError('My Custom Message', { cause: 'unknown' })
 
   // Error with code and meta options
-  validateInternalError('An error ocurred', { code: 'ERROR_CODE', meta: { data: 'informative' } })
+  validateInternalError('An error ocurred', {
+    code: 'ERROR_CODE',
+    meta: { data: 'informative' },
+  })
 })
 
 Deno.test('Validates error serialization', () => {

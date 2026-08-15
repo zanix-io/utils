@@ -9,7 +9,10 @@ import logger from 'modules/logger/mod.ts'
  * @param this - The error instance
  * @param options - Options to customize the error.
  */
-function processError(this: ApplicationError | HttpError, options: ErrorOptions) {
+function processError(
+  this: ApplicationError | HttpError,
+  options: ErrorOptions,
+) {
   this.id = options.id || generateUUID()
   this.name = this.constructor.name
 
@@ -29,6 +32,32 @@ function processError(this: ApplicationError | HttpError, options: ErrorOptions)
     enumerable: false, // This ensures it's not visible when printing the error
   })
 }
+
+/**
+ * `Deno.errors.Http` itself, in Deno/server — `HttpError`'s real base class there, unchanged
+ * from before. A plain `Error` everywhere else: referencing `Deno.errors.Http` directly (an
+ * unguarded property access on a global that doesn't exist at all outside Deno) throws evaluating
+ * this very module, before any class using it is even instantiated — real, confirmed the hard
+ * way importing `@zanix/errors` from real browser-run code (`@zanix/space`'s own `defineComet`,
+ * which only ever needs the browser-safe `InternalError`/`ApplicationError`, declared in this
+ * same file — ESM evaluates a whole module's top-level code regardless of which export a
+ * consumer actually uses, so `HttpError`'s own class declaration always runs too). `typeof Deno`
+ * is a safe way to test for an undeclared global; only a direct reference throws. `HttpError`'s
+ * own public behavior (`.message`/`.status`/`.stack`/`.cause`/`.meta`/`.code`) is unaffected
+ * either way — every one of those is set directly in its own constructor, never inherited from
+ * whichever base class is picked here.
+ *
+ * Exported, not a module-private variable — a real, confirmed requirement discovered fixing this:
+ * JSR's own `no-slow-types` check needs the superclass expression to be a plain named variable
+ * (an inline conditional directly in `extends` fails as "super class expression was too
+ * complex"), but `deno doc --lint`'s own `private-type-ref` check then demands that same variable
+ * be public, or it flags `HttpError` itself as referencing a private type. Exporting it satisfies
+ * both. Not meant to be used directly — the export exists purely so `HttpError`'s own base class
+ * can be both a plain variable AND publicly resolvable at the same time.
+ */
+export const HttpErrorBase: typeof Error = typeof Deno !== 'undefined' && Deno.errors?.Http
+  ? (Deno.errors.Http as typeof Error)
+  : Error
 
 /**
  * A custom error class for HTTP-related `exceptions`, extending Deno's `Http` error class.
@@ -55,7 +84,7 @@ function processError(this: ApplicationError | HttpError, options: ErrorOptions)
  *
  * @category errors
  */
-export class HttpError extends Deno.errors.Http {
+export class HttpError extends HttpErrorBase {
   /** The main error message. */
   public override message: string
   /** Unique identifier assigned to this error instance. */

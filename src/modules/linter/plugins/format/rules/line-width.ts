@@ -19,33 +19,39 @@ const rules: Record<string, Deno.lint.Rule> = {
 
       if (!maxLineWidth) return {}
 
-      return Line(context, ({ lineLength: baseLenght, lineStart, lineEnd, line, lines, index }) => {
-        const cleanLine = line.replace(commentRegex, '').trim()
-        const lineLength = cleanLine.length
-        const prevLine = (lines[index - 1] || '').trim()
-        const nextLine = (lines[index + 1] || '').trim()
+      return Line(
+        context,
+        (
+          { lineLength: baseLenght, lineStart, lineEnd, line, lines, index },
+        ) => {
+          const cleanLine = line.replace(commentRegex, '').trim()
+          const lineLength = cleanLine.length
+          const prevLine = (lines[index - 1] || '').trim()
+          const nextLine = (lines[index + 1] || '').trim()
 
-        const exceptions = lineLength <= maxLineWidth || cleanLine.startsWith('import ') ||
-          cleanLine.replace(enclosedStringRegex, '').length < 2 ||
-          regex.baseLineCommentRegex.test(cleanLine) ||
-          regex.baseLineCommentRegex.test(prevLine) &&
-            (nextLine.endsWith('*/') && !commentRegex.test(prevLine) ||
-              nextLine.startsWith('*')) ||
-          cleanLine.startsWith('return') || cleanLine.startsWith('`')
+          const exceptions = lineLength <= maxLineWidth ||
+            cleanLine.startsWith('import ') ||
+            cleanLine.replace(enclosedStringRegex, '').length < 2 ||
+            regex.baseLineCommentRegex.test(cleanLine) ||
+            regex.baseLineCommentRegex.test(prevLine) &&
+              (nextLine.endsWith('*/') && !commentRegex.test(prevLine) ||
+                nextLine.startsWith('*')) ||
+            cleanLine.startsWith('return') || cleanLine.startsWith('`')
 
-        if (exceptions) return
+          if (exceptions) return
 
-        context.report({
-          node: {
-            range: [lineStart + baseLenght - lineLength, lineEnd],
-            type: 'Program',
-          } as Deno.lint.Node,
-          message: linterMessageFormat(
-            `The line exceeds the maximum allowed width of ${maxLineWidth} characters.`,
-          ),
-          hint: 'Consider reviewing the formatting plugin.',
-        })
-      })
+          context.report({
+            node: {
+              range: [lineStart + baseLenght - lineLength, lineEnd],
+              type: 'Program',
+            } as Deno.lint.Node,
+            message: linterMessageFormat(
+              `The line exceeds the maximum allowed width of ${maxLineWidth} characters.`,
+            ),
+            hint: 'Consider reviewing the formatting plugin.',
+          })
+        },
+      )
     },
   },
 }

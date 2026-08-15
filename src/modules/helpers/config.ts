@@ -1,7 +1,9 @@
 import type { ConfigFile } from 'typings/config.ts'
 
+import { dirname, fromFileUrl, join } from '@std/path'
 import { CONFIG_FILE } from 'utils/constants.ts'
 import { getConfigDir } from './paths.ts'
+import { fileExists } from './files.ts'
 import { isFileUrl } from 'utils/urls.ts'
 import regex from 'utils/regex.ts'
 import { stripComments } from 'utils/encoders.ts'
@@ -36,6 +38,32 @@ export function readConfig(configPath?: string | null): ConfigFile {
 }
 
 /**
+ * Walks up from `metaUrl`'s own directory (never `Deno.cwd()`) looking for `configFile`, mirroring
+ * how the JSR-fetch branch strips a module subpath down to its package root. Bounded by the
+ * filesystem root so it can't loop forever.
+ *
+ * @param metaUrl The module URL (`import.meta.url`) used as the starting point for the upward search.
+ * @param configFile The configuration file name to look for in each ancestor directory.
+ * @returns The absolute path to the first matching configuration file.
+ */
+function findLocalConfigPath(metaUrl: string, configFile: string): string {
+  let dir = dirname(fromFileUrl(metaUrl))
+
+  while (true) {
+    const candidate = join(dir, configFile)
+    if (fileExists(candidate)) return candidate
+
+    const parent = dirname(dir)
+    if (parent === dir) {
+      throw new Deno.errors.NotFound(
+        `Could not find '${configFile}' starting from '${metaUrl}'.`,
+      )
+    }
+    dir = parent
+  }
+}
+
+/**
  * Reads and parses the library module `deno` configuration file
  *
  * @param metaUrl - The optional file config dir.
@@ -55,7 +83,9 @@ export async function readModuleConfig(
   const configFile = `${CONFIG_FILE}${isJsonc ? 'c' : ''}`
 
   if (isFileUrl(metaUrl)) {
-    configContent = await Deno.readTextFile(configFile)
+    configContent = await Deno.readTextFile(
+      findLocalConfigPath(metaUrl, configFile),
+    )
   } else {
     const url = metaUrl.replace(regex.jsrBaseUrlRegex, '$1')
 
@@ -80,7 +110,10 @@ export async function readModuleConfig(
  * @tags allow-read, allow-write
  * @category helpers
  */
-export async function saveConfig(config: ConfigFile, path?: string | null): Promise<void> {
+export async function saveConfig(
+  config: ConfigFile,
+  path?: string | null,
+): Promise<void> {
   configFile = null // reset saved config file data
   const configDir = path || getConfigDir()
   const formattedContent = JSON.stringify(config, null, 2)

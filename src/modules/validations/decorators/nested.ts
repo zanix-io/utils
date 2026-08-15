@@ -40,9 +40,17 @@ export const ValidateNested: ValidationDecorator<
   }
 
   const validation: ValidationFunction = async function (val, property) {
-    const setup = validationsMetadata.getValidationSetup(this.constructor.prototype)
-    const nestedObject = validationsMetadata.getNestedProperties(setup.target, 'obj')
-    const nestedErrors = validationsMetadata.getNestedProperties(setup.target, 'error')
+    const setup = validationsMetadata.getValidationSetup(
+      this.constructor.prototype,
+    )
+    const nestedObject = validationsMetadata.getNestedProperties(
+      setup.target,
+      'obj',
+    )
+    const nestedErrors = validationsMetadata.getNestedProperties(
+      setup.target,
+      'error',
+    )
 
     const validateFn = async (
       value: object | undefined,
@@ -61,7 +69,11 @@ export const ValidateNested: ValidationDecorator<
         }])
         return false
       }
-      const { errors, obj } = await validate(Type as never, { ...value }, setup)
+      const { errors, obj } = await validate(
+        Type as never,
+        { ...value },
+        setup,
+      )
 
       // Delete obj metadata
       validationsMetadata.resetAll(obj)

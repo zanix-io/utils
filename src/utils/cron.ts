@@ -9,6 +9,8 @@ import { setImmediate } from 'node:timers'
 function parseField(field: string, min: number, max: number): Set<number> {
   const values = new Set<number>()
 
+  if (!field) return values
+
   // "*" means every possible value
   if (field === '*') {
     for (let i = min; i <= max; i++) values.add(i)
@@ -21,6 +23,8 @@ function parseField(field: string, min: number, max: number): Set<number> {
       // Step syntax
       const [range, stepStr] = part.split('/')
       const step = parseInt(stepStr, 10)
+
+      if (Number.isNaN(step)) continue
 
       let start = min
       let end = max
@@ -35,10 +39,17 @@ function parseField(field: string, min: number, max: number): Set<number> {
     } else if (part.includes('-')) {
       // Range syntax
       const [start, end] = part.split('-').map(Number)
+
+      if (Number.isNaN(start) || Number.isNaN(end)) continue
+
       for (let i = start; i <= end; i++) values.add(i)
     } else {
       // Single value
-      values.add(parseInt(part, 10))
+      const value = parseInt(part, 10)
+
+      if (!Number.isNaN(value)) {
+        values.add(value)
+      }
     }
   }
 
@@ -81,7 +92,10 @@ export async function nextCronDate(
     !months.size ||
     !dows.size
   ) {
-    logger.error('Invalid cron expression: empty field', cronExpr)
+    logger.error(
+      'Invalid cron expression: no valid values found for a field',
+      cronExpr,
+    )
     return
   }
 

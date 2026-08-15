@@ -7,10 +7,14 @@ export type DefaultLogger = typeof Logger['prototype']
 /** Maps each Zanix project type to its `src` subfolder shape. */
 export type ZanixSrcTreeMap = {
   server: { server: ZanixServerSrcTree }
-  app: { app: ZanixAppSrcTree }
+  space: { space: ZanixSpaceSrcTree }
   library: { modules: ZanixLibrarySrcTree }
-  'app-server': { app: ZanixAppSrcTree; server: ZanixServerSrcTree }
-  all: { modules: ZanixLibrarySrcTree; app: ZanixAppSrcTree; server: ZanixServerSrcTree }
+  'space-server': { space: ZanixSpaceSrcTree; server: ZanixServerSrcTree }
+  all: {
+    modules: ZanixLibrarySrcTree
+    space: ZanixSpaceSrcTree
+    server: ZanixServerSrcTree
+  }
 }
 
 /** Resolves the `src` subfolder shape for a given Zanix project type. */
@@ -18,14 +22,14 @@ export type ZanixSrcTree<T extends ZanixProjectsFull> = T extends keyof ZanixSrc
   ? ZanixSrcTreeMap[T]
   : {}
 
-/** Resolves the `zanix` folder addition for non-library Zanix project types. */
-export type ZanixProjectSrc<T extends ZanixProjectsFull> = T extends 'library' | undefined ? {}
-  : { zanix: ZanixBaseFolder }
-
 /** A record of generated template files, grouped by template category. */
 export type ZanixTemplatesRecord = Record<
   ZanixTemplates,
-  { PATH: string; NAME: string; content(local: ZanixLocalContentProps): Promise<string> }[]
+  {
+    PATH: string
+    NAME: string
+    content(local: ZanixLocalContentProps): Promise<string>
+  }[]
 >
 
 /** The base fields present on every Zanix folder-tree node. */
@@ -60,7 +64,12 @@ export type ZanixTemplates = 'base'
 /**
  * The Zanix project types supported by the framework.
  */
-export type ZanixProjects = 'library' | 'server' | 'app' | 'app-server'
+export type ZanixProjects =
+  | 'library'
+  | 'server'
+  | 'space'
+  | 'space-server'
+  | 'app'
 
 /**
  * Represents a generic folder structure used to model a file system where each folder
@@ -85,36 +94,22 @@ export type ZanixServerSrcTree = ZanixBaseFolder<{
 export type ZanixLibrarySrcTree = ZanixBaseFolder<undefined>
 
 /**
- * Zanix App Folder structure
+ * Zanix Space Folder structure — a `@zanix/space` frontend app's real, implemented conventions:
+ * file-based page routing rooted at `routes/` (`page.tsx`/`layout.tsx`/`loading.tsx`/`error.tsx`,
+ * nested per segment) and `comets/` for selective-hydration client components. Not the
+ * `Components/Layout/Pages/resources` shape this type previously had under the name
+ * `ZanixAppSrcTree` — that shape was never reconciled against `@zanix/space`'s actual
+ * implementation and didn't match it; this replaces it rather than aliasing it.
  * @experimental
  */
-export type ZanixAppSrcTree = ZanixBaseFolder<{
-  Components: ZanixBaseFolder
-  Layout: ZanixBaseFolder
-  Pages: ZanixBaseFolder
-  resources: ZanixBaseFolder<{
-    intl: ZanixBaseFolder<{ es: ZanixBaseFolder }, 'noTemplates'>
-    public: ZanixBaseFolder<{
-      assets: ZanixBaseFolder<{
-        docs: ZanixBaseFolder
-        fonts: ZanixBaseFolder
-        icons: ZanixBaseFolder
-        images: ZanixBaseFolder
-        videos: ZanixBaseFolder
-      }, 'noTemplates'>
-      scripts: ZanixBaseFolder
-      sitemap: ZanixBaseFolder
-      styles: ZanixBaseFolder<{
-        apps: ZanixBaseFolder
-        global: ZanixBaseFolder
-      }>
-    }, 'noTemplates'>
-  }, 'noTemplates'>
+export type ZanixSpaceSrcTree = ZanixBaseFolder<{
+  routes: ZanixBaseFolder
+  comets: ZanixBaseFolder
 }, 'noTemplates'>
 
 /** Zanix general folders */
 export type ZanixFolderTree<T extends ZanixProjectsFull = undefined> = ZanixBaseFolder<
-  ZanixProjectSrc<T> & {
+  {
     '.dist': ZanixBaseFolder<undefined, 'noTemplates'>
     docs: ZanixBaseFolder
     src: ZanixBaseFolder<
@@ -125,7 +120,8 @@ export type ZanixFolderTree<T extends ZanixProjectsFull = undefined> = ZanixBase
           unit: ZanixBaseFolder
         }, 'noTemplates'>
         shared: ZanixBaseFolder<
-          T extends 'library' | undefined ? {} : { middlewares: ZanixBaseFolder },
+          T extends 'library' | undefined ? {}
+            : { middlewares: ZanixBaseFolder },
           'noTemplates'
         >
         typings: ZanixBaseFolder
@@ -165,7 +161,6 @@ export interface ZanixGlobal {
     /** The base config data */
     config: {
       project?: ZanixProjects
-      hash?: string
     }
   }
 }

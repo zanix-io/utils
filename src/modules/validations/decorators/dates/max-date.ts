@@ -53,7 +53,10 @@ export function maxDateArray(date: Date, values: Date[]): boolean {
  *
  * @category validations
  */
-export const MaxDate: ValidationDecorator<Date, DefaultTransformValidationOpts> = function (
+export const MaxDate: ValidationDecorator<
+  Date,
+  DefaultTransformValidationOpts
+> = function (
   date: Date,
   options = {},
 ): ValidationDecoratorDefinition {

@@ -17,7 +17,8 @@ export function errorValidationFormatting(
   obj: Record<string, any> = {},
 ) {
   for (const error of errors) {
-    const { property, constraints = [], plainValue, children, value } = error || {}
+    const { property, constraints = [], plainValue, children, value } = error ||
+      {}
     if (!property) continue
     const objProp = obj[property]
 

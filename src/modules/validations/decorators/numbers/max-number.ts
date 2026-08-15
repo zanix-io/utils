@@ -52,7 +52,10 @@ export function maxNumberArray(num: number, values: number[]): boolean {
  * ```
  * @category validations
  */
-export const MaxNumber: ValidationDecorator<number, DefaultTransformValidationOpts> = function (
+export const MaxNumber: ValidationDecorator<
+  number,
+  DefaultTransformValidationOpts
+> = function (
   num: number,
   options = {},
 ): ValidationDecoratorDefinition {

@@ -17,7 +17,10 @@ function generateSalt(length: number): Uint8Array {
   return crypto.getRandomValues(new Uint8Array(length))
 }
 
-const encriptionLevel: Record<EncryptionLevel, { algorithm: HashAlgorithm; iterations: number }> = {
+const encriptionLevel: Record<
+  EncryptionLevel,
+  { algorithm: HashAlgorithm; iterations: number }
+> = {
   low: {
     algorithm: 'SHA-1',
     iterations: 1000,
@@ -77,7 +80,10 @@ export async function generateHash(
   let encrypted = await crypto.subtle.digest(algorithm, dataToEncrypt)
 
   for await (const _ of iterateAsync(iterations)) {
-    encrypted = await crypto.subtle.digest(algorithm, new Uint8Array(encrypted))
+    encrypted = await crypto.subtle.digest(
+      algorithm,
+      new Uint8Array(encrypted),
+    )
   }
 
   return `${saltPrefix}${uint8ArrayToBase64(new Uint8Array(encrypted))}`

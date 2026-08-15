@@ -16,7 +16,6 @@
 
 export type {
   DefaultLogger,
-  ZanixAppSrcTree,
   ZanixBaseFolder,
   ZanixBaseFolderProps,
   ZanixBaseLibraryInfo,
@@ -28,8 +27,8 @@ export type {
   ZanixLocalContentProps,
   ZanixProjects,
   ZanixProjectsFull,
-  ZanixProjectSrc,
   ZanixServerSrcTree,
+  ZanixSpaceSrcTree,
   ZanixSrcTree,
   ZanixSrcTreeMap,
   ZanixTemplates,

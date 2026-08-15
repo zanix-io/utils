@@ -7,11 +7,12 @@ import {
   healthy,
   inmetiateError,
   loopError,
+  readEnv,
   recurseError,
   timeoutError,
 } from './tasks.ts'
 import 'modules/logger/mod.ts' // initialize logger
-import { assertSpyCalls, stub } from '@std/testing/mock'
+import { assertSpyCalls, spy, stub } from '@std/testing/mock'
 
 console.error = () => {}
 
@@ -40,7 +41,12 @@ Deno.test('execute synchronous task in worker', async () => {
   })
 
   delete result.messageId
-  assertEquals(result, { error: null, response: 5, _wasWorkerThread: true, _workerId: 0 })
+  assertEquals(result, {
+    error: null,
+    response: 5,
+    _wasWorkerThread: true,
+    _workerId: 0,
+  })
 
   // trying to execute another task on worker open
   const resultClosed: any = await new Promise((resolve) => {
@@ -52,7 +58,12 @@ Deno.test('execute synchronous task in worker', async () => {
   })
 
   delete resultClosed.messageId
-  assertEquals(resultClosed, { error: null, response: 9, _wasWorkerThread: true, _workerId: 0 })
+  assertEquals(resultClosed, {
+    error: null,
+    response: 9,
+    _wasWorkerThread: true,
+    _workerId: 0,
+  })
 })
 
 Deno.test('execute asynchronous task in worker', async () => {
@@ -68,7 +79,12 @@ Deno.test('execute asynchronous task in worker', async () => {
   })
 
   delete result.messageId
-  assertEquals(result, { error: null, response: 20, _wasWorkerThread: true, _workerId: 0 })
+  assertEquals(result, {
+    error: null,
+    response: 20,
+    _wasWorkerThread: true,
+    _workerId: 0,
+  })
 
   // trying to execute another task after closed, it generates a new worker
 
@@ -81,7 +97,12 @@ Deno.test('execute asynchronous task in worker', async () => {
   })
 
   delete resultClosed.messageId
-  assertEquals(resultClosed, { error: null, response: 15, _wasWorkerThread: true, _workerId: 0 })
+  assertEquals(resultClosed, {
+    error: null,
+    response: 15,
+    _wasWorkerThread: true,
+    _workerId: 0,
+  })
 })
 
 Deno.test('WorkerManager: execute multiple tasks', async () => {
@@ -135,7 +156,9 @@ Deno.test('WorkerManager: execute multiple tasks', async () => {
   })
 
   assertArrayIncludes(
-    [{ '2': 'OK' }, { '3': 3 }, { '1': 2 }, { '4': 6 }, { '4': 9 }, { '4': 12 }],
+    [{ '2': 'OK' }, { '3': 3 }, { '1': 2 }, { '4': 6 }, { '4': 9 }, {
+      '4': 12,
+    }],
     responses,
   )
 
@@ -254,7 +277,123 @@ Deno.test('Worker: Loop error', async () => {
   assert(!wm['workers'].filter(Boolean).length) // closed
 })
 
+Deno.test(
+  'Worker: a timeout with no queued task calls onFinish and recovers the pool',
+  async () => {
+    const wm = new WorkerManager()
+
+    // Unlike "Worker: Loop error" above, nothing is queued while the timeout is pending — this
+    // is the exact gap the timeout handler's own fix closes: `onFinish` must still be called (it
+    // never was before), and the dead worker slot must still be replaced with a fresh one even
+    // when no queued task is there to trigger the replacement.
+    const result: any = await new Promise((resolve) => {
+      const task = wm.task(loopError, {
+        metaUrl: new URL('./tasks.ts', import.meta.url).href,
+        onFinish: resolve,
+        timeout: 300,
+      })
+      task.invoke()
+    })
+
+    assertEquals(result.response, null)
+    assertEquals(
+      result.error.message,
+      'Worker execution timed out after 300ms for task "loopError"',
+    )
+
+    // The pool must have already been repaired — a fresh, working worker in this slot — without
+    // depending on any queued task to have triggered the replacement.
+    await checkHealthy(wm)
+  },
+)
+
+Deno.test('WorkerManager handles worker.onerror', async () => {
+  let onmessage: ((e: any) => void) | undefined
+  let onerror: ((e: any) => boolean | void) | undefined
+
+  const terminate = () => {}
+  const loggerSpy = spy(Znx.logger, 'error')
+
+  const fakeWorker = {
+    postMessage() {
+      onerror?.({
+        error: new Error('boom'),
+      })
+    },
+    terminate,
+    set onmessage(cb) {
+      onmessage = cb
+    },
+    get onmessage() {
+      return onmessage
+    },
+    set onerror(cb) {
+      onerror = cb
+    },
+    get onerror() {
+      return onerror
+    },
+  }
+
+  const wm = new WorkerManager({}, () => ({
+    worker: fakeWorker as unknown as Worker,
+    status: 'free',
+  }))
+
+  const result: any = await new Promise((resolve) => {
+    wm.task(add, {
+      metaUrl: import.meta.url,
+      onFinish: resolve,
+    }).invoke(1, 2)
+  })
+
+  assertEquals(result.response, null)
+  assertEquals(result.error.message, 'boom')
+  assertSpyCalls(loggerSpy, 1)
+
+  loggerSpy.restore()
+})
+
 Deno.test('manual worker close', () => {
   const wm = new WorkerManager()
   wm.close() // verify close
+})
+
+Deno.test('WorkerManager: permissions option genuinely restricts a worker', async () => {
+  Deno.env.set('WORKER_MANAGER_TEST_VAR', 'visible')
+
+  try {
+    // Unrestricted (default) — the task can see the host's env, same as any pre-existing caller.
+    const wmUnrestricted = new WorkerManager()
+    const unrestricted: any = await new Promise((resolve) => {
+      wmUnrestricted.task(readEnv, {
+        metaUrl: new URL('./tasks.ts', import.meta.url).href,
+        onFinish: resolve,
+        autoClose: true,
+      }).invoke()
+    })
+    assertEquals(unrestricted.error, null)
+    assertEquals(unrestricted.response, 'visible')
+
+    // Restricted — denying `env` must produce a real Deno permission error inside the worker,
+    // never a silently-successful read, proving `permissions` is actually enforced and not just
+    // threaded through unused. `read: true` stays granted here — an object permission profile
+    // replaces the whole set (unlisted categories default to fully denied, not "inherited"), and
+    // the worker needs `read` just to import its own task module before `readEnv` ever runs.
+    const wmRestricted = new WorkerManager({
+      permissions: { env: false, read: true },
+    })
+    const restricted: any = await new Promise((resolve) => {
+      wmRestricted.task(readEnv, {
+        metaUrl: new URL('./tasks.ts', import.meta.url).href,
+        onFinish: resolve,
+        autoClose: true,
+      }).invoke()
+    })
+    assertEquals(restricted.response, null)
+    assert(restricted.error)
+    assert(restricted.error.message.includes('Requires env access'))
+  } finally {
+    Deno.env.delete('WORKER_MANAGER_TEST_VAR')
+  }
 })

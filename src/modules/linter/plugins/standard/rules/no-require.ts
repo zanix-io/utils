@@ -22,7 +22,9 @@ const rules: Record<string, Deno.lint.Rule> = {
         'CallExpression[callee.name="require"]'(node) {
           context.report({
             node,
-            message: linterMessageFormat("Don't use require() calls to load modules."),
+            message: linterMessageFormat(
+              "Don't use require() calls to load modules.",
+            ),
             hint: 'Use `import` instead.',
           })
         },

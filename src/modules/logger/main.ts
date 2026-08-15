@@ -10,6 +10,7 @@ import type {
 } from 'typings/logger.ts'
 
 import { serializeMultipleErrors } from 'modules/errors/serialize.ts'
+import { createRedactor } from 'modules/errors/redact.ts'
 import { baseFormatter } from 'modules/logger/defaults/formatter.ts'
 import { setGlobalZnx } from 'modules/helpers/zanix/namespace.ts'
 import { baseSaveData } from './defaults/storage/main.ts'
@@ -22,6 +23,7 @@ import { showMessage } from './base.ts'
 export class Logger<Return extends unknown = DefaultResponse> {
   #formatter: Formatter = () => ({})
   #saveFuntion: SaveDataFunction = () => {}
+  #redact: ReturnType<typeof createRedactor>
 
   /**
    * Creates a `Logger` instance with a function-based save mode.
@@ -47,21 +49,30 @@ export class Logger<Return extends unknown = DefaultResponse> {
     // This ensures Znx's `baseSaveData` method has the necessary global configuration.
     setGlobalZnx(globals)
 
+    this.#redact = createRedactor(options.redact)
+
     if (options.storage !== false) {
       const { storage = {} } = options
-      this.#formatter = baseFormatter(storage.formatter)
-      this.#saveFuntion = baseSaveData(storage.save)
+      this.#formatter = baseFormatter(storage.formatter, this.#redact)
+      this.#saveFuntion = baseSaveData(storage.save, this.#redact)
     }
   }
 
+  /**
+   * Redacts `data` exactly once — the single result is reused for both `showMessage` (console) and
+   * `#storage` (file/custom `storage.save` — Elasticsearch included), rather than each redacting
+   * its own copy of the same raw input. `showMessage` itself never redacts (see its own doc), so
+   * this is the only place that does for this call.
+   */
   #log(type: LoggerMethods, ...data: LoggerData): Return | undefined {
-    if (data[data.length - 1] === 'noSave') {
-      data.length = data.length - 1
-      showMessage(type, ...data)
-      return undefined
-    }
-    showMessage(type, ...data)
-    return this.#storage(type, data) as Return
+    const hasNoSave = data[data.length - 1] === 'noSave'
+    if (hasNoSave) data.length = data.length - 1
+
+    const redactedData = data.map(this.#redact) as LoggerData
+    showMessage(type, ...redactedData)
+    if (hasNoSave) return undefined
+
+    return this.#storage(type, redactedData) as Return
   }
 
   #storage(type: LoggerMethods, log: LoggerData) {
@@ -84,7 +95,10 @@ export class Logger<Return extends unknown = DefaultResponse> {
    */
   public error(...data: LoggerData<'error'>): Return | undefined {
     const [message, ...rest] = data
-    const errors = serializeMultipleErrors(rest)
+    // `redact: false` — this only needs to flatten each `Error` into a plain, serializable shape
+    // and dedupe already-logged instances. `#log` redacts the result (using this instance's own
+    // `redact` option) right after, so redacting here too would just walk the same data twice.
+    const errors = serializeMultipleErrors(rest, { redact: false })
 
     if (!errors.length && rest.length) return
     return this.#log('error', message, ...errors)

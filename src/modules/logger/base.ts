@@ -42,8 +42,15 @@ export const baseHeaderLog = (method: LoggerMethods) => {
 }
 
 /**
+ * A pure console formatter/dispatcher — it does NOT redact. Every caller (`Logger#log`, and each
+ * `showMessage('warn', ...)` fallback elsewhere in this module for a failed custom formatter/save
+ * function) is responsible for redacting its own `args` exactly once, itself, before calling this —
+ * see each caller's own doc for where that happens. Redacting here too, on top of that, would mean
+ * paying the cost of walking the same data twice for a single console write, for no benefit: the
+ * data is already safe by the time it reaches this function.
+ *
  * @param method - {@link LoggerMethods}
- * @param args - The logger args
+ * @param args - The logger args, already redacted by the caller
  */
 export const showMessage = (method: LoggerMethods, ...args: unknown[]) => {
   const logMethod = method === 'success' ? 'info' : method

@@ -47,7 +47,9 @@ export function defineValidationDecorator<T extends BaseRTO = BaseRTO>(
     const messageResult = typeof message === 'string' ? () => message : message
 
     function customSetter(this: any, value: any) {
-      const { asGetter } = validationsMetadata.getValidationSetup(this.constructor.prototype)
+      const { asGetter } = validationsMetadata.getValidationSetup(
+        this.constructor.prototype,
+      )
       if (!asGetter) {
         Object.defineProperty(this, property, {
           value,

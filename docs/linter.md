@@ -1,6 +1,10 @@
 # Linter plugins
 
-`@zanix/utils` ships four [`Deno.lint`](https://deno.com/) plugins as independent subpath exports, so a consumer can pull in only the rules it needs instead of the whole package. Each plugin is a plain `Deno.lint.Plugin` object (`{ name, rules }`) and can be dropped straight into the `"lint": { "plugins": [...] }` array of a `deno.json`/`deno.jsonc` file:
+`@zanix/utils` ships four [`Deno.lint`](https://deno.com/) plugins as
+independent subpath exports, so a consumer can pull in only the rules it needs
+instead of the whole package. Each plugin is a plain `Deno.lint.Plugin` object
+(`{ name, rules }`) and can be dropped straight into the
+`"lint": { "plugins": [...] }` array of a `deno.json`/`deno.jsonc` file:
 
 ```jsonc
 {
@@ -14,9 +18,14 @@
 }
 ```
 
-Every diagnostic reported by these plugins uses the same message format: a leading `❌` followed by the human-readable description (see `linterMessageFormat` in `src/modules/linter/commons/message.ts`). The diagnostic `id` is always `<plugin-name>/<rule-name>`, for example `deno-fmt-plugin/single-quote`.
+Every diagnostic reported by these plugins uses the same message format: a
+leading `❌` followed by the human-readable description (see
+`linterMessageFormat` in `src/modules/linter/commons/message.ts`). The
+diagnostic `id` is always `<plugin-name>/<rule-name>`, for example
+`deno-fmt-plugin/single-quote`.
 
-The plugins can also be imported directly and run programmatically through `Deno.lint.runPlugin(plugin, fileName, code)`:
+The plugins can also be imported directly and run programmatically through
+`Deno.lint.runPlugin(plugin, fileName, code)`:
 
 ```typescript
 import formatPlugin from 'jsr:@zanix/utils@[version]/linter/deno-fmt-plugin'
@@ -42,7 +51,11 @@ Real diagnostic captured with `Deno.lint.runPlugin`:
 ```typescript
 import formatPlugin from 'jsr:@zanix/utils@[version]/linter/deno-fmt-plugin'
 
-Deno.lint.runPlugin(formatPlugin, 'test.ts', `const a = "This is double quoted";`)
+Deno.lint.runPlugin(
+  formatPlugin,
+  'test.ts',
+  `const a = "This is double quoted";`,
+)
 // [{
 //   id: 'deno-fmt-plugin/single-quote',
 //   message: "❌ Use single quotes instead of double quotes.",
@@ -64,7 +77,9 @@ Add it to `deno.jsonc`:
 
 ## `deno-std-plugin`
 
-General-purpose standard rules for Deno/TypeScript codebases. Source: `src/modules/linter/plugins/standard/mod.ts`. Note that the subpath is `deno-std-plugin`, not `deno-standard-plugin`.
+General-purpose standard rules for Deno/TypeScript codebases. Source:
+`src/modules/linter/plugins/standard/mod.ts`. Note that the subpath is
+`deno-std-plugin`, not `deno-standard-plugin`.
 
 | Rule name                 | What it checks                                                                                                                                                                                                                                           | Example message                                                                                                                                                             |
 | ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -72,7 +87,8 @@ General-purpose standard rules for Deno/TypeScript codebases. Source: `src/modul
 | `no-useless-expression`   | Expression statements with no effect (a bare `SequenceExpression`, a non-first-position bare `Literal`, an immediately-invoked `FunctionExpression`, a bare `LogicalExpression`, or an `injectGlobal` tagged template).                                  | `❌ Unnecessary expression.`                                                                                                                                                |
 | `require-access-modifier` | Class methods or properties without an explicit `public`, `private`, or `protected` modifier (constructors and `#private` members are exempt). Reports one of two distinct messages depending on whether the offending member is a method or a property. | `❌ Methods should have an explicit access modifier (public, private, protected).` or `❌ Properties should have an explicit access modifier (public, private, protected).` |
 
-Real diagnostics captured with `Deno.lint.runPlugin` against a class with an undecorated property and method:
+Real diagnostics captured with `Deno.lint.runPlugin` against a class with an
+undecorated property and method:
 
 ```typescript
 import standardPlugin from 'jsr:@zanix/utils@[version]/linter/deno-std-plugin'
@@ -115,7 +131,8 @@ Add it to `deno.jsonc`:
 
 ## `deno-test-plugin`
 
-Rules that guard against leftover test-debugging helpers. Source: `src/modules/linter/plugins/test/mod.ts`.
+Rules that guard against leftover test-debugging helpers. Source:
+`src/modules/linter/plugins/test/mod.ts`.
 
 | Rule name   | What it checks                    | Example message                       |
 | ----------- | --------------------------------- | ------------------------------------- |
@@ -149,12 +166,14 @@ Add it to `deno.jsonc`:
 
 ## `deno-zanix-plugin`
 
-Rules specific to the Zanix Framework, plus every rule from the three plugins above. Source: `src/modules/linter/plugins/zanix/mod.ts`.
+Rules specific to the Zanix Framework, plus every rule from the three plugins
+above. Source: `src/modules/linter/plugins/zanix/mod.ts`.
 
-| Rule name                 | What it checks                                                                                                                                 | Example message                                                                                                    |
-| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| `no-znx-console`          | Any call on the global `console` object (e.g. `console.log`, `console.error`) instead of the Zanix logger.                                     | `❌ Disallows the use of 'console'.`                                                                               |
-| `no-explicit-znx-imports` | Imports from an `@zanix` scoped package that include an explicit file extension (e.g. `.ts`, `.js`), instead of importing the package by name. | `❌ Explicit imports from '@zanix' modules with file extensions are not allowed. Use the package imports instead.` |
+| Rule name                 | What it checks                                                                                                                                                                                                                                         | Example message                                                                                                    |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------ |
+| `no-znx-console`          | Any call on the global `console` object (e.g. `console.log`, `console.error`) instead of the Zanix logger.                                                                                                                                             | `❌ Disallows the use of 'console'.`                                                                               |
+| `no-explicit-znx-imports` | Imports from an `@zanix` scoped package that include an explicit file extension (e.g. `.ts`, `.js`), instead of importing the package by name.                                                                                                         | `❌ Explicit imports from '@zanix' modules with file extensions are not allowed. Use the package imports instead.` |
+| `use-znx-flags`           | A bare string-literal expression statement as the very first statement of a file (the same grammar slot as `'use strict'`) whose value isn't one of the known `ZNX_FLAGS` (e.g. `'use comet'`). A string literal anywhere else in the file is ignored. | `❌ The flag "otherFlag" is invalid.`                                                                              |
 
 Real diagnostic captured with `Deno.lint.runPlugin`:
 
@@ -171,6 +190,30 @@ Deno.lint.runPlugin(zanixPlugin, 'test.ts', `console.log('hi')`)
 // }]
 ```
 
+`use-znx-flags` in action — a known flag (`'use comet'`, from the `ZNX_FLAGS`
+constant) as the file's first statement passes; anything else in that position
+doesn't:
+
+```typescript
+import zanixPlugin from 'jsr:@zanix/utils@[version]/linter/deno-zanix-plugin'
+
+Deno.lint.runPlugin(zanixPlugin, 'test.ts', `'otherFlag'`)
+// [{
+//   id: 'deno-zanix-plugin/use-znx-flags',
+//   message: '❌ The flag "otherFlag" is invalid.',
+//   hint: 'Review available flags:\n use comet',
+//   range: [0, 11],
+//   fix: []
+// }]
+
+Deno.lint.runPlugin(
+  zanixPlugin,
+  'test.ts',
+  `'use comet'\nexport function Counter() {}`,
+)
+// [] — 'use comet' is a known flag
+```
+
 Add it to `deno.jsonc`:
 
 ```jsonc
@@ -183,10 +226,24 @@ Add it to `deno.jsonc`:
 
 ## Combined plugin
 
-`deno-zanix-plugin` is not just `no-znx-console` and `no-explicit-znx-imports` — its `mod.ts` spreads the rule sets of `deno-fmt-plugin`, `deno-std-plugin`, and `deno-test-plugin` into its own `rules` object, then adds its own two rules on top. In other words, enabling `deno-zanix-plugin` alone gives every rule documented above (`single-quote`, `line-width`, `no-require`, `no-useless-expression`, `require-access-modifier`, `no-only`, `no-ignore`, `no-znx-console`, `no-explicit-znx-imports`) in a single plugin entry, without having to list the other three subpaths individually in `deno.jsonc`.
+`deno-zanix-plugin` is not just `no-znx-console`, `no-explicit-znx-imports`, and
+`use-znx-flags` — its `mod.ts` spreads the rule sets of `deno-fmt-plugin`,
+`deno-std-plugin`, and `deno-test-plugin` into its own `rules` object, then adds
+its own three rules on top. In other words, enabling `deno-zanix-plugin` alone
+gives every rule documented above (`single-quote`, `line-width`, `no-require`,
+`no-useless-expression`, `require-access-modifier`, `no-only`, `no-ignore`,
+`no-znx-console`, `no-explicit-znx-imports`, `use-znx-flags`) in a single plugin
+entry, without having to list the other three subpaths individually in
+`deno.jsonc`.
 
-Diagnostics reported through the combined plugin still carry `deno-zanix-plugin` as the `id` prefix (e.g. `deno-zanix-plugin/single-quote`), not the id of the original sub-plugin, since the rule is registered under the `deno-zanix-plugin` name.
+Diagnostics reported through the combined plugin still carry `deno-zanix-plugin`
+as the `id` prefix (e.g. `deno-zanix-plugin/single-quote`), not the id of the
+original sub-plugin, since the rule is registered under the `deno-zanix-plugin`
+name.
 
 ## See also
 
-- [README](../README.md) — package overview, installation, and the full list of subpath exports.
+- [README](../README.md) — package overview, installation, and the full list of
+  subpath exports.
+- [Utils](./utils.md#constants) — `ZNX_FLAGS`, the list of flags `use-znx-flags`
+  accepts.

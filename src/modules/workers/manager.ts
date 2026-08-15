@@ -33,18 +33,35 @@ export class WorkerManager {
   /** Round-robin cursor used by {@link getWorkerId} when no worker is free. */
   #workerIx: number = 0
 
+  #permissions?: Deno.PermissionOptions
+
   /**
    * Creates a new `WorkerManager`, initializing the internal pool of workers.
    *
    * @param options.pool - The number of workers to keep in the pool. Defaults to `1`.
+   * @param options.permissions - Restricts every worker THIS pool creates (see
+   * `getWebProcessWorker`'s own doc) — real sandboxing for a task that must never touch `net`/
+   * `read`/`write`/`env`/`run`/`ffi`/`sys` beyond an explicit allow-list, independent of the host
+   * process's own full permission set. Omit entirely (the default) for unchanged, unrestricted
+   * behavior — every existing caller of this class keeps working exactly as before. A pool
+   * mixing tasks that need DIFFERENT permission profiles should use a SEPARATE `WorkerManager`
+   * instance per profile, never one shared pool — permissions are set once, at pool creation, for
+   * every worker this instance will ever create (including ones instantiated later to replace a
+   * timed-out worker, see `getWorkerId`).
+   * @param createWorker - Optional factory used to create worker instances.
+   * Useful for testing or providing a custom worker implementation.
    */
-  constructor(options: { pool?: number } = {}) {
-    const { pool = 1 } = options
+  constructor(
+    options: { pool?: number; permissions?: Deno.PermissionOptions } = {},
+    private readonly createWorker = getWebProcessWorker,
+  ) {
+    const { pool = 1, permissions } = options
+    this.#permissions = permissions
     this.#initializeWorkers(pool)
   }
 
   #instantiateNewWorker() {
-    const worker = getWebProcessWorker()
+    const worker = this.createWorker(this.#permissions)
     return worker
   }
 
@@ -84,7 +101,12 @@ export class WorkerManager {
    */
   private invokeTask(
     taskData: TaskMessage['data'],
-    options: { onFinish?: TaskCallback; autoClose?: boolean; timeout: number; verbose?: boolean },
+    options: {
+      onFinish?: TaskCallback
+      autoClose?: boolean
+      timeout: number
+      verbose?: boolean
+    },
     workerId = this.getWorkerId(),
   ): void {
     const { onFinish, autoClose, timeout, verbose = true } = options
@@ -102,15 +124,32 @@ export class WorkerManager {
     // Timeout rejection
     const timeoutId = setTimeout(() => {
       const { taskName, metaUrl, messageId } = taskData
-      Znx.logger.error(`Worker execution timed out after ${timeout}ms for task "${taskName}"`, {
-        meta: { taskName, timeout, module: metaUrl, messageId },
-      })
+      Znx.logger.error(
+        `Worker execution timed out after ${timeout}ms for task "${taskName}"`,
+        {
+          meta: { taskName, timeout, module: metaUrl, messageId },
+        },
+      )
       worker.terminate() // Terminate the worker after finishing the task
+      // A terminated worker can never post its own response back — without this, `onFinish` (and
+      // anything awaiting it, e.g. a caller wrapping `.invoke()` in a Promise) would simply hang
+      // forever on a timeout instead of ever settling. `worker.onmessage`/`.onerror` are never
+      // called for a terminated worker, so this is the only place that can report it.
+      onFinish?.({
+        error: new Error(
+          `Worker execution timed out after ${timeout}ms for task "${taskName}"`,
+        ),
+        response: null,
+        messageId,
+      })
+      // Always replace this slot with a genuinely fresh, working worker — not only when a queued
+      // task happens to be waiting. Otherwise the terminated `worker` object stays parked here,
+      // still reporting whatever stale `status` it had, and could later be handed a NEW task by
+      // `getWorkerId`'s own round-robin — which would then hang forever too, since a terminated
+      // worker can never respond to anything.
+      this.workers[workerId] = this.#instantiateNewWorker()
       const task = this.#tasks.shift()
-      if (task) {
-        this.workers[workerId] = this.#instantiateNewWorker()
-        task?.(workerId)
-      }
+      if (task) task(workerId)
     }, timeout)
 
     // Handle the response from the worker
@@ -143,7 +182,9 @@ export class WorkerManager {
     // Handle general errors
     worker.onerror = (e) => {
       const error = e.error || e
-      if (verbose) Znx.logger.error('An error ocurred in worker execution', error)
+      if (verbose) {
+        Znx.logger.error('An error ocurred in worker execution', error)
+      }
       onFinish?.({ error, response: null })
 
       workerManager.status = 'free'
@@ -215,7 +256,12 @@ export class WorkerManager {
        * currentTask.invoke(arg0, arg1);
        */
       invoke: (...parameters: Parameters<T>) => {
-        this.invokeTask({ taskName, messageId: generateUUID(), parameters, metaUrl }, {
+        this.invokeTask({
+          taskName,
+          messageId: generateUUID(),
+          parameters,
+          metaUrl,
+        }, {
           onFinish,
           autoClose,
           verbose,

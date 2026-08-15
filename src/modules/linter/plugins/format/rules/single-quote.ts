@@ -20,10 +20,14 @@ const rules: Record<string, Deno.lint.Rule> = {
     create(context) {
       return {
         Literal(node) {
-          if (typeof node.value !== 'string' || !singleQuoteRegex.test(node.raw)) return
+          if (
+            typeof node.value !== 'string' || !singleQuoteRegex.test(node.raw)
+          ) return
           context.report({
             node,
-            message: linterMessageFormat('Use single quotes instead of double quotes.'),
+            message: linterMessageFormat(
+              'Use single quotes instead of double quotes.',
+            ),
             hint: 'Consider reviewing the formatting plugin.',
           })
         },

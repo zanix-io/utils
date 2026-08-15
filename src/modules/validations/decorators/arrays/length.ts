@@ -16,8 +16,13 @@ import { defineValidationDecorator } from 'modules/validations/base/definitions/
  *
  * @category validations
  */
-export function arrayLength(value: unknown[], min: number, max: number): boolean {
-  return Array.isArray(value) && min >= 1 && value.length >= min && value.length <= max
+export function arrayLength(
+  value: unknown[],
+  min: number,
+  max: number,
+): boolean {
+  return Array.isArray(value) && min >= 1 && value.length >= min &&
+    value.length <= max
 }
 
 /**

@@ -7,7 +7,10 @@ const validData: Partial<EachBranchesRTO> = {
   email: 'test@example.com',
   emails: ['a@example.com', 'b@example.com'],
   uuid: '9b2f0d5b-3a3e-4c2d-b4d6-8e6f5a1c2e79',
-  uuids: ['9b2f0d5b-3a3e-4c2d-b4d6-8e6f5a1c2e79', '9b2f0d5b-3a3e-4c2d-b4d6-8e6f5a1c2379'],
+  uuids: [
+    '9b2f0d5b-3a3e-4c2d-b4d6-8e6f5a1c2e79',
+    '9b2f0d5b-3a3e-4c2d-b4d6-8e6f5a1c2379',
+  ],
   url: 'http://www.zanix.co',
   urls: ['http://www.zanix.co', 'http://www.zanix.mx'],
   phone: '3333333333',
@@ -50,9 +53,14 @@ Deno.test({
 Deno.test('EachBranchesRTO - rejects invalid each:true array entries', async () => {
   await assertRejects(
     () =>
-      classValidation(EachBranchesRTO, { ...validData, emails: ['not-an-email'] }).catch((err) => {
+      classValidation(EachBranchesRTO, {
+        ...validData,
+        emails: ['not-an-email'],
+      }).catch((err) => {
         assertEquals(err.cause.properties.emails, [{
-          constraints: ["All values of 'emails' must be valid email addresses."],
+          constraints: [
+            "All values of 'emails' must be valid email addresses.",
+          ],
           value: ['not-an-email'],
           plainValue: ['not-an-email'],
         }])
@@ -66,14 +74,15 @@ Deno.test('EachBranchesRTO - rejects invalid each:true array entries', async () 
 Deno.test('EachBranchesRTO - rejects invalid scalar values', async () => {
   await assertRejects(
     () =>
-      classValidation(EachBranchesRTO, { ...validData, uuid: 'not-a-uuid' }).catch((err) => {
-        assertEquals(err.cause.properties.uuid, [{
-          constraints: ["'uuid' must be a valid UUID."],
-          value: 'not-a-uuid',
-          plainValue: 'not-a-uuid',
-        }])
-        throw err
-      }),
+      classValidation(EachBranchesRTO, { ...validData, uuid: 'not-a-uuid' })
+        .catch((err) => {
+          assertEquals(err.cause.properties.uuid, [{
+            constraints: ["'uuid' must be a valid UUID."],
+            value: 'not-a-uuid',
+            plainValue: 'not-a-uuid',
+          }])
+          throw err
+        }),
     HttpError,
     'BAD_REQUEST',
   )

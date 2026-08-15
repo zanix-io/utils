@@ -8,17 +8,29 @@ Deno.test('Validates max date', () => {
   assertEquals(maxDate(new Date('2023-01-01'), new Date('2023-01-01')), true)
   assertEquals(maxDate(new Date('2023-01-01'), new Date('2024-01-01')), false)
 
-  assertEquals(maxDateArray(new Date('2023-01-01'), new Date('2020-01-01') as never), false)
   assertEquals(
-    maxDateArray(new Date('2023-01-01'), [new Date('2020-01-01'), new Date('2018-01-01')]),
+    maxDateArray(new Date('2023-01-01'), new Date('2020-01-01') as never),
+    false,
+  )
+  assertEquals(
+    maxDateArray(new Date('2023-01-01'), [
+      new Date('2020-01-01'),
+      new Date('2018-01-01'),
+    ]),
     true,
   )
   assertEquals(
-    maxDateArray(new Date('2023-01-01'), [new Date('2023-01-01'), new Date('2018-01-01')]),
+    maxDateArray(new Date('2023-01-01'), [
+      new Date('2023-01-01'),
+      new Date('2018-01-01'),
+    ]),
     true,
   )
   assertEquals(
-    maxDateArray(new Date('2023-01-01'), [new Date('2020-01-01'), new Date('2028-01-01')]),
+    maxDateArray(new Date('2023-01-01'), [
+      new Date('2020-01-01'),
+      new Date('2028-01-01'),
+    ]),
     false,
   )
 })
@@ -28,13 +40,22 @@ Deno.test('Validates min date', () => {
   assertEquals(minDate(new Date('2024-01-01'), new Date('2024-01-01')), true)
   assertEquals(minDate(new Date('2024-01-01'), new Date('2023-01-01')), false)
 
-  assertEquals(minDateArray(new Date('2024-01-01'), new Date('2025-01-01') as never), false)
   assertEquals(
-    minDateArray(new Date('2024-01-01'), [new Date('2024-01-01'), new Date('2025-01-01')]),
+    minDateArray(new Date('2024-01-01'), new Date('2025-01-01') as never),
+    false,
+  )
+  assertEquals(
+    minDateArray(new Date('2024-01-01'), [
+      new Date('2024-01-01'),
+      new Date('2025-01-01'),
+    ]),
     true,
   )
   assertEquals(
-    minDateArray(new Date('2024-01-01'), [new Date('2023-01-01'), new Date('2025-01-01')]),
+    minDateArray(new Date('2024-01-01'), [
+      new Date('2023-01-01'),
+      new Date('2025-01-01'),
+    ]),
     false,
   )
 })

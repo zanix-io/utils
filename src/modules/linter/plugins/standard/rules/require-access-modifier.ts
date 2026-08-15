@@ -20,8 +20,12 @@ const rules: Record<string, Deno.lint.Rule> = {
   'require-access-modifier': {
     create(context) {
       return {
-        'MethodDefinition[accessibility=undefined]'(node: Deno.lint.MethodDefinition) {
-          if (node.kind === 'constructor' || node.key.type === 'PrivateIdentifier') return
+        'MethodDefinition[accessibility=undefined]'(
+          node: Deno.lint.MethodDefinition,
+        ) {
+          if (
+            node.kind === 'constructor' || node.key.type === 'PrivateIdentifier'
+          ) return
           context.report({
             node,
             message: linterMessageFormat(

@@ -13,7 +13,8 @@ import { defineValidationDecorator } from 'modules/validations/base/definitions/
  * @category validations
  */
 export function stringLength(value: string, min: number, max: number): boolean {
-  return (typeof value === 'string' && value.length >= min && value.length <= max)
+  return (typeof value === 'string' && value.length >= min &&
+    value.length <= max)
 }
 
 /**
@@ -26,9 +27,15 @@ export function stringLength(value: string, min: number, max: number): boolean {
  *
  * @category validations
  */
-export function stringLengthArray(values: string[], min: number, max: number): boolean {
+export function stringLengthArray(
+  values: string[],
+  min: number,
+  max: number,
+): boolean {
   try {
-    return !values.some((val) => (typeof val !== 'string' || val.length < min || val.length > max))
+    return !values.some((
+      val,
+    ) => (typeof val !== 'string' || val.length < min || val.length > max))
   } catch {
     return false
   }
@@ -65,5 +72,8 @@ export const Length: ValidationDecorator<{ min?: number; max?: number }> = funct
     validation = (value: string) => stringLength(value, min, max)
   }
 
-  return defineValidationDecorator(validation, { message: defaultMessage, ...options })
+  return defineValidationDecorator(validation, {
+    message: defaultMessage,
+    ...options,
+  })
 }

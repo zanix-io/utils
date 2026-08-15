@@ -22,6 +22,7 @@ Deno.test('Ensures the logger correctly outputs messages to the console', () => 
   const dataDebug = { data: 'test-debug' }
   const dataWarn = { data: 'test-warn' }
   const dataError = { data: 'test-error' }
+  const dataSucess = { data: 'test-success' }
 
   // Mocks
   const consoleInfo = stub(console, 'info', (...[message, ...data]) => {
@@ -54,6 +55,25 @@ Deno.test('Ensures the logger correctly outputs messages to the console', () => 
   consoleDebug.restore()
   consoleWarn.restore()
   consoleError.restore()
+
+  const consoleSuccess = stub(console, 'info', (...[message, ...data]) => {
+    assert(message.includes('🟢'))
+    assert(message.includes(`ZNX-OK`))
+    assertEquals(data[0], dataSucess)
+  })
+
+  showMessage('success', dataSucess)
+  consoleSuccess.restore()
+})
+
+Deno.test("showMessage prints its args as-is — redaction is each caller's own job", () => {
+  const consoleWarn = stub(console, 'warn', (...[, ...data]) => {
+    assertEquals(data[0], { token: 'secret' })
+  })
+
+  showMessage('warn', { token: 'secret' })
+
+  consoleWarn.restore()
 })
 
 Deno.test('Validates the default log message formatter', () => {
@@ -61,6 +81,7 @@ Deno.test('Validates the default log message formatter', () => {
 
   const formatterMock = mockWrap(formatter, {
     showMessage: () => {},
+    redact: (value: unknown) => value,
     defaultFormatter: (...data: []) => {
       return {
         id: 'base Id',
@@ -102,6 +123,9 @@ Deno.test('Validates the default save log', () => {
   const context = {
     canUseZnx: () => false,
     defaultSaveData: () => '',
+    // `baseSaveData`'s own `redact` parameter defaults to `createRedactor()` — mocked here as an
+    // identity factory since this test only exercises the save-function dispatch, not redaction.
+    createRedactor: () => (value: unknown) => value,
   }
   const defaultSave = stub(context, 'defaultSaveData', returnsNext(['data']))
 
@@ -122,7 +146,11 @@ Deno.test('Validates the custom save log', () => {
   const context = {
     saveDataFunction: () => '',
   }
-  const saveDataFunctionMocked = stub(context, 'saveDataFunction', returnsNext(['called']))
+  const saveDataFunctionMocked = stub(
+    context,
+    'saveDataFunction',
+    returnsNext(['called']),
+  )
   baseSaveData(saveDataFunctionMocked)({} as never)
 
   assertSpyCall(saveDataFunctionMocked, 0, {
@@ -156,9 +184,18 @@ Deno.test('Validates logger file default name', () => {
 })
 
 Deno.test('Validates logger default file deletion', () => {
-  assertEquals(shouldBeDeleted('log-2000-01-01.json', new Date(getISODate()).getTime(), 1), true)
-  assertEquals(shouldBeDeleted('log-3000-01-01.json', new Date(getISODate()).getTime(), 1), false)
-  assertEquals(shouldBeDeleted('log-no-match.json', new Date(getISODate()).getTime(), 1), true) // should be deleted, file name format no match
+  assertEquals(
+    shouldBeDeleted('log-2000-01-01.json', new Date(getISODate()).getTime(), 1),
+    true,
+  )
+  assertEquals(
+    shouldBeDeleted('log-3000-01-01.json', new Date(getISODate()).getTime(), 1),
+    false,
+  )
+  assertEquals(
+    shouldBeDeleted('log-no-match.json', new Date(getISODate()).getTime(), 1),
+    true,
+  ) // should be deleted, file name format no match
 
   const customDatenow = new Date('2025-03-09').getTime()
   assertEquals(shouldBeDeleted('log-2025-03-07.json', customDatenow, 1), true)

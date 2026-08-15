@@ -34,7 +34,10 @@ Deno.test('ExposeRTO validation errors', async () => {
 })
 
 Deno.test('ExposeRTO validations', async () => {
-  const values = await classValidation(ExposeRTO, { value: 'string value', test: 'test value' })
+  const values = await classValidation(ExposeRTO, {
+    value: 'string value',
+    test: 'test value',
+  })
   assertEquals(values.age, 3)
   assertEquals(values.optionalValue, undefined)
   assertEquals(values.value, 'string value')

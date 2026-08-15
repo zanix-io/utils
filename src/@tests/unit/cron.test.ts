@@ -13,9 +13,9 @@ Deno.test('Cron expression: every 10 seconds', async () => {
   assertEquals(next, new Date('2025-01-01T00:00:10Z'))
 })
 
-Deno.test('Cron expression: every Thursday at 12:00:00 UTC using ?', async () => {
+Deno.test('Cron expression: invalid day field using ?', async () => {
   const next = await nextCronDate('0 0 12 ? * 4', d('2026-03-04T12:00:00Z'))
-  assertEquals(next, new Date('2026-03-05T12:00:00.000Z'))
+  assertEquals(next, undefined)
 })
 
 Deno.test('Cron expression: every second', async () => {
@@ -76,7 +76,10 @@ Deno.test('Cron expression: range of seconds – next minute', async () => {
 })
 
 Deno.test('Cron expression: list of seconds', async () => {
-  const next = await nextCronDate('5,15,25 * * * * *', d('2025-01-01T00:00:06Z'))
+  const next = await nextCronDate(
+    '5,15,25 * * * * *',
+    d('2025-01-01T00:00:06Z'),
+  )
   assertEquals(next, new Date('2025-01-01T00:00:15Z'))
 })
 
@@ -104,11 +107,110 @@ Deno.test('Cron expression: complex cron example', async () => {
   assertEquals(next, new Date('2025-02-01T14:00:00Z'))
 })
 
-Deno.test({
-  name: 'Cron expression: every 6th day of the month at 12:00:00 UTC using ?',
-  fn: async () => {
-    const next = await nextCronDate('0 0 12 6 ? *', d('2026-03-04T12:00:00Z'))
-    assertEquals(next, undefined)
-  },
-  sanitizeExit: false,
+Deno.test('Cron expression: invalid weekday returns undefined', async () => {
+  const next = await nextCronDate('0 0 12 6 * ?', d('2026-03-04T12:00:00Z'))
+  assertEquals(next, undefined)
+})
+
+Deno.test('nextCronDate skips invalid day of month', async () => {
+  const from = new Date('2026-02-01T00:00:00Z')
+
+  const result = await nextCronDate(
+    '0 0 0 31 * *',
+    from,
+  )
+
+  assertEquals(
+    result?.toISOString(),
+    '2026-03-31T00:00:00.000Z',
+  )
+})
+
+Deno.test('nextCronDate supports range step syntax', async () => {
+  const from = new Date('2026-01-01T00:00:00Z')
+
+  const result = await nextCronDate(
+    '0 0 1-5/2 * * *',
+    from,
+  )
+
+  assertEquals(
+    result?.toISOString(),
+    '2026-01-01T01:00:00.000Z',
+  )
+})
+
+Deno.test('nextCronDate rejects invalid empty parsed field', async () => {
+  const result = await nextCronDate(
+    '0 0 0 1 1 ,',
+    new Date(),
+  )
+
+  assertEquals(result, undefined)
+})
+
+Deno.test('Cron expression: missing field returns undefined', async () => {
+  const next = await nextCronDate(
+    '0 0 12 6 *',
+    d('2026-03-04T12:00:00Z'),
+  )
+
+  assertEquals(next, undefined)
+})
+
+Deno.test('Cron expression: invalid step is ignored', async () => {
+  const next = await nextCronDate(
+    '*/x 0 12 * * *',
+    d('2026-03-04T11:59:59Z'),
+  )
+
+  assertEquals(next, undefined)
+})
+
+Deno.test('Cron expression: invalid range is ignored', async () => {
+  const next = await nextCronDate(
+    '0 0 12 x-5 * *',
+    d('2026-03-04T00:00:00Z'),
+  )
+
+  assertEquals(next, undefined)
+})
+
+Deno.test('Cron expression yields during long search', async () => {
+  const next = await nextCronDate(
+    '0 0 0 31 2 *',
+    d('2026-01-01T00:00:00Z'),
+  )
+
+  assertEquals(next, undefined)
+})
+
+Deno.test('Cron expression jumps to next year when month passed', async () => {
+  const next = await nextCronDate(
+    '0 0 12 * 1 *',
+    d('2026-12-31T12:00:00Z'),
+  )
+
+  assertEquals(
+    next,
+    new Date('2027-01-01T12:00:00Z'),
+  )
+})
+
+Deno.test('Cron expression: handles February 31st', async () => {
+  const next = await nextCronDate(
+    '0 0 12 31 2 *',
+    d('9998-02-01T00:00:00Z'),
+  )
+
+  assertEquals(next, undefined)
+})
+
+Deno.test('Cron expression: handles impossible day of month', async () => {
+  const next = await nextCronDate(
+    '0 0 0 31 2 *',
+    d('2026-02-01T00:00:00Z'),
+  )
+
+  assertEquals(next, undefined)
 })

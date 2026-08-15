@@ -18,7 +18,9 @@ Deno.test({
   name: 'searchParamsPropertyDescriptor - caches the processed value and allows overriding it',
   fn: () => {
     const context: { _computedSearch: unknown } = { _computedSearch: null }
-    const descriptor = searchParamsPropertyDescriptor(new URLSearchParams('?keyA=a'))
+    const descriptor = searchParamsPropertyDescriptor(
+      new URLSearchParams('?keyA=a'),
+    )
 
     const firstAccess = descriptor.get?.call(context)
     const secondAccess = descriptor.get?.call(context) // should hit the cached value, not reprocess
@@ -75,7 +77,9 @@ Deno.test('computedSearchParams should process urlsearch params', () => {
   const context = { _computedSearch: null }
   //For simple key-value pairs
   const paramsKV = new URLSearchParams('?keyA=a&keyB=b')
-  const processedKV = searchParamsPropertyDescriptor(paramsKV).get?.call(context)
+  const processedKV = searchParamsPropertyDescriptor(paramsKV).get?.call(
+    context,
+  )
 
   assertEquals(processedKV, { keyA: 'a', keyB: 'b' })
   assertEquals(context._computedSearch, processedKV)
@@ -83,7 +87,8 @@ Deno.test('computedSearchParams should process urlsearch params', () => {
   //For duplicate keys
   context._computedSearch = null
   const paramsDuplicates = new URLSearchParams('?keyA=a&keyA=b')
-  const processedDuplicates = searchParamsPropertyDescriptor(paramsDuplicates).get?.call(context)
+  const processedDuplicates = searchParamsPropertyDescriptor(paramsDuplicates)
+    .get?.call(context)
 
   assertEquals(processedDuplicates, { keyA: ['a', 'b'] })
   assertEquals(context._computedSearch, processedDuplicates)
@@ -93,7 +98,8 @@ Deno.test('computedSearchParams should process urlsearch params', () => {
   const nestedParams = new URLSearchParams(
     'keyA[subKeyA]=a&keyA[subKeyB]=b&keyB[subKeyA]=c&keyB[subKeyB]=d',
   )
-  const processedNested = searchParamsPropertyDescriptor(nestedParams).get?.call(context)
+  const processedNested = searchParamsPropertyDescriptor(nestedParams).get
+    ?.call(context)
   assertEquals(processedNested, {
     keyA: { subKeyA: 'a', subKeyB: 'b' },
     keyB: { subKeyA: 'c', subKeyB: 'd' },
@@ -104,7 +110,9 @@ Deno.test('computedSearchParams should process urlsearch params', () => {
   const mixedParams = new URLSearchParams(
     'keyA[subKeyA]=a&keyA[subKeyB]=b&keyB[subKeyA]=c&keyB[subKeyB]=d&keyA=0',
   )
-  const processedMixed = searchParamsPropertyDescriptor(mixedParams).get?.call(context)
+  const processedMixed = searchParamsPropertyDescriptor(mixedParams).get?.call(
+    context,
+  )
   assertEquals(processedMixed, {
     keyA: { '0': '0', subKeyA: 'a', subKeyB: 'b' },
     keyB: { subKeyA: 'c', subKeyB: 'd' },
@@ -114,7 +122,8 @@ Deno.test('computedSearchParams should process urlsearch params', () => {
   const mixedParams2 = new URLSearchParams(
     `keyA=0&keyA[subKeyAA]=a&keyA[subKeyAB]=b&keyB[subKeyBA]=c&keyB[subKeyBB]=d&keyB[subKeyBB]=ef&keyB[subKeyBB][subKeyBF]=d&keyB[subKeyBB][subKeyBF]=ef&keyB[subKeyBB][subKeyBE]=e`,
   )
-  const processedMixed2 = searchParamsPropertyDescriptor(mixedParams2).get?.call(context)
+  const processedMixed2 = searchParamsPropertyDescriptor(mixedParams2).get
+    ?.call(context)
   assertEquals(processedMixed2, {
     keyA: { '0': '0', subKeyAA: 'a', subKeyAB: 'b' },
     keyB: {
@@ -127,7 +136,8 @@ Deno.test('computedSearchParams should process urlsearch params', () => {
   const mixedParams3 = new URLSearchParams(
     `keyA[subKeyAA]=a&keyA[subKeyAB]=b&keyB[subKeyBA]=c&keyB[subKeyBB]=d&keyB[subKeyBB]=ef&keyB[subKeyBB][subKeyBF]=d&keyB[subKeyBB][subKeyBF]=ef&keyB[subKeyBB][subKeyBE]=e&keyA=0`,
   )
-  const processedMixed3 = searchParamsPropertyDescriptor(mixedParams3).get?.call(context)
+  const processedMixed3 = searchParamsPropertyDescriptor(mixedParams3).get
+    ?.call(context)
   assertEquals(processedMixed3, {
     keyA: { '0': '0', subKeyAA: 'a', subKeyAB: 'b' },
     keyB: {
@@ -208,7 +218,9 @@ Deno.test('interpolateUrl substitutes a mixed-text query value as a string', () 
 })
 
 Deno.test('interpolateUrl expands an array whole-value placeholder into repeated keys', () => {
-  const result = interpolateUrl('https://x.com?tags={{tags}}', { tags: ['a', 'b', 'c'] })
+  const result = interpolateUrl('https://x.com?tags={{tags}}', {
+    tags: ['a', 'b', 'c'],
+  })
   assertEquals(result, 'https://x.com?tags=a&tags=b&tags=c')
 })
 
@@ -216,7 +228,10 @@ Deno.test('interpolateUrl expands a nested-object placeholder using bracket nota
   const result = interpolateUrl('https://x.com?address={{address}}', {
     address: { city: 'Bogotá', zip: '110111' },
   })
-  assertEquals(result, 'https://x.com?address%5Bcity%5D=Bogot%C3%A1&address%5Bzip%5D=110111')
+  assertEquals(
+    result,
+    'https://x.com?address%5Bcity%5D=Bogot%C3%A1&address%5Bzip%5D=110111',
+  )
 })
 
 Deno.test('interpolateUrl keeps a simple whole-value string placeholder as a plain param', () => {
@@ -227,7 +242,9 @@ Deno.test('interpolateUrl keeps a simple whole-value string placeholder as a pla
 })
 
 Deno.test('interpolateUrl preserves multiple query params, mixing plain and array values', () => {
-  const result = interpolateUrl('https://x.com?page=1&tags={{tags}}', { tags: ['a', 'b'] })
+  const result = interpolateUrl('https://x.com?page=1&tags={{tags}}', {
+    tags: ['a', 'b'],
+  })
   assertEquals(result, 'https://x.com?page=1&tags=a&tags=b')
 })
 

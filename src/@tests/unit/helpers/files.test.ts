@@ -1,4 +1,4 @@
-import { collectFiles, fileExists } from 'modules/helpers/files.ts'
+import { collectFiles, fileExists, folderExists } from 'modules/helpers/files.ts'
 import { assertArrayIncludes, assertEquals } from '@std/assert'
 import { join } from '@std/path'
 import { getTemporaryFolder } from 'modules/helpers/paths.ts'
@@ -55,7 +55,10 @@ Deno.test('collectFiles: should find only .gql and .graphql files', () => {
 
   foundFiles.forEach((file) => {
     const path = file.path.replace(/\\/g, '/') // normalize paths
-    assertEquals(file.content, `content of ${filesToCreate.find((p) => path.endsWith(p))}`)
+    assertEquals(
+      file.content,
+      `content of ${filesToCreate.find((p) => path.endsWith(p))}`,
+    )
   })
 
   Deno.removeSync(temporaryFolder, { recursive: true })
@@ -78,9 +81,30 @@ Deno.test('collectFiles: accepts an array of roots and finds matches across all 
   assertEquals(foundFiles.length, 2)
   assertArrayIncludes(
     foundFiles.map((p) => p.path.replace(/\\/g, '/')),
-    [`${dirA}/a.gql`.replace(/\\/g, '/'), `${dirB}/b.graphql`.replace(/\\/g, '/')],
+    [
+      `${dirA}/a.gql`.replace(/\\/g, '/'),
+      `${dirB}/b.graphql`.replace(/\\/g, '/'),
+    ],
   )
 
   Deno.removeSync(dirA, { recursive: true })
   Deno.removeSync(dirB, { recursive: true })
+})
+
+Deno.test('folderExists: existing folder', () => {
+  assertEquals(folderExists('.'), true)
+})
+
+Deno.test('folderExists: missing folder', () => {
+  assertEquals(folderExists('./missing-folder'), false)
+})
+
+Deno.test('folderExists: path is a file', async () => {
+  const file = await Deno.makeTempFile()
+
+  try {
+    assertEquals(folderExists(file), false)
+  } finally {
+    await Deno.remove(file)
+  }
 })

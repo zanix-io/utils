@@ -43,7 +43,9 @@ Deno.test('Unidirectional encryption or hash generation works correctly', async 
   assert(await validateHash(message, newHashLow, 'low') === true)
   assert(await validateHash(message, newHashHigh, 'high') === true)
   assert(await validateHash(message, newHashMH, 'medium-high') === true)
-  assert(await validateHash('other message', newHashMH, 'medium-high') === false)
+  assert(
+    await validateHash('other message', newHashMH, 'medium-high') === false,
+  )
 
   // Hash without salt
   const hashWithoutSalt = await generateHash(message, 'low', false)
@@ -56,14 +58,21 @@ Deno.test('Unidirectional encryption or hash generation works correctly', async 
   // Hash with different salt
   const salt = crypto.getRandomValues(base64ToUint8Array(hashWithoutSalt))
   const hashWithOtherSalt = await generateHash(message, 'low', salt)
-  assertEquals(hashWithOtherSalt.length - uint8ArrayToHEX(salt).length - 1, hashWithoutSalt.length) // comparing length without salts for low
+  assertEquals(
+    hashWithOtherSalt.length - uint8ArrayToHEX(salt).length - 1,
+    hashWithoutSalt.length,
+  ) // comparing length without salts for low
   assert(await validateHash(message, hashWithOtherSalt, 'low') === true)
-  assert(await validateHash('other message', hashWithOtherSalt, 'low') === false)
+  assert(
+    await validateHash('other message', hashWithOtherSalt, 'low') === false,
+  )
 
   const newHashWithOtherSalt = await generateHash(message, 'low', 11)
   assertEquals(newHashWithOtherSalt.length, 51)
   assert(await validateHash(message, newHashWithOtherSalt, 'low') === true)
-  assert(await validateHash('other message', newHashWithOtherSalt, 'low') === false)
+  assert(
+    await validateHash('other message', newHashWithOtherSalt, 'low') === false,
+  )
 })
 
 Deno.test('Verifying case sensitive encryption', async () => {
@@ -113,7 +122,10 @@ Deno.test('Asymmetric RSA encryption and decryption should works correctly', asy
   assertEquals(message, decryptedData4)
 
   // Array
-  const encryptedData5 = await encryptRSA([message, message + ' second'], publicKey4)
+  const encryptedData5 = await encryptRSA(
+    [message, message + ' second'],
+    publicKey4,
+  )
   const decryptedData5 = await decryptRSA(encryptedData5, privateKey4)
 
   assert(message !== encryptedData4[0])
@@ -176,11 +188,16 @@ Deno.test('Symmetric AES encryption and decryption should works correctly', asyn
   assertEquals(message, decryptedData6)
 
   const encryptedDataCustom = await encryptAES(message, 'my custom secret')
-  const decryptedDataCustom = await decryptAES(encryptedDataCustom, 'my custom secret')
+  const decryptedDataCustom = await decryptAES(
+    encryptedDataCustom,
+    'my custom secret',
+  )
   assert(message !== encryptedDataCustom)
   assertEquals(message, decryptedDataCustom)
 
-  const key7 = await generateCustomAESKey('my secret custom key value for 32 key len')
+  const key7 = await generateCustomAESKey(
+    'my secret custom key value for 32 key len',
+  )
   assertEquals(atob(key7).length, 32)
   const encryptedData7 = await encryptAES(message, key7)
   const decryptedData7 = await decryptAES(encryptedData7, key7)
@@ -221,11 +238,17 @@ Deno.test('General encryption and decryption should works correctly', async () =
 Deno.test('RSA sign should works correctly', async () => {
   const message = 'Este es un mensaje importante'
 
-  const { privateKey, publicKey } = await generateRSAKeys({ algorithm: 'RSA-PSS' })
+  const { privateKey, publicKey } = await generateRSAKeys({
+    algorithm: 'RSA-PSS',
+  })
 
   const signedData = await signRSA(message, privateKey)
   const verifiedData = await verifyRSA(message, signedData, publicKey)
-  const unverifiedData = await verifyRSA('other message', signedData, publicKey)
+  const unverifiedData = await verifyRSA(
+    'other message',
+    signedData,
+    publicKey,
+  )
 
   assert(verifiedData)
   assert(!unverifiedData)
@@ -273,7 +296,9 @@ Deno.test({
   name: 'signHMACBytes defaults to SHA-1 and matches the well-known HMAC-SHA1 test vector',
   fn: async () => {
     const key = stringToUint8Array('key')
-    const data = stringToUint8Array('The quick brown fox jumps over the lazy dog')
+    const data = stringToUint8Array(
+      'The quick brown fox jumps over the lazy dog',
+    )
     const expectedSignature = 'de7c9b85b8b78aa6bc8a7a36f70a90701c9db4d9'
 
     const signature = await signHMACBytes(key, data)
@@ -287,7 +312,14 @@ Deno.test('signHMACBytes supports other hash algorithms too', async () => {
   const data = stringToUint8Array('header.payload')
 
   const bytesSignature = await signHMACBytes(key, data, 'SHA-256')
-  const stringSignature = await signHMAC('header.payload', 'my-secret-key', 'SHA-256')
+  const stringSignature = await signHMAC(
+    'header.payload',
+    'my-secret-key',
+    'SHA-256',
+  )
 
-  assertEquals(uint8ArrayToHEX(bytesSignature), uint8ArrayToHEX(stringSignature))
+  assertEquals(
+    uint8ArrayToHEX(bytesSignature),
+    uint8ArrayToHEX(stringSignature),
+  )
 })

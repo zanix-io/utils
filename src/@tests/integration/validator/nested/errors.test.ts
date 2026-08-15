@@ -313,7 +313,9 @@ Deno.test('Nested RTO multiple levels', async () => {
         ],
         stringPropWithInizializer: [
           {
-            constraints: ["'stringPropWithInizializer' must be a valid string."],
+            constraints: [
+              "'stringPropWithInizializer' must be a valid string.",
+            ],
             value: undefined,
             plainValue: undefined,
           },
@@ -327,7 +329,9 @@ Deno.test('Nested RTO multiple levels', async () => {
         ],
         stringPropArray: [
           {
-            constraints: ["All values of 'stringPropArray' must be valid strings"],
+            constraints: [
+              "All values of 'stringPropArray' must be valid strings",
+            ],
             value: undefined,
             plainValue: undefined,
           },
