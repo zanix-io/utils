@@ -12,6 +12,15 @@ and this project adheres to
 
 ### Added
 
+- **`toKebabCase`/`toPascalCase`** (`helpers`) — casing-convention conversion for identifiers,
+  moved here from `@zanix/cli` (its own `utils/casing.ts`), the only consumer until now: generic,
+  reusable string primitives belong in `@zanix/utils`, not in a specific CLI's own `utils/` folder
+  (matching the same split already applied to path/config resolution and file-existence checks —
+  see `@zanix/cli`'s own `ENGINEERING.md` §3, "Config-split precedent"). `toPascalCase` now reuses
+  `capitalize` internally
+  for each word's own capitalization, instead of duplicating that logic inline. See
+  [Utils](docs/utils.md#capitalization--casing) for the full reference, including how these differ
+  from `capitalize`/`capitalizeWords`.
 - **Redaction for errors and logs**: `redactSensitiveData`, `createRedactor`,
   and `setDefaultRedactOptions` (from `/errors`), plus the accompanying
   `RedactOptions` type. Every log (console and whatever storage strategy is

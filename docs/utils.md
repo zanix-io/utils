@@ -33,31 +33,35 @@ import {
   isZanixHex,
   stringToUint8Array,
   stripComments,
+  toKebabCase,
+  toPascalCase,
   uint8ArrayToBase64,
   uint8ArrayToHEX,
   uint8ArrayToString,
 } from 'jsr:@zanix/utils@[version]/helpers'
 ```
 
-| Name                 | Signature                                                     | Description                                                                                                                                                                                                   |
-| -------------------- | ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `encoder`            | `TextEncoder`                                                 | Shared `TextEncoder` instance used across the library to turn strings into UTF-8 bytes.                                                                                                                       |
-| `decoder`            | `TextDecoder`                                                 | Shared `TextDecoder` instance used across the library to turn UTF-8 bytes back into strings.                                                                                                                  |
-| `capitalize`         | `(value: string) => string`                                   | Capitalizes only the first character of a string, leaving the rest untouched. Returns the empty string unchanged.                                                                                             |
-| `capitalizeWords`    | `(str: string) => string`                                     | Splits a string on spaces and capitalizes the first character of every word.                                                                                                                                  |
-| `stripComments`      | `(value: string) => string`                                   | Strips `//` line comments and `/* ... */` block comments from a JSONC-like string, without touching comment-like text that lives inside quoted values.                                                        |
-| `stringToUint8Array` | `(value: string) => Uint8Array<ArrayBuffer>`                  | Encodes a string into a `Uint8Array` using UTF-8 (via `encoder`).                                                                                                                                             |
-| `uint8ArrayToString` | `(value: Uint8Array, encode?: string) => string`              | Decodes a `Uint8Array`/`ArrayBuffer` into a string. `encode` defaults to `'utf-8'` and accepts any label supported by `TextDecoder`.                                                                          |
-| `uint8ArrayToBase64` | `(uint8Array: Uint8Array) => string`                          | Converts a `Uint8Array` into a standard (non URL-safe) Base64 string.                                                                                                                                         |
-| `base64ToUint8Array` | `(base64: string) => Uint8Array<ArrayBuffer>`                 | Decodes a standard Base64 string back into a `Uint8Array`.                                                                                                                                                    |
-| `uint8ArrayToHEX`    | `(uint8Array: Uint8Array) => string`                          | Converts a `Uint8Array` into a lowercase hexadecimal string, zero-padded per byte.                                                                                                                            |
-| `hexToUint8Array`    | `(hex: string) => Uint8Array`                                 | Converts a hexadecimal string into a `Uint8Array`. Strips internal whitespace and lower-cases the input first. Throws `Error('Hex string must have an even length')` if the cleaned string has an odd length. |
-| `base64UrlEncode`    | `(input: string \| Uint8Array) => string`                     | Encodes a string or `Uint8Array` into Base64 and makes it URL-safe by replacing `+` with `-`, `/` with `_`, and stripping trailing `=` padding. Useful for JWTs and URL-embedded tokens.                      |
-| `base64UrlDecode`    | `(input: string, toString?: boolean) => Uint8Array \| string` | Decodes a Base64 URL-safe string. Returns a `Uint8Array` by default; pass `toString: true` to get a decoded UTF-8 string instead.                                                                             |
-| `base32Encode`       | `(bytes: Uint8Array) => string`                               | Encodes a `Uint8Array` into Base32 (RFC 4648), using the uppercase `A-Z2-7` alphabet with no padding — the conventional format for secrets shown to/typed into authenticator apps (TOTP).                     |
-| `base32Decode`       | `(input: string) => Uint8Array`                               | Decodes a Base32 string (RFC 4648) into a `Uint8Array`. Tolerant of lowercase input and optional `=` padding. Throws if a character outside the Base32 alphabet is found.                                     |
-| `isZanixHex`         | `(str: string) => boolean`                                    | Checks whether a string matches the internal Zanix hex format `Zx` followed by one or more hex digits (`/^Zx[0-9a-fA-F]+$/`).                                                                                 |
-| `compareUint8Arrays` | `(a: Uint8Array, b: Uint8Array) => boolean`                   | Compares two `Uint8Array`s for equality, byte by byte. Returns `false` immediately if their lengths differ.                                                                                                   |
+| Name                 | Signature                                                     | Description                                                                                                                                                                                                                               |
+| -------------------- | ------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `encoder`            | `TextEncoder`                                                 | Shared `TextEncoder` instance used across the library to turn strings into UTF-8 bytes.                                                                                                                                                   |
+| `decoder`            | `TextDecoder`                                                 | Shared `TextDecoder` instance used across the library to turn UTF-8 bytes back into strings.                                                                                                                                              |
+| `capitalize`         | `(value: string) => string`                                   | Capitalizes only the first character of a string, leaving the rest untouched. Returns the empty string unchanged.                                                                                                                         |
+| `capitalizeWords`    | `(str: string) => string`                                     | Splits a string on spaces and capitalizes the first character of every word.                                                                                                                                                              |
+| `toKebabCase`        | `(value: string) => string`                                   | Converts camelCase, PascalCase, snake_case, spaced, or already-kebab-case input into kebab-case (e.g. `'PaymentMethod'` → `'payment-method'`). A run of consecutive capitals splits as its own word (`'XMLParser'` → `'xml-parser'`).     |
+| `toPascalCase`       | `(value: string) => string`                                   | Converts kebab-case, snake_case, spaced, or camelCase input into PascalCase (e.g. `'payment-method'` → `'PaymentMethod'`). Each word is capitalized via `capitalize` after lowercasing it, so `'PAYMENT'` → `'Payment'`, not `'PAYMENT'`. |
+| `stripComments`      | `(value: string) => string`                                   | Strips `//` line comments and `/* ... */` block comments from a JSONC-like string, without touching comment-like text that lives inside quoted values.                                                                                    |
+| `stringToUint8Array` | `(value: string) => Uint8Array<ArrayBuffer>`                  | Encodes a string into a `Uint8Array` using UTF-8 (via `encoder`).                                                                                                                                                                         |
+| `uint8ArrayToString` | `(value: Uint8Array, encode?: string) => string`              | Decodes a `Uint8Array`/`ArrayBuffer` into a string. `encode` defaults to `'utf-8'` and accepts any label supported by `TextDecoder`.                                                                                                      |
+| `uint8ArrayToBase64` | `(uint8Array: Uint8Array) => string`                          | Converts a `Uint8Array` into a standard (non URL-safe) Base64 string.                                                                                                                                                                     |
+| `base64ToUint8Array` | `(base64: string) => Uint8Array<ArrayBuffer>`                 | Decodes a standard Base64 string back into a `Uint8Array`.                                                                                                                                                                                |
+| `uint8ArrayToHEX`    | `(uint8Array: Uint8Array) => string`                          | Converts a `Uint8Array` into a lowercase hexadecimal string, zero-padded per byte.                                                                                                                                                        |
+| `hexToUint8Array`    | `(hex: string) => Uint8Array`                                 | Converts a hexadecimal string into a `Uint8Array`. Strips internal whitespace and lower-cases the input first. Throws `Error('Hex string must have an even length')` if the cleaned string has an odd length.                             |
+| `base64UrlEncode`    | `(input: string \| Uint8Array) => string`                     | Encodes a string or `Uint8Array` into Base64 and makes it URL-safe by replacing `+` with `-`, `/` with `_`, and stripping trailing `=` padding. Useful for JWTs and URL-embedded tokens.                                                  |
+| `base64UrlDecode`    | `(input: string, toString?: boolean) => Uint8Array \| string` | Decodes a Base64 URL-safe string. Returns a `Uint8Array` by default; pass `toString: true` to get a decoded UTF-8 string instead.                                                                                                         |
+| `base32Encode`       | `(bytes: Uint8Array) => string`                               | Encodes a `Uint8Array` into Base32 (RFC 4648), using the uppercase `A-Z2-7` alphabet with no padding — the conventional format for secrets shown to/typed into authenticator apps (TOTP).                                                 |
+| `base32Decode`       | `(input: string) => Uint8Array`                               | Decodes a Base32 string (RFC 4648) into a `Uint8Array`. Tolerant of lowercase input and optional `=` padding. Throws if a character outside the Base32 alphabet is found.                                                                 |
+| `isZanixHex`         | `(str: string) => boolean`                                    | Checks whether a string matches the internal Zanix hex format `Zx` followed by one or more hex digits (`/^Zx[0-9a-fA-F]+$/`).                                                                                                             |
+| `compareUint8Arrays` | `(a: Uint8Array, b: Uint8Array) => boolean`                   | Compares two `Uint8Array`s for equality, byte by byte. Returns `false` immediately if their lengths differ.                                                                                                                               |
 
 ### Base64 URL-safe encoding
 
@@ -117,11 +121,27 @@ stripComments('{"note": "//not a comment"}') // '{"note": "//not a comment"}' (u
 Use it with trusted input only — it is meant for JSONC-style config files, not
 for sanitizing untrusted code.
 
-### Capitalization
+### Capitalization & casing
+
+`capitalize`/`capitalizeWords` do prose-style capitalization — they only ever
+touch the first letter of a string (or of each space-separated word) and never
+reformat the rest. `toKebabCase`/`toPascalCase` are a different job: casing
+_conversion_ for identifiers — they recognize camelCase/PascalCase/snake_case/
+spaced boundaries and re-join the words into one target convention (never
+splitting on plain spaces alone, and `toPascalCase` always concatenates with
+no separator). `toPascalCase` uses `capitalize` internally for each word's own
+capitalization once it's already split into words, but the two pairs solve
+different problems and neither is a drop-in replacement for the other.
 
 ```ts
 capitalize('hello') // 'Hello'
 capitalizeWords('the quick brown fox') // 'The Quick Brown Fox'
+
+toKebabCase('PaymentMethod') // 'payment-method'
+toKebabCase('payment_method') // 'payment-method'
+
+toPascalCase('payment-method') // 'PaymentMethod'
+toPascalCase('PAYMENT') // 'Payment' — capitalizeWords would leave this as 'PAYMENT'
 ```
 
 ## Constants

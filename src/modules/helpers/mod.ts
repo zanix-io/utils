@@ -9,8 +9,8 @@
 
 /**
  * General-purpose helpers for the Zanix ecosystem: config and path resolution, file utilities,
- * date/URL/encoding/network helpers, the Zanix namespace helper, cryptography (encryption and
- * masking), and code-to-storage sync reconciliation (`planCodeSync`).
+ * date/URL/encoding/network/casing helpers, the Zanix namespace helper, cryptography (encryption
+ * and masking), and code-to-storage sync reconciliation (`planCodeSync`).
  *
  * The `zanix new`/`zanix generate` project-tree scaffolding and `zanix prepare`'s GitHub/editor
  * scaffolding automation used to live here — moved to `@zanix/cli` (their only real consumer,
@@ -20,6 +20,7 @@
  */
 
 export * from 'utils/identifiers.ts'
+export * from 'utils/casing.ts'
 export * from 'utils/dates.ts'
 export * from 'utils/templates.ts'
 export * from 'utils/concurrency.ts'
