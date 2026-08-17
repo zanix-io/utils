@@ -1,4 +1,4 @@
-import type { TaskCallbackResponse, TaskMessage } from 'typings/workers.ts'
+import type { TaskCallbackResponse, TaskMessage, WorkerEntry } from 'typings/workers.ts'
 import { generateUUID } from 'utils/identifiers.ts'
 
 // deno-lint-ignore no-explicit-any
@@ -16,7 +16,7 @@ const moduleCache = new Map<string, any>()
  */
 export const getWebProcessWorker = (
   permissions?: Deno.PermissionOptions,
-): { worker: Worker; status: 'busy' | 'free' } => {
+): WorkerEntry => {
   const worker = new Worker(import.meta.url, {
     type: 'module',
     ...(permissions !== undefined ? { deno: { permissions } } : {}),

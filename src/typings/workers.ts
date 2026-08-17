@@ -1,5 +1,11 @@
 /** A function that can be executed as a task inside a `WorkerManager` worker. */
 export type TaskFunction = (...args: never[]) => unknown
+
+/** A worker instance managed by `WorkerManager`, paired with its current availability status. */
+export type WorkerEntry = { worker: Worker; status: 'busy' | 'free' }
+
+/** Factory used to create a new {@link WorkerEntry}, optionally restricted by `permissions`. */
+export type WorkerFactory = (permissions?: Deno.PermissionOptions) => WorkerEntry
 /** The result payload passed to a task's `onFinish` callback. */
 export type TaskCallbackResponse = {
   // deno-lint-ignore no-explicit-any

@@ -1,4 +1,10 @@
-import type { TaskCallback, TaskFunction, TaskMessage } from 'typings/workers.ts'
+import type {
+  TaskCallback,
+  TaskFunction,
+  TaskMessage,
+  WorkerEntry,
+  WorkerFactory,
+} from 'typings/workers.ts'
 import { getWebProcessWorker } from './processor.ts'
 import { generateUUID } from 'utils/identifiers.ts'
 
@@ -27,7 +33,7 @@ import { generateUUID } from 'utils/identifiers.ts'
  */
 export class WorkerManager {
   /** The pool of workers managed by this instance, indexed by worker id. */
-  private workers: { worker: Worker; status: 'busy' | 'free' }[] = []
+  private workers: WorkerEntry[] = []
   /** Tasks queued while every worker in the pool is busy. */
   #tasks: Array<(workerId?: number) => void> = []
   /** Round-robin cursor used by {@link getWorkerId} when no worker is free. */
@@ -53,7 +59,7 @@ export class WorkerManager {
    */
   constructor(
     options: { pool?: number; permissions?: Deno.PermissionOptions } = {},
-    private readonly createWorker = getWebProcessWorker,
+    private readonly createWorker: WorkerFactory = getWebProcessWorker,
   ) {
     const { pool = 1, permissions } = options
     this.#permissions = permissions
