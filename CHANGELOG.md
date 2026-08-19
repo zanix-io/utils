@@ -8,6 +8,35 @@ and this project adheres to
 
 ## [Unreleased]
 
+## [2.6.1] - 2026-08-19
+
+### Added
+
+- **`getTemporaryFolder(callerUrl, unique?)`** (`helpers`) — a new optional second parameter.
+  Omitted (the original behavior), it still returns the one fixed `__tmp__` path shared by every
+  caller at that location. Set — `true`, or a string for that subfolder's own name prefix — it
+  instead returns a FRESH, uniquely-named subfolder of `__tmp__` on every call (via
+  `Deno.makeTempDirSync`), for callers (or concurrent test runs) that need their own isolated
+  scratch space and must not collide with, or clobber via cleanup, another caller's files —
+  without giving up `__tmp__`'s own git-ignored, alongside-the-module convention the way a plain
+  `Deno.makeTempDir()` call (rooted in the OS temp dir instead) would.
+
+### Fixed
+
+- **`logger`'s console header, outside Deno** — every `Logger` call (`info`/`warn`/`error`/etc.)
+  built its own colored header via `@std/fmt/colors`, unconditionally — real ANSI escape codes,
+  meant for a terminal. A browser console doesn't interpret those at all: they printed as raw
+  control-sequence bytes rather than color, a real (if cosmetic) regression for `logger` calls
+  reached from browser-bundled code (a real, current caller: `@zanix/space-ui`'s `Modal`, whose
+  dev-time accessibility warning fires from hydrated client code, not just SSR). `buildHeaderLog`
+  now branches on `typeof Deno === 'undefined'`: the terminal path is byte-for-byte unchanged, and
+  the browser path builds a `['%c...', cssString]` pair instead — the browser devtools' own
+  equivalent to ANSI coloring, consumed positionally by `console[method]` the same way `%s`/`%d`
+  are. `baseHeaderLog` (the `Logger`-internal entrypoint every level ultimately calls through
+  `showMessage`) decides which branch from the real `typeof Deno` check; the branch-building logic
+  itself (`buildHeaderLog`) takes `isBrowser` as a plain parameter instead, so both paths stay
+  unit-testable without needing to undefine the real `Deno` global mid-suite.
+
 ## [2.6.0] - 2026-08-15
 
 ### Added

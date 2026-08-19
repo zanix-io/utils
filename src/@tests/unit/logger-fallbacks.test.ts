@@ -1,6 +1,6 @@
-import { assert, assertEquals } from '@std/assert'
+import { assert, assertEquals, assertFalse } from '@std/assert'
 import { stub } from '@std/testing/mock'
-import { baseHeaderLog } from 'modules/logger/base.ts'
+import { baseHeaderLog, buildHeaderLog } from 'modules/logger/base.ts'
 import { baseFormatter } from 'modules/logger/defaults/formatter.ts'
 
 Deno.test('baseHeaderLog omits the app name when the config file cannot be read', () => {
@@ -8,14 +8,52 @@ Deno.test('baseHeaderLog omits the app name when the config file cannot be read'
     throw new Error('boom')
   })
 
-  let header: string
+  let header: [string, ...string[]]
   try {
     header = baseHeaderLog('info')
   } finally {
     readTextFileSyncStub.restore()
   }
 
-  assert(header.includes('ZNX-INFO'))
+  assert(header[0].includes('ZNX-INFO'))
+  assert(!header[0].includes('@zanix/utils'))
+})
+
+Deno.test('baseHeaderLog picks the terminal (ANSI) branch inside a real Deno process', () => {
+  const [header, ...rest] = baseHeaderLog('info')
+
+  // Real ANSI escape sequences, not the browser's `%c` token — `typeof Deno !== 'undefined'` here.
+  assert(header.includes('\u001b['))
+  assertFalse(header.includes('%c'))
+  assertEquals(rest, [])
+})
+
+Deno.test('buildHeaderLog (browser variant) uses %c + a CSS string instead of ANSI escapes', () => {
+  for (
+    const method of ['info', 'success', 'error', 'warn', 'debug'] as const
+  ) {
+    const [header, style, ...rest] = buildHeaderLog(method, true)
+
+    assert(header.startsWith('%c'))
+    assertFalse(header.includes('\u001b['))
+    assert(style.includes('color:'))
+    assertEquals(rest, [])
+  }
+})
+
+Deno.test('buildHeaderLog (browser): omits the app name when the config cannot be read', () => {
+  const readTextFileSyncStub = stub(Deno, 'readTextFileSync', () => {
+    throw new Error('boom')
+  })
+
+  let header: string
+  try {
+    ;[header] = buildHeaderLog('warn', true)
+  } finally {
+    readTextFileSyncStub.restore()
+  }
+
+  assert(header.includes('ZNX-WARNING'))
   assert(!header.includes('@zanix/utils'))
 })
 

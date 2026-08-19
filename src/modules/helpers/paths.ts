@@ -88,15 +88,35 @@ export function getPathFromCurrent(
  * If the folder does not exist, it is created automatically.
  *
  * @param callerUrl - The base path to create the temporary folder inside. Use `import.meta.url`.
- * @returns The absolute path of the temporary folder.
+ * @param unique - When set, returns a FRESH, uniquely-named subfolder inside `__tmp__` instead of
+ * the fixed `__tmp__` path itself — a new folder every call, via `Deno.makeTempDirSync`. Needed
+ * whenever more than one caller (or concurrent test run) needs its own isolated scratch space
+ * inside `__tmp__` and must not collide with, or clobber via cleanup, another caller's files. A
+ * string sets that subfolder's own name prefix; `true` uses no prefix.
+ * @returns The absolute path of the temporary folder — the fixed `__tmp__` path, or a fresh
+ * unique subfolder of it when `unique` is set.
  *
  * This folder is named `__tmp__` and is excluded from version control by default (e.g., added to .gitignore).
  *
+ * @example
+ * ```ts
+ * // The fixed folder, shared by every caller at this location — the original behavior.
+ * getTemporaryFolder(import.meta.url)
+ *
+ * // A fresh, isolated subfolder inside it — safe for concurrent/repeated use.
+ * getTemporaryFolder(import.meta.url, 'fixture-')
+ * ```
+ *
  * @category helpers
  */
-export function getTemporaryFolder(callerUrl: string): string {
+export function getTemporaryFolder(callerUrl: string, unique?: boolean | string): string {
   const temporalFolder = getPathFromCurrent(callerUrl, '__tmp__')
   Deno.mkdirSync(temporalFolder, { recursive: true })
 
-  return temporalFolder
+  if (!unique) return temporalFolder
+
+  return Deno.makeTempDirSync({
+    dir: temporalFolder,
+    prefix: typeof unique === 'string' ? unique : undefined,
+  })
 }

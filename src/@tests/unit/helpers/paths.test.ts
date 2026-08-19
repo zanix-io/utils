@@ -63,6 +63,52 @@ Deno.test('getConfigDir returns null when no real config file exists', async () 
   await Deno.remove(tempDir, { recursive: true })
 })
 
+Deno.test(
+  'getTemporaryFolder: with no `unique` arg, returns the SAME fixed __tmp__ path on every call',
+  () => {
+    const first = getTemporaryFolder(import.meta.url)
+    const second = getTemporaryFolder(import.meta.url)
+
+    assertEquals(first, second)
+    assert(first.endsWith('__tmp__'), first)
+  },
+)
+
+Deno.test(
+  'getTemporaryFolder: `unique: true` returns a FRESH, real subfolder of __tmp__ each call, ' +
+    'with no prefix',
+  () => {
+    const base = getTemporaryFolder(import.meta.url)
+    const first = getTemporaryFolder(import.meta.url, true)
+    const second = getTemporaryFolder(import.meta.url, true)
+
+    try {
+      assert(first !== second, 'two calls must not return the same folder')
+      assert(first.startsWith(base + '/'), first)
+      assert(second.startsWith(base + '/'), second)
+      // Both real, existing directories on disk — not just computed strings.
+      assert(Deno.statSync(first).isDirectory)
+      assert(Deno.statSync(second).isDirectory)
+    } finally {
+      Deno.removeSync(first, { recursive: true })
+      Deno.removeSync(second, { recursive: true })
+    }
+  },
+)
+
+Deno.test(
+  "getTemporaryFolder: a string `unique` sets the fresh subfolder's own name prefix",
+  () => {
+    const folder = getTemporaryFolder(import.meta.url, 'fixture-')
+
+    try {
+      assert(getFolderName(folder).startsWith('fixture-'), folder)
+    } finally {
+      Deno.removeSync(folder, { recursive: true })
+    }
+  },
+)
+
 Deno.test('getFolderName should return the folder name from a URI', () => {
   assertEquals(getFolderName('/home/user/project/paths.ts'), 'paths.ts')
   assertEquals(
