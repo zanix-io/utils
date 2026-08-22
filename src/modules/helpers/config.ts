@@ -87,7 +87,7 @@ export async function readModuleConfig(
       findLocalConfigPath(metaUrl, configFile),
     )
   } else {
-    const url = metaUrl.replace(regex.jsrBaseUrlRegex, '$1')
+    const url = metaUrl.replace(regex.JSR_BASE_URL_REGEX, '$1')
 
     const response = await fetch(`${url}/${configFile}`)
 

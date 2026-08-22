@@ -91,6 +91,11 @@ export async function classValidation<T extends BaseRTO>(
         properties: errorValidationFormatting(errors),
         target: obj.constructor.name,
       },
+      // Unlike most `cause` values (typically another system's raw, internal error), this one is
+      // purpose-built per-field feedback about the caller's OWN submitted data — exactly the case
+      // `exposeCause` exists for: safe and directly actionable for whoever gets this response, not
+      // internal-only detail. See `@zanix/errors`' `ErrorOptions.exposeCause` doc.
+      exposeCause: true,
     })
   })
 

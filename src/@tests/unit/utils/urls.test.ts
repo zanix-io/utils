@@ -1,6 +1,7 @@
 import {
   getProcessedParams,
   interpolateUrl,
+  sanitizeUrl,
   searchParamsPropertyDescriptor,
   toSearchParams,
   verifyUrl,
@@ -257,4 +258,36 @@ Deno.test('interpolateUrl interpolates the query key itself', () => {
 
 Deno.test('interpolateUrl returns just the path when the query string is empty', () => {
   assertEquals(interpolateUrl('https://x.com?', {}), 'https://x.com')
+})
+
+Deno.test('sanitizeUrl passes an ordinary http(s) URL through unchanged', () => {
+  assertEquals(sanitizeUrl('https://example.com/path?a=1'), 'https://example.com/path?a=1')
+  assertEquals(sanitizeUrl('/relative/path'), '/relative/path')
+})
+
+Deno.test('sanitizeUrl rejects javascript: and vbscript: schemes, case-insensitively', () => {
+  assertEquals(sanitizeUrl('javascript:alert(1)'), '')
+  assertEquals(sanitizeUrl('JavaScript:alert(1)'), '')
+  assertEquals(sanitizeUrl('vbscript:msgbox(1)'), '')
+})
+
+Deno.test('sanitizeUrl rejects a non-image data: URL but allows a data:image one', () => {
+  assertEquals(sanitizeUrl('data:text/html,<script>alert(1)</script>'), '')
+  assertEquals(
+    sanitizeUrl('data:image/png;base64,iVBORw0KGgo='),
+    'data:image/png;base64,iVBORw0KGgo=',
+  )
+})
+
+Deno.test('sanitizeUrl catches a scheme obfuscated with an embedded tab/CR/LF or leading control char', () => {
+  assertEquals(sanitizeUrl('java\tscript:alert(1)'), '')
+  assertEquals(sanitizeUrl('java\r\nscript:alert(1)'), '')
+  assertEquals(sanitizeUrl('\x00javascript:alert(1)'), '')
+})
+
+Deno.test('sanitizeUrl passes a non-string value through unchanged', () => {
+  assertEquals(sanitizeUrl(undefined), undefined)
+  assertEquals(sanitizeUrl(null), null)
+  const obj = { href: 'x' }
+  assertStrictEquals(sanitizeUrl(obj), obj)
 })

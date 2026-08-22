@@ -33,6 +33,42 @@ export function isFileUrl(url: string): boolean {
   return parsedUrl?.protocol === 'file:'
 }
 
+/** Schemes rejected by {@linkcode sanitizeUrl} — `javascript:`/`vbscript:` execute script in the
+ * page's origin the moment the element they're attached to is activated/loaded; a non-image
+ * `data:` URL is rejected too, since an SVG or HTML `data:` payload can carry its own `<script>`. */
+const UNSAFE_URL_SCHEME = /^(?:javascript|vbscript):|^data:(?!image\/)/
+
+/**
+ * Neutralizes a value about to be used as a navigable `href`/`src`: `javascript:`, `vbscript:`,
+ * and non-image `data:` schemes are rejected (returned as `''`) instead of reaching the DOM.
+ * Everything else — a safe URL string, or a non-string value (the prop was simply absent) —
+ * passes through unchanged.
+ *
+ * ASCII tab/CR/LF are stripped from the whole value, then leading C0-control/space is trimmed,
+ * before the scheme is checked — the same normalization a browser applies when resolving a URL's
+ * scheme. Without it, `"java\tscript:alert(1)"` reads as a harmless string to a naive check but
+ * the browser still treats it as `javascript:alert(1)`.
+ *
+ * The one function every author-controlled URL-shaped prop (a RichText/markdown tag, a template
+ * field, anywhere untrusted input reaches a `href`/`src`) should be sanitized through — never
+ * re-implemented per call site, so this bug class can only exist here, not slip back in wherever
+ * someone adds a new one.
+ *
+ * @param value Raw value to check — typically read from user/CMS/translation-controlled content.
+ * @returns `value` unchanged when it's not a string or carries a safe scheme; `''` otherwise.
+ *
+ * @category helpers
+ */
+export function sanitizeUrl<T>(value: T): T | '' {
+  if (typeof value !== 'string') return value
+  const normalized = value
+    .replace(/[\t\r\n]/g, '')
+    // deno-lint-ignore no-control-regex
+    .replace(/^[\x00-\x20]+/, '') // deliberate: strips leading C0 control chars/space
+    .toLowerCase()
+  return UNSAFE_URL_SCHEME.test(normalized) ? '' : value
+}
+
 /**
  * `URLSearchParams` processor into various structures depending on the query parameter format.
  *
@@ -66,12 +102,12 @@ export function isFileUrl(url: string): boolean {
  * @category helpers
  */
 export const getProcessedParams = (searchParams: URLSearchParams): object => {
-  const { keyPartsRegex, keyPartsTestRegex } = regex
+  const { KEY_PARTS_REGEX, KEY_PARTS_TEST_REGEX } = regex
   // deno-lint-ignore no-explicit-any
   const processedSearch: Record<string, any> = {}
   let currentNested = processedSearch
 
-  const hasNestedParams = searchParams.keys().some((key) => keyPartsTestRegex.test(key))
+  const hasNestedParams = searchParams.keys().some((key) => KEY_PARTS_TEST_REGEX.test(key))
 
   const basicProcessor = (key: string, values: string | string[]) => {
     processedSearch[key] = values
@@ -83,7 +119,7 @@ export const getProcessedParams = (searchParams: URLSearchParams): object => {
     allValues: string[],
   ) => {
     // deno-lint-ignore no-non-null-assertion
-    const matchs = key.match(keyPartsRegex)!
+    const matchs = key.match(KEY_PARTS_REGEX)!
     const length = matchs.length
 
     for (let i = 0; i < length; i++) {

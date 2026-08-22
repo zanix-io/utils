@@ -18,20 +18,21 @@ Helpers to locate the project root, resolve paths relative to the current
 module, read/write the `deno.json(c)` configuration, and check for the existence
 of files and folders.
 
-| Symbol               | Signature                                                                                                   | Description                                                                                                                                                                                                                                                                              |
-| -------------------- | ----------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `getRootDir`         | `(): string`                                                                                                | Returns `Deno.cwd()`, the root directory of the running process.                                                                                                                                                                                                                         |
-| `getConfigDir`       | `(root?: string): string \| null`                                                                           | Resolves the path to `deno.json` or `deno.jsonc` inside `root` (defaults to `getRootDir()`). Prefers `deno.json` over `deno.jsonc` when both exist. Returns `null` if neither exists.                                                                                                    |
-| `readConfig`         | `(configPath?: string \| null): ConfigFile`                                                                 | Reads and parses (comment-stripped) the `deno` config file. The parsed result is cached in memory; subsequent calls with the same `configPath` reuse the cache. Throws if no config file can be resolved.                                                                                |
-| `saveConfig`         | `(config: ConfigFile, path?: string \| null): Promise<void>`                                                | Serializes `config` with two-space indentation and writes it to `path` (or the resolved config dir, or `deno.jsonc` as a last resort). Resets the internal `readConfig` cache.                                                                                                           |
-| `readModuleConfig`   | `(metaUrl: string, isJsonc?: boolean): Promise<ConfigFile>`                                                 | Reads a library's own `deno.json(c)`, either from the local filesystem (when `metaUrl` is a `file:` URL) or by fetching it from the equivalent JSR URL. `isJsonc` defaults to `true`.                                                                                                    |
-| `getFolderName`      | `(uri: string): string`                                                                                     | Extracts the base name (last path segment) from a URI or path.                                                                                                                                                                                                                           |
-| `getRelativePath`    | `(to: string, from?: string): string`                                                                       | Returns the relative path from `from` (defaults to `getRootDir()`) to `to`.                                                                                                                                                                                                              |
-| `getPathFromCurrent` | `(callerUrl: string, relativePath: string): string`                                                         | Resolves `relativePath` against the directory of `callerUrl` (typically `import.meta.url`). Converts `file:` URLs to a plain filesystem path.                                                                                                                                            |
-| `getTemporaryFolder` | `(callerUrl: string, unique?: boolean \| string): string`                                                   | Creates (if needed) and returns a `__tmp__` folder next to `callerUrl`, intended to be git-ignored scratch space. With `unique` set, returns a FRESH, uniquely-named subfolder of it instead (a string sets its own name prefix) — one new folder per call, for isolated/concurrent use. |
-| `fileExists`         | `(path: string): boolean`                                                                                   | Checks whether `path` points to an existing file. Requires `allow-read`.                                                                                                                                                                                                                 |
-| `folderExists`       | `(path: string): boolean`                                                                                   | Checks whether `path` points to an existing directory. Requires `allow-read`.                                                                                                                                                                                                            |
-| `collectFiles`       | `(root: string \| string[], extensions: string[], callback: (path: string, content: string) => void): void` | Recursively walks `root` (or each root in the array), and for every file whose name ends with one of `extensions` calls `callback` with its full path and text content.                                                                                                                  |
+| Symbol               | Signature                                                                                                   | Description                                                                                                                                                                                                                                                                                                                                                                  |
+| -------------------- | ----------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `getRootDir`         | `(): string`                                                                                                | Returns `Deno.cwd()`, the root directory of the running process.                                                                                                                                                                                                                                                                                                             |
+| `getConfigDir`       | `(root?: string): string \| null`                                                                           | Resolves the path to `deno.json` or `deno.jsonc` inside `root` (defaults to `getRootDir()`). Prefers `deno.json` over `deno.jsonc` when both exist. Returns `null` if neither exists.                                                                                                                                                                                        |
+| `readConfig`         | `(configPath?: string \| null): ConfigFile`                                                                 | Reads and parses (comment-stripped) the `deno` config file. The parsed result is cached in memory; subsequent calls with the same `configPath` reuse the cache. Throws if no config file can be resolved.                                                                                                                                                                    |
+| `saveConfig`         | `(config: ConfigFile, path?: string \| null): Promise<void>`                                                | Serializes `config` with two-space indentation and writes it to `path` (or the resolved config dir, or `deno.jsonc` as a last resort). Resets the internal `readConfig` cache.                                                                                                                                                                                               |
+| `readModuleConfig`   | `(metaUrl: string, isJsonc?: boolean): Promise<ConfigFile>`                                                 | Reads a library's own `deno.json(c)`, either from the local filesystem (when `metaUrl` is a `file:` URL) or by fetching it from the equivalent JSR URL. `isJsonc` defaults to `true`.                                                                                                                                                                                        |
+| `getFolderName`      | `(uri: string): string`                                                                                     | Extracts the base name (last path segment) from a URI or path.                                                                                                                                                                                                                                                                                                               |
+| `getRelativePath`    | `(to: string, from?: string): string`                                                                       | Returns the relative path from `from` (defaults to `getRootDir()`) to `to`.                                                                                                                                                                                                                                                                                                  |
+| `getPathFromCurrent` | `(callerUrl: string, relativePath: string): string`                                                         | Resolves `relativePath` against the directory of `callerUrl` (typically `import.meta.url`). Converts `file:` URLs to a plain filesystem path.                                                                                                                                                                                                                                |
+| `getTemporaryFolder` | `(callerUrl: string, unique?: boolean \| string): string`                                                   | Creates (if needed) and returns a `__tmp__` folder next to `callerUrl`, intended to be git-ignored scratch space. With `unique` set, returns a FRESH, uniquely-named subfolder of it instead (a string sets its own name prefix) — one new folder per call, for isolated/concurrent use.                                                                                     |
+| `confinePath`        | `(rootDir: string, key: string): string`                                                                    | Resolves `key` (a caller-supplied path segment, or an id used to build one) against `rootDir` and throws `ApplicationError` (`UTILS_PATHS_TRAVERSAL_BLOCKED`) if the result lands outside `rootDir` — catching both a `../`-segment escape and an absolute `key` that overrides `rootDir` entirely. `key` resolving to `rootDir` itself (an empty/`.` key) is also rejected. |
+| `fileExists`         | `(path: string): boolean`                                                                                   | Checks whether `path` points to an existing file. Requires `allow-read`.                                                                                                                                                                                                                                                                                                     |
+| `folderExists`       | `(path: string): boolean`                                                                                   | Checks whether `path` points to an existing directory. Requires `allow-read`.                                                                                                                                                                                                                                                                                                |
+| `collectFiles`       | `(root: string \| string[], extensions: string[], callback: (path: string, content: string) => void): void` | Recursively walks `root` (or each root in the array), and for every file whose name ends with one of `extensions` calls `callback` with its full path and text content.                                                                                                                                                                                                      |
 
 ```typescript
 import {
@@ -79,6 +80,15 @@ collectFiles(['./src', './shared'], ['.gql', '.graphql'], (path, content) => {
 })
 ```
 
+```typescript
+import { confinePath } from 'jsr:@zanix/utils@[version]/helpers'
+
+// The guard any storage/filesystem layer needs before touching disk with a caller-supplied key
+confinePath('/data/objects', 'assets/1/original') // '/data/objects/assets/1/original'
+confinePath('/data/objects', '../../etc/passwd') // throws ApplicationError
+confinePath('/data/objects', '/etc/passwd') // throws ApplicationError — an absolute key overrides rootDir
+```
+
 ## Zanix namespace
 
 Helpers around the global `Znx` namespace, used internally by the Zanix
@@ -90,7 +100,7 @@ framework to share config/logger state process-wide.
 > bootstrapping helpers (`prepareGithub`, `createVSCodeConfig`, and their
 > supporting functions) were moved to `@zanix/cli` — every real consumer of that
 > code was `cli` itself, never a transversal utility anyone else depended on.
-> See `@zanix/cli`'s own `ENGINEERING.md` §5/§7 for the full reasoning. The
+> See `@zanix/cli`'s own `engineering.md` §5/§7 for the full reasoning. The
 > `Zanix*SrcTree`/`ZanixFolderTree`/`ZanixLibraries`/etc. **types** describing
 > that folder-tree shape are still exported from `@zanix/utils/types` (see
 > [Types reference](./types.md)) — only the runtime implementation moved.
@@ -123,6 +133,7 @@ getGlobalZnx() // { config: {}, logger: {} }
 | `parseTTL`                       | `(input: number \| string): number`                                   | Parses a human-readable duration (`"1h"`, `"30m"`, `"7d"`, `"2w"`, `"1mo"`, `"1y"`, etc.) into seconds. A numeric input is returned as-is (assumed to already be seconds). Throws on an unrecognized string format.                                                                                                                               |
 | `verifyUrl`                      | `(url: string): URL \| undefined`                                     | Attempts to parse `url` as a `URL`, returning `undefined` instead of throwing when it is invalid.                                                                                                                                                                                                                                                 |
 | `isFileUrl`                      | `(url: string): boolean`                                              | Returns whether `url` parses to the `file:` protocol.                                                                                                                                                                                                                                                                                             |
+| `sanitizeUrl`                    | `<T>(value: T): T \| ''`                                              | Neutralizes a value about to be used as a navigable `href`/`src`: returns `''` for a `javascript:`/`vbscript:`/non-image-`data:` scheme (including one obfuscated with an embedded tab/CR/LF or leading control char), otherwise returns `value` unchanged.                                                                                       |
 | `getProcessedParams`             | `(searchParams: URLSearchParams): object`                             | Converts `URLSearchParams` into a plain object: simple keys map to a single value, repeated keys map to an array, and bracket-style keys (`keyA[subKeyA]=a`) map to nested objects.                                                                                                                                                               |
 | `toSearchParams`                 | `(params: Record<string, unknown>): URLSearchParams`                  | Builds a `URLSearchParams` from a plain object — the reverse of `getProcessedParams`, using the same conventions so the two round-trip. Arrays become duplicate keys, nested objects use bracket notation, `null`/`undefined` values are skipped.                                                                                                 |
 | `searchParamsPropertyDescriptor` | `(searchParams: URLSearchParams): PropertyDescriptor & ThisType<any>` | Builds a lazily-computed `get`/`set` property descriptor backed by `getProcessedParams`, for use with `Object.defineProperty` on a class or object that wraps `URLSearchParams`.                                                                                                                                                                  |
@@ -148,12 +159,15 @@ jwt.sign(payload, secret, { expiresIn })
 ```
 
 ```typescript
-import { isFileUrl, verifyUrl } from 'jsr:@zanix/utils@[version]/helpers'
+import { isFileUrl, sanitizeUrl, verifyUrl } from 'jsr:@zanix/utils@[version]/helpers'
 
 verifyUrl('https://example.com') // URL instance
 verifyUrl('not a url') // undefined
 
 isFileUrl(import.meta.url) // true when running a local module
+
+sanitizeUrl('https://example.com') // 'https://example.com', unchanged
+sanitizeUrl('javascript:alert(1)') // ''
 ```
 
 ```typescript
@@ -324,15 +338,58 @@ const plan = planCodeSync(staticEntries, existing)
 
 ## Misc
 
-| Symbol         | Signature                | Description                                                                                                       |
-| -------------- | ------------------------ | ----------------------------------------------------------------------------------------------------------------- |
-| `generateUUID` | `(): string`             | Returns a random v4 UUID via `crypto.randomUUID()`.                                                               |
-| `isFileUrl`    | `(url: string): boolean` | See [Dates & URLs](#dates--urls). Listed here as well since it is a general-purpose URL check, not date-specific. |
+| Symbol                           | Signature                                                                        | Description                                                                                                                                                                                                                                                                                                                                              |
+| -------------------------------- | -------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `generateUUID`                   | `(): string`                                                                     | Returns a random v4 UUID via `crypto.randomUUID()`.                                                                                                                                                                                                                                                                                                      |
+| `isFileUrl`                      | `(url: string): boolean`                                                         | See [Dates & URLs](#dates--urls). Listed here as well since it is a general-purpose URL check, not date-specific.                                                                                                                                                                                                                                        |
+| `SESSION_COOKIE_ATTRIBUTES`      | `string`                                                                         | The baseline attribute string every Zanix session/token cookie is built with: `'Path=/; HttpOnly; Secure; SameSite=Strict'`. `Secure` still round-trips on `localhost`, since browsers treat it as a secure context regardless of scheme. One shared constant so posture can't drift between the packages that each build their own `Set-Cookie` string. |
+| `isPlainObject`                  | `(value: unknown): value is Record<string, unknown>`                             | Type-guards `value` as a real object literal — rejects `null`, an array, and any class instance (`Date`, a custom class, etc.), not just non-objects.                                                                                                                                                                                                    |
+| `assertNoCrlf`                   | `(field: string, value: string): void`                                           | Throws if `value` carries a `\r` or `\n` — for a caller composing a raw protocol line by hand (an SMTP command, a hand-built header line) where an embedded line break would inject an unintended extra line.                                                                                                                                            |
+| `assertContentLengthWithinLimit` | `(contentLength: string \| number \| null \| undefined, maxBytes: number): void` | Fast-rejects a request body BEFORE it is read, based solely on a claimed `Content-Length` (raw header value or already-parsed number). A missing/empty/non-numeric value never throws — pair with `readBoundedStream` for the real defense.                                                                                                              |
+| `readBoundedStream`              | `(stream: ReadableStream<Uint8Array>, maxBytes: number): Promise<Uint8Array>`    | Drains `stream` into one `Uint8Array`, cancelling the reader and throwing the instant the REAL running byte count exceeds `maxBytes` — the actual guard against an unbounded request body/upload exhausting memory. Framework-neutral: throws a plain `ApplicationError`, never an HTTP-specific error.                                                  |
 
 ```typescript
 import { generateUUID } from 'jsr:@zanix/utils@[version]/helpers'
 
 generateUUID() // e.g. "3fa1c2b0-9c1e-4e2a-8f3e-6f6a6a6c8b21"
+```
+
+```typescript
+import { SESSION_COOKIE_ATTRIBUTES } from 'jsr:@zanix/utils@[version]/helpers'
+;`session=${value}; ${SESSION_COOKIE_ATTRIBUTES}`
+  // 'session=abc123; Path=/; HttpOnly; Secure; SameSite=Strict'
+  `session=${value}; Max-Age=${maxAge}; ${SESSION_COOKIE_ATTRIBUTES}`
+```
+
+```typescript
+import { assertNoCrlf, isPlainObject } from 'jsr:@zanix/utils@[version]/helpers'
+
+isPlainObject({ a: 1 }) // true
+isPlainObject([1, 2]) // false
+isPlainObject(null) // false
+isPlainObject(new Date()) // false — a class instance, not a plain literal
+
+assertNoCrlf('subject', 'Hello') // does not throw
+assertNoCrlf('subject', 'Hi\r\nBcc: attacker@evil.com') // throws
+```
+
+```typescript
+import {
+  assertContentLengthWithinLimit,
+  readBoundedStream,
+} from 'jsr:@zanix/utils@[version]/helpers'
+
+const maxBytes = 10 * 1024 * 1024 // 10 MiB
+
+// Cheap fast-reject, before a byte of the body is touched — Content-Length is optional and
+// spoofable, so this alone is never the real defense.
+assertContentLengthWithinLimit(req.headers.get('content-length'), maxBytes)
+
+// The real defense: enforced against bytes actually read while draining the stream.
+const bytes = await readBoundedStream(req.body!, maxBytes) // Uint8Array — e.g. for hashing/ffmpeg
+
+// Or, decoded to text on top, for a JSON/form body:
+const text = new TextDecoder().decode(bytes)
 ```
 
 ## Testing utilities

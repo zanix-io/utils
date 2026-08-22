@@ -5,9 +5,10 @@ import {
 } from 'modules/validations/decorators/strings/is-number-string.ts'
 import { isEmail, isEmailArray } from 'modules/validations/decorators/strings/is-email.ts'
 import { isUUID, isUUIDArray } from 'modules/validations/decorators/strings/is-uuid.ts'
+import { isObjectId, isObjectIdArray } from 'modules/validations/decorators/strings/is-object-id.ts'
 import { stringLength, stringLengthArray } from 'modules/validations/decorators/strings/length.ts'
 import { match, matchArray } from 'modules/validations/decorators/strings/match.ts'
-import { emailRegex } from 'utils/regex.ts'
+import { EMAIL_REGEX } from 'utils/regex.ts'
 import { isPhone, isPhoneArray } from 'modules/validations/decorators/strings/is-phone.ts'
 import { isUrl, isUrlArray } from 'modules/validations/decorators/strings/is-url.ts'
 import { assertEquals } from '@std/assert'
@@ -68,6 +69,26 @@ Deno.test('Validates isUUID and isUUIDArray functions', () => {
   )
 })
 
+Deno.test('Validates isObjectId and isObjectIdArray functions', () => {
+  assertEquals(isObjectId('507f1f77bcf86cd799439011'), true)
+  assertEquals(isObjectId('507f1f77bcf86cd79943901'), false) // 23 chars
+  assertEquals(isObjectId('507f1f77bcf86cd799439011z'), false) // non-hex char
+  assertEquals(isObjectId(undefined), false)
+
+  assertEquals(
+    isObjectIdArray(['507f1f77bcf86cd799439011', '507f191e810c19729de860ea']),
+    true,
+  )
+  assertEquals(
+    isObjectIdArray('507f1f77bcf86cd799439011' as never),
+    false,
+  )
+  assertEquals(
+    isObjectIdArray(['507f1f77bcf86cd799439011', 'not-an-object-id']),
+    false,
+  )
+})
+
 Deno.test('Validates string length and length string array', () => {
   assertEquals(stringLength('qwer', 1, 5), true)
   assertEquals(stringLength('qwerdssf', 4, 10), true)
@@ -80,16 +101,16 @@ Deno.test('Validates string length and length string array', () => {
 })
 
 Deno.test('Validates regular expression match ', () => {
-  assertEquals(match(emailRegex, 'juan@pablo.com'), true)
-  assertEquals(match(emailRegex, 'pepito@gmail.'), false)
+  assertEquals(match(EMAIL_REGEX, 'juan@pablo.com'), true)
+  assertEquals(match(EMAIL_REGEX, 'pepito@gmail.'), false)
 
-  assertEquals(matchArray(emailRegex, 'pepito@gmail.com' as never), false)
+  assertEquals(matchArray(EMAIL_REGEX, 'pepito@gmail.com' as never), false)
   assertEquals(
-    matchArray(emailRegex, ['pepito@gmail.com', 'juan@pablo.com']),
+    matchArray(EMAIL_REGEX, ['pepito@gmail.com', 'juan@pablo.com']),
     true,
   )
   assertEquals(
-    matchArray(emailRegex, ['pepito@gmail.com', 'juan@pablo']),
+    matchArray(EMAIL_REGEX, ['pepito@gmail.com', 'juan@pablo']),
     false,
   )
 })

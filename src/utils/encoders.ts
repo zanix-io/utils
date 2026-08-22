@@ -1,3 +1,5 @@
+import { ApplicationError } from 'modules/errors/main.ts'
+
 /**
  * Shared instance of `TextEncoder`.
  *
@@ -55,21 +57,67 @@ export function capitalizeWords(str: string): string {
 }
 
 /**
- * Strips // line comments and /* block comments *\/ from a JSONC string.
- * This does not remove comment-like content inside string values.
- * Use with care for trusted input.
+ * Strips `//` line comments and `/* ... *\/` block comments from a JSONC string.
+ *
+ * Walks the input character by character, tracking whether it's currently inside a double-quoted
+ * JSON string (respecting `\"`/`\\` escapes) so a `//` or `/* ... *\/`-shaped substring that
+ * happens to appear inside a string value (e.g. a glob like `"src/@tests/**\/*.test.ts"`) is never
+ * mistaken for a real comment. Comment detection only ever applies outside of a string.
+ *
+ * An unterminated block comment (a `/*` with no matching `*\/`) is left untouched rather than
+ * silently consuming the rest of the input, mirroring how a plain regex would simply fail to match
+ * it.
+ *
+ * Use with care for trusted input — this is a lightweight comment stripper, not a full JSONC
+ * parser (it doesn't validate structure, and things like trailing commas are still up to the
+ * caller's own `JSON.parse`).
+ *
  * @param value
  */
 export function stripComments(value: string): string {
-  return value
-    // Remove block comments (/* ... */)
-    .replace(/\/\*[\s\S]*?\*\//g, '')
-    // Remove line comments (//...)
-    .replace(/^\s*\/\/.*$/gm, '')
-    // Remove trailing line comments (after code)
-    .replace(/([^:]\/\/.*)/g, (_, group) => {
-      return group.startsWith('"') ? group : '' // keep if inside a string
-    })
+  let result = ''
+  let inString = false
+
+  for (let i = 0; i < value.length; i++) {
+    const char = value[i]
+
+    if (inString) {
+      result += char
+      if (char === '\\' && i + 1 < value.length) {
+        result += value[++i] // keep the escaped character verbatim (handles \" and \\)
+      } else if (char === '"') {
+        inString = false
+      }
+      continue
+    }
+
+    if (char === '"') {
+      inString = true
+      result += char
+      continue
+    }
+
+    if (char === '/' && value[i + 1] === '/') {
+      const lineEnd = value.indexOf('\n', i)
+      result = result.replace(/[ \t]*$/, '') // drop whitespace already emitted before the comment
+      i = lineEnd === -1 ? value.length - 1 : lineEnd - 1
+      continue
+    }
+
+    if (char === '/' && value[i + 1] === '*') {
+      const commentEnd = value.indexOf('*/', i + 2)
+      if (commentEnd === -1) {
+        result += value.slice(i) // unterminated: leave the rest of the input untouched
+        break
+      }
+      i = commentEnd + 1
+      continue
+    }
+
+    result += char
+  }
+
+  return result
 }
 
 /**
@@ -127,6 +175,7 @@ export function uint8ArrayToHEX(uint8Array: Uint8Array): string {
  *
  * @param {string} hex - The hex string to be converted.
  * @returns {Uint8Array} The resulting Uint8Array.
+ * @throws {ApplicationError} If `hex` (after stripping whitespace) has an odd length.
  */
 export function hexToUint8Array(hex: string): Uint8Array {
   // Remove any spaces, if present, and ensure the hex string is even length
@@ -134,7 +183,10 @@ export function hexToUint8Array(hex: string): Uint8Array {
 
   // Check for invalid length (it should always be even)
   if (hex.length % 2 !== 0) {
-    throw new Error('Hex string must have an even length')
+    throw new ApplicationError('Hex string must have an even length', {
+      code: 'UTILS_ENCODERS_HEX_ODD_LENGTH',
+      meta: { hex },
+    })
   }
 
   // Convert hex to Uint8Array
@@ -265,7 +317,7 @@ export const base32Encode = (bytes: Uint8Array): string => {
  *
  * @param {string} input - The Base32-encoded string to decode.
  * @returns {Uint8Array} The decoded bytes.
- * @throws {Error} If `input` contains a character outside the Base32 alphabet.
+ * @throws {ApplicationError} If `input` contains a character outside the Base32 alphabet.
  *
  * @example
  * const decoded = base32Decode('NBSWY3DP');
@@ -281,7 +333,10 @@ export const base32Decode = (input: string): Uint8Array => {
   for (const char of clean) {
     const index = BASE32_ALPHABET.indexOf(char)
     if (index === -1) {
-      throw new Error(`Invalid Base32 character: '${char}'`)
+      throw new ApplicationError(`Invalid Base32 character: '${char}'`, {
+        code: 'UTILS_ENCODERS_BASE32_INVALID_CHAR',
+        meta: { char },
+      })
     }
 
     value = (value << 5) | index
@@ -301,7 +356,18 @@ export const isZanixHex: (str: string) => boolean = (str: string): boolean =>
   /^Zx[0-9a-fA-F]+$/.test(str)
 
 /**
- * Compare two Uint8Array objects for equality.
+ * Compare two Uint8Array objects for equality, in constant time with respect to their content.
+ *
+ * Runs over every byte regardless of where (or whether) a mismatch occurs — there's no early
+ * exit once lengths are confirmed equal, so how long this takes never leaks how many leading
+ * bytes of `b` happened to match `a`. This matters for any comparison of secret bytes (an HMAC
+ * signature, an API key, a token) against caller-supplied input: an early-exit compare lets a
+ * remote attacker recover the secret one byte at a time by timing repeated guesses, since a guess
+ * whose first byte matches takes measurably longer than one that doesn't.
+ *
+ * A length mismatch alone returns `false` immediately — safe to short-circuit on, since for a
+ * fixed-length secret (any HMAC digest, for instance) the length itself carries no information
+ * about the secret's actual bytes.
  *
  * @param a - The first Uint8Array to compare.
  * @param b - The second Uint8Array to compare.
@@ -309,8 +375,10 @@ export const isZanixHex: (str: string) => boolean = (str: string): boolean =>
  */
 export const compareUint8Arrays = (a: Uint8Array, b: Uint8Array): boolean => {
   if (a.length !== b.length) return false
+
+  let diff = 0
   for (let i = 0; i < a.length; i++) {
-    if (a[i] !== b[i]) return false
+    diff |= a[i] ^ b[i]
   }
-  return true
+  return diff === 0
 }

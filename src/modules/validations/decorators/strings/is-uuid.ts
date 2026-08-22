@@ -2,7 +2,7 @@ import type { ValidationDecorator, ValidationDecoratorDefinition } from 'typings
 
 import { defineValidationDecorator } from 'modules/validations/base/definitions/decorators.ts'
 import { match, matchArray } from './match.ts'
-import { uuidRegex } from 'utils/regex.ts'
+import { UUID_REGEX } from 'utils/regex.ts'
 
 /**
  * Is uuid validation
@@ -13,7 +13,7 @@ import { uuidRegex } from 'utils/regex.ts'
  * @category validations
  */
 export function isUUID(value?: string): boolean {
-  return match(uuidRegex, value)
+  return match(UUID_REGEX, value)
 }
 
 /**
@@ -25,7 +25,7 @@ export function isUUID(value?: string): boolean {
  * @category validations
  */
 export function isUUIDArray(value: string[]): boolean {
-  return matchArray(uuidRegex, value)
+  return matchArray(UUID_REGEX, value)
 }
 
 /**

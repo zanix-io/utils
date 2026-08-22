@@ -36,7 +36,7 @@ Deno.test('test library types module', () => {
 Deno.test('test library regex module', async () => {
   const regex = await import(`jsr:@zanix/utils/regex`)
 
-  assertExists(regex.commentRegex)
+  assertExists(regex.COMMENT_REGEX)
   assertExists(regex.default)
 })
 

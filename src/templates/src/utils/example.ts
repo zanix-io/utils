@@ -87,7 +87,7 @@ function capitalizeFirstLetter(str: string): string {
  * console.log(isValid); // Output: true
  */
 function isEmailValid(email: string): boolean {
-  return regex.emailRegex.test(email)
+  return regex.EMAIL_REGEX.test(email)
 }
 
 /**

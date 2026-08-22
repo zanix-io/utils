@@ -2,7 +2,7 @@ import type { ValidationDecorator, ValidationDecoratorDefinition } from 'typings
 
 import { defineValidationDecorator } from 'modules/validations/base/definitions/decorators.ts'
 import { match, matchArray } from './match.ts'
-import { emailRegex } from 'utils/regex.ts'
+import { EMAIL_REGEX } from 'utils/regex.ts'
 
 /**
  * Is email validation
@@ -13,7 +13,7 @@ import { emailRegex } from 'utils/regex.ts'
  * @category validations
  */
 export function isEmail(value?: string): boolean {
-  return match(emailRegex, value)
+  return match(EMAIL_REGEX, value)
 }
 
 /**
@@ -25,7 +25,7 @@ export function isEmail(value?: string): boolean {
  * @category validations
  */
 export function isEmailArray(value: string[]): boolean {
-  return matchArray(emailRegex, value)
+  return matchArray(EMAIL_REGEX, value)
 }
 
 /**

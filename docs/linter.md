@@ -169,11 +169,11 @@ Add it to `deno.jsonc`:
 Rules specific to the Zanix Framework, plus every rule from the three plugins
 above. Source: `src/modules/linter/plugins/zanix/mod.ts`.
 
-| Rule name                 | What it checks                                                                                                                                                                                                                                         | Example message                                                                                                    |
-| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------ |
-| `no-znx-console`          | Any call on the global `console` object (e.g. `console.log`, `console.error`) instead of the Zanix logger.                                                                                                                                             | `❌ Disallows the use of 'console'.`                                                                               |
-| `no-explicit-znx-imports` | Imports from an `@zanix` scoped package that include an explicit file extension (e.g. `.ts`, `.js`), instead of importing the package by name.                                                                                                         | `❌ Explicit imports from '@zanix' modules with file extensions are not allowed. Use the package imports instead.` |
-| `use-znx-flags`           | A bare string-literal expression statement as the very first statement of a file (the same grammar slot as `'use strict'`) whose value isn't one of the known `ZNX_FLAGS` (e.g. `'use comet'`). A string literal anywhere else in the file is ignored. | `❌ The flag "otherFlag" is invalid.`                                                                              |
+| Rule name                 | What it checks                                                                                                                                                                                                                                                          | Example message                                                                                                    |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `no-znx-console`          | Any call on the global `console` object (e.g. `console.log`, `console.error`) instead of the Zanix logger. `console.log`/`console.info`/`console.warn`/`console.error` are auto-fixable via `deno lint --fix` (see below); any other `console.*` method is report-only. | `❌ Disallows the use of 'console'.`                                                                               |
+| `no-explicit-znx-imports` | Imports from an `@zanix` scoped package that include an explicit file extension (e.g. `.ts`, `.js`), instead of importing the package by name.                                                                                                                          | `❌ Explicit imports from '@zanix' modules with file extensions are not allowed. Use the package imports instead.` |
+| `use-znx-flags`           | A bare string-literal expression statement as the very first statement of a file (the same grammar slot as `'use strict'`) whose value isn't one of the known `ZNX_FLAGS` (e.g. `'use comet'`). A string literal anywhere else in the file is ignored.                  | `❌ The flag "otherFlag" is invalid.`                                                                              |
 
 Real diagnostic captured with `Deno.lint.runPlugin`:
 
@@ -189,6 +189,37 @@ Deno.lint.runPlugin(zanixPlugin, 'test.ts', `console.log('hi')`)
 //   fix: []
 // }]
 ```
+
+### `no-znx-console` auto-fix
+
+`console.log`, `console.info`, `console.warn`, and `console.error` map 1:1
+onto `logger.debug`, `logger.info`, `logger.warn`, and `logger.error` — running
+`deno lint --fix` rewrites each call site and inserts the `logger` import for
+you:
+
+```typescript
+// before
+console.log('starting', { step: 1 })
+console.error('failed', err)
+
+// after `deno lint --fix`
+import logger from '@zanix/logger'
+
+logger.debug('starting', { step: 1 })
+logger.error('failed', err)
+```
+
+The fix resolves the real import alias from the linted file's own project
+`deno.json(c)` — walking up from the file's directory for the alias whose
+target resolves to `@zanix/utils`'s `/logger` subpath (`@zanix/logger` in
+most repos, `@zanix/utils/logger` in `space-ui` — never a single hardcoded
+alias). A file with several `console.*` calls only gets the import inserted
+once, and a file that already imports the logger (under any name) has that
+import reused instead of a second one being added. When the project doesn't
+declare `@zanix/utils`'s `/logger` subpath as a dependency at all, the
+violation is still reported but `--fix` leaves the file untouched. Any
+`console.*` method without a safe 1:1 `logger` mapping (`console.table`,
+`console.trace`, ...) is always report-only.
 
 `use-znx-flags` in action — a known flag (`'use comet'`, from the `ZNX_FLAGS`
 constant) as the file's first statement passes; anything else in that position

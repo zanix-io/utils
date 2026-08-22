@@ -1,5 +1,28 @@
-import { assertEquals } from '@std/assert'
-import { getClientIp, isIpInCidr, parseCidr } from 'utils/network.ts'
+import { assertEquals, assertRejects, assertThrows } from '@std/assert'
+import { ApplicationError } from 'modules/errors/main.ts'
+import {
+  assertContentLengthWithinLimit,
+  assertNoCrlf,
+  getClientIp,
+  isIpInCidr,
+  parseCidr,
+  readBoundedStream,
+} from 'utils/network.ts'
+
+/** Builds a `ReadableStream<Uint8Array>` that yields `chunks` one at a time — used to exercise
+ * {@linkcode readBoundedStream} without depending on a real `Request`/network stream. */
+function streamOf(chunks: Uint8Array[]): ReadableStream<Uint8Array> {
+  let i = 0
+  return new ReadableStream<Uint8Array>({
+    pull(controller) {
+      if (i < chunks.length) {
+        controller.enqueue(chunks[i++])
+      } else {
+        controller.close()
+      }
+    },
+  })
+}
 
 Deno.test('isIpInCidr: exact match with a bare IP (implicit /32)', () => {
   assertEquals(isIpInCidr('203.0.113.5', '203.0.113.5'), true)
@@ -247,4 +270,114 @@ Deno.test('getClientIp: returns unknown-ip when all trusted headers are empty', 
   })
 
   assertEquals(getClientIp(headers), 'unknown-ip')
+})
+
+Deno.test('assertNoCrlf accepts an ordinary value', () => {
+  assertNoCrlf('subject', 'Hello world')
+})
+
+Deno.test('assertNoCrlf rejects a value carrying an injected line, CRLF/bare-LF/CR alike', () => {
+  const error = assertThrows(
+    () => assertNoCrlf('subject', 'Hi\r\nBcc: attacker@evil.com'),
+    ApplicationError,
+    'Invalid subject: must not contain line breaks',
+  )
+  assertEquals(error.code, 'UTILS_NETWORK_CRLF_INJECTION')
+  // Never auto-logged (InternalError's default `shouldLog:true` would be) — this is a hot,
+  // low-level validator; every caller-side format mistake auto-logging would be unwanted noise,
+  // not a real operator signal. `ApplicationError` defaults `shouldLog:false`.
+  assertEquals((error as unknown as { _logged: boolean })._logged, false)
+  assertThrows(() => assertNoCrlf('to', 'a@b.com\nBcc: c@d.com'), ApplicationError)
+  assertThrows(() => assertNoCrlf('from', 'a@b.com\rBcc: c@d.com'), ApplicationError)
+})
+
+Deno.test('assertContentLengthWithinLimit: does not throw when within the limit', () => {
+  assertContentLengthWithinLimit('1024', 2048)
+  assertContentLengthWithinLimit(1024, 2048)
+})
+
+Deno.test('assertContentLengthWithinLimit: does not throw when exactly at the limit', () => {
+  assertContentLengthWithinLimit('2048', 2048)
+  assertContentLengthWithinLimit(2048, 2048)
+})
+
+Deno.test('assertContentLengthWithinLimit: throws when the declared size exceeds the limit', () => {
+  const error = assertThrows(
+    () => assertContentLengthWithinLimit('4096', 2048),
+    ApplicationError,
+    'Content-Length declares 4096 bytes, exceeding the 2048-byte limit',
+  )
+  assertEquals(error.code, 'UTILS_NETWORK_CONTENT_LENGTH_TOO_LARGE')
+  assertEquals(error.meta, { declaredBytes: 4096, maxBytes: 2048 })
+})
+
+Deno.test('assertContentLengthWithinLimit: throws given an already-parsed oversized number', () => {
+  assertThrows(
+    () => assertContentLengthWithinLimit(4096, 2048),
+    ApplicationError,
+  )
+})
+
+Deno.test('assertContentLengthWithinLimit: null/undefined/empty never throw', () => {
+  assertContentLengthWithinLimit(null, 1)
+  assertContentLengthWithinLimit(undefined, 1)
+  assertContentLengthWithinLimit('', 1)
+})
+
+Deno.test('assertContentLengthWithinLimit: a non-numeric value never throws', () => {
+  assertContentLengthWithinLimit('not-a-number', 1)
+})
+
+Deno.test('readBoundedStream: returns accumulated bytes when under the limit', async () => {
+  const stream = streamOf([new Uint8Array([1, 2, 3]), new Uint8Array([4, 5])])
+  const result = await readBoundedStream(stream, 10)
+  assertEquals(result, new Uint8Array([1, 2, 3, 4, 5]))
+})
+
+Deno.test('readBoundedStream: accepts a payload landing exactly on the limit', async () => {
+  const stream = streamOf([new Uint8Array([1, 2, 3])])
+  const result = await readBoundedStream(stream, 3)
+  assertEquals(result, new Uint8Array([1, 2, 3]))
+})
+
+Deno.test('readBoundedStream: returns an empty Uint8Array for an empty stream', async () => {
+  const stream = streamOf([])
+  const result = await readBoundedStream(stream, 10)
+  assertEquals(result, new Uint8Array())
+})
+
+Deno.test('readBoundedStream: cancels the reader once real bytes exceed maxBytes', async () => {
+  let cancelled = false
+  const stream = new ReadableStream<Uint8Array>({
+    pull(controller) {
+      controller.enqueue(new Uint8Array([1, 2, 3, 4, 5]))
+    },
+    cancel() {
+      cancelled = true
+    },
+  })
+
+  const error = await assertRejects(
+    () => readBoundedStream(stream, 3),
+    ApplicationError,
+    'Request body exceeded the 3-byte limit while streaming',
+  )
+  assertEquals((error as ApplicationError).code, 'UTILS_NETWORK_BODY_TOO_LARGE')
+  assertEquals((error as ApplicationError).meta, { maxBytes: 3 })
+  assertEquals(cancelled, true)
+})
+
+Deno.test('readBoundedStream: rejects one oversized chunk, no further buffering', async () => {
+  const stream = streamOf([new Uint8Array(20)])
+  await assertRejects(
+    () => readBoundedStream(stream, 10),
+    ApplicationError,
+  )
+})
+
+Deno.test('readBoundedStream: caps against real bytes, ignoring Content-Length', async () => {
+  // Simulates a chunked-transfer-encoding body: no Content-Length was ever checked here, only
+  // the real bytes read from the stream matter.
+  const stream = streamOf([new Uint8Array(5), new Uint8Array(5), new Uint8Array(5)])
+  await assertRejects(() => readBoundedStream(stream, 10), ApplicationError)
 })

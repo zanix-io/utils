@@ -1,3 +1,5 @@
+import { ApplicationError } from 'modules/errors/main.ts'
+
 /**
  * A parsed IPv4 CIDR range.
  *
@@ -191,6 +193,30 @@ export function normalizeClientIp(ip: string): string {
 }
 
 /**
+ * The `trustProxyHeader`/`trustedHeaders` contract shared by every guard/helper in the Zanix
+ * ecosystem that resolves a client identity from a proxy-forwarded header (an IP allowlist, a
+ * rate-limit bucket, an anonymous session id) — declared once here rather than re-declared
+ * per consumer, so the same opt-in-and-explicit shape can't quietly drift between them.
+ */
+export interface ProxyTrustOptions {
+  /**
+   * Must be explicitly set to `true` to trust `trustedHeaders` (default:
+   * `cf-connecting-ip`/`x-real-ip`/`x-forwarded-for`) for resolving the client's identity. Since
+   * those headers are fully attacker-controlled unless the deployment's own infrastructure
+   * guarantees a trusted proxy overwrites them, leaving this unset never trusts them — each
+   * consumer defines its own safe fallback for that case (e.g. one shared bucket/session id, or
+   * refusing to start at all when an allowlist was configured without it).
+   */
+  trustProxyHeader?: boolean
+  /**
+   * Headers considered trustworthy by the application deployment, when `trustProxyHeader` is
+   * `true`. The caller is responsible for ensuring these headers cannot be spoofed by untrusted
+   * clients. Defaults to {@linkcode getClientIp}'s own default list.
+   */
+  trustedHeaders?: string[]
+}
+
+/**
  * Extracts the client IP from trusted request headers.
  *
  * The first header present in `trustedHeaders` is used.
@@ -247,4 +273,167 @@ export function getClientIp(
   }
 
   return 'unknown-ip'
+}
+
+/**
+ * Guards a value that's about to become its own line in a raw text protocol (an SMTP command, a
+ * literal HTTP header line built by hand) against CR/LF injection: a value carrying `\r` or `\n`
+ * could otherwise inject extra protocol lines the caller never intended — a silent `Bcc`, a
+ * spoofed `From`, a smuggled second command — since the receiving end has no other way to tell
+ * where one line ends and the next begins.
+ *
+ * Only relevant to a value the caller writes out AS a raw line itself. The `Headers`/`Request`
+ * APIs already reject embedded CR/LF in a header value on their own, so this is for the lower-level
+ * case of composing a protocol line by hand (an SMTP client, a proxied request builder) rather
+ * than going through those APIs.
+ *
+ * @param field Name of the field being checked, used in the thrown error message.
+ * @param value Raw value to check.
+ * @throws {ApplicationError} If `value` contains `\r` or `\n`.
+ *
+ * @category helpers
+ */
+export function assertNoCrlf(field: string, value: string): void {
+  if (/[\r\n]/.test(value)) {
+    // The caller passed a value with an embedded line break — not something outside its
+    // control, so `ApplicationError` (shouldLog:false by default), not `InternalError`, which
+    // would auto-log every failure of this hot, low-level validator on construction.
+    throw new ApplicationError(`Invalid ${field}: must not contain line breaks`, {
+      code: 'UTILS_NETWORK_CRLF_INJECTION',
+      meta: { field },
+    })
+  }
+}
+
+/**
+ * Fast-rejects a request body BEFORE a single byte of it is read, based solely on a claimed
+ * `Content-Length` — either the raw header string (`headers.get('content-length')`) or an
+ * already-parsed number, whichever the caller already has on hand. Never the real defense on its
+ * own: `Content-Length` is optional (absent under `Transfer-Encoding: chunked`) and fully
+ * client-controlled (nothing stops a caller from lying about it), so this is only a cheap early
+ * exit for the common case of an honest client that already declared an oversized body — pair it
+ * with {@linkcode readBoundedStream}, which enforces the same cap against bytes actually read,
+ * for real protection.
+ *
+ * A missing, empty, or non-numeric `contentLength` is treated as "no claim was made" and never
+ * throws — the absence of a usable `Content-Length` is exactly the case {@linkcode readBoundedStream}
+ * exists to cover, not this function's concern.
+ *
+ * @param contentLength - The claimed body size: the raw `Content-Length` header value, an
+ * already-parsed number, or `null`/`undefined` when absent.
+ * @param maxBytes - The maximum number of bytes the body may declare.
+ * @throws {ApplicationError} If `contentLength` parses to a finite number greater than `maxBytes`.
+ *
+ * @example
+ * ```ts
+ * assertContentLengthWithinLimit(req.headers.get('content-length'), 10 * 1024 * 1024)
+ * ```
+ *
+ * @category helpers
+ */
+export function assertContentLengthWithinLimit(
+  contentLength: string | number | null | undefined,
+  maxBytes: number,
+): void {
+  if (contentLength === null || contentLength === undefined || contentLength === '') return
+
+  const declaredBytes = typeof contentLength === 'number' ? contentLength : Number(contentLength)
+
+  if (!Number.isFinite(declaredBytes) || declaredBytes <= maxBytes) return
+
+  throw new ApplicationError(
+    `Content-Length declares ${declaredBytes} bytes, exceeding the ${maxBytes}-byte limit`,
+    {
+      code: 'UTILS_NETWORK_CONTENT_LENGTH_TOO_LARGE',
+      meta: { declaredBytes, maxBytes },
+    },
+  )
+}
+
+/**
+ * Drains `stream` into one `Uint8Array`, rejecting (`ApplicationError`, code
+ * `UTILS_NETWORK_BODY_TOO_LARGE`) the instant the REAL, running byte count exceeds `maxBytes` —
+ * the actual defense against an unbounded request body/upload exhausting memory, since a claimed
+ * `Content-Length` (see {@linkcode assertContentLengthWithinLimit}) is optional and spoofable and
+ * can't be trusted alone.
+ *
+ * The moment the running total crosses `maxBytes`, the reader is cancelled and the stream is torn
+ * down immediately — an oversized payload is never fully buffered first just to be thrown away
+ * afterwards.
+ *
+ * Framework-neutral by design: this throws a plain {@linkcode ApplicationError}, never an
+ * HTTP-specific error type, so it has no dependency on any particular server framework's error
+ * hierarchy. A caller that needs its own framework error (e.g. an HTTP 413) should catch this and
+ * construct it from the caught error (or from `maxBytes` directly) — see this function's own
+ * `@example`.
+ *
+ * @param stream - The `ReadableStream<Uint8Array>` to drain — typically a request body.
+ * @param maxBytes - The maximum number of bytes to accept. Enforced against bytes actually read,
+ * never against a claimed size.
+ * @returns The accumulated bytes, once `stream` is fully (and safely) drained.
+ * @throws {ApplicationError} Once the accumulated byte count exceeds `maxBytes`.
+ *
+ * @example Bytes-native usage (e.g. hashing an upload, writing it to disk for a transform)
+ * ```ts
+ * const bytes = await readBoundedStream(req.body!, maxBytes)
+ * ```
+ *
+ * @example Decoding to text on top (e.g. a JSON/form request body)
+ * ```ts
+ * const bytes = await readBoundedStream(req.body!, maxBytes)
+ * const text = new TextDecoder().decode(bytes)
+ * ```
+ *
+ * @example Translating the framework-neutral error into an HTTP-specific one
+ * ```ts
+ * try {
+ *   assertContentLengthWithinLimit(req.headers.get('content-length'), maxBytes)
+ *   return await readBoundedStream(req.body!, maxBytes)
+ * } catch (error) {
+ *   if (error instanceof ApplicationError) {
+ *     throw new HttpError('PAYLOAD_TOO_LARGE', { message: error.message, cause: error })
+ *   }
+ *   throw error
+ * }
+ * ```
+ *
+ * @category helpers
+ */
+export async function readBoundedStream(
+  stream: ReadableStream<Uint8Array>,
+  maxBytes: number,
+): Promise<Uint8Array> {
+  const reader = stream.getReader()
+  const chunks: Uint8Array[] = []
+  let total = 0
+
+  while (true) {
+    // deno-lint-ignore no-await-in-loop -- a stream reader is inherently sequential.
+    const { done, value } = await reader.read()
+    if (done) break
+
+    total += value.byteLength
+    if (total > maxBytes) {
+      // Tear the stream down immediately — never finish buffering an oversized payload first,
+      // the whole point of enforcing the cap DURING the drain rather than after it.
+      // deno-lint-ignore no-await-in-loop -- one-time cleanup right before the loop's own throw.
+      await reader.cancel().catch(() => {})
+      throw new ApplicationError(
+        `Request body exceeded the ${maxBytes}-byte limit while streaming`,
+        {
+          code: 'UTILS_NETWORK_BODY_TOO_LARGE',
+          meta: { maxBytes },
+        },
+      )
+    }
+    chunks.push(value)
+  }
+
+  const merged = new Uint8Array(total)
+  let offset = 0
+  for (const chunk of chunks) {
+    merged.set(chunk, offset)
+    offset += chunk.byteLength
+  }
+  return merged
 }

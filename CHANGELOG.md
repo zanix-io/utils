@@ -6,7 +6,112 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to
 [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [3.0.0] - 2026-08-21
+
+### Added
+
+- **`no-znx-console` auto-fix** (`linter`) — `console.log`/`console.info`/`console.warn`/
+  `console.error` are now auto-fixable via `deno lint --fix`, rewriting each call site to its
+  `logger` equivalent (`logger.debug`/`logger.info`/`logger.warn`/`logger.error`) and inserting
+  the `logger` import. The fix resolves the real import alias from the linted file's own project
+  `deno.json(c)` (never a hardcoded one), reuses an existing `logger` import in the file instead of
+  adding a second one, and is skipped — leaving the file untouched, violation still reported — when
+  the project doesn't declare `@zanix/utils`'s `/logger` subpath as a dependency. Any other
+  `console.*` method (`console.table`, `console.trace`, ...) remains report-only.
+- **`confinePath(rootDir, key)`** (`helpers`) — resolves `key` against `rootDir` and throws if the
+  result lands outside `rootDir`, catching both a `../`-traversing `key` and an absolute `key`
+  (which overrides `rootDir` outright when resolved, the same escape spelled differently) with one
+  containment check. The standard guard for any storage/filesystem layer that maps a
+  caller-supplied string onto a real path on disk.
+- **`SESSION_COOKIE_ATTRIBUTES`** (`helpers`) — the shared `Path=/; HttpOnly; Secure;
+  SameSite=Strict` attribute string every Zanix session/token cookie is built with, so that
+  posture can't drift between the packages that each build their own `Set-Cookie` string.
+- **`sanitizeUrl(value)`** (`helpers`) — neutralizes a value about to be used as a navigable
+  `href`/`src`: rejects `javascript:`/`vbscript:` and non-image `data:` schemes (including one
+  obfuscated with an embedded tab/CR/LF or a leading control character), returning `''` instead of
+  letting them reach the DOM. Promoted from a package-local RichText helper, since a second real
+  consumer needing the same URL-sanitization guarantee showed up.
+- **`isPlainObject(value)`** (`helpers`) — type-guards `value` as a real object literal: not
+  `null`, not an array, and not a class instance (`Date`, a Mongo `ObjectId`, etc. — checked via
+  `Object.getPrototypeOf(value) === Object.prototype`), so a caller that walks a value's own
+  enumerable properties never mistakes a constructed instance for a nested object to descend into.
+  Promoted after the identical predicate turned up independently re-implemented in three different
+  files across two packages.
+- **`assertNoCrlf(field, value)`** (`helpers`) — throws if `value` carries a `\r` or `\n`, for a
+  caller composing a raw protocol line by hand (an SMTP command, a hand-built header line) where
+  an embedded line break would inject an extra line the caller never intended.
+- **`ProxyTrustOptions`** (`helpers`) — the `trustProxyHeader`/`trustedHeaders` shape shared by
+  {@linkcode getClientIp}'s callers: opt-in-and-explicit trust of a proxy-forwarded header,
+  declared once so it doesn't get re-declared per guard that needs the same contract.
+- **`RedactOptions.extend`** (`errors`, and therefore `Logger`'s own `redact` option) — a list of
+  extra key names (a plain string, matched exactly and case-insensitively) or patterns (a `RegExp`,
+  for a rule broader than one literal name) to redact _in addition to_ whichever pattern already
+  applies (built-in, an app-wide `setDefaultRedactOptions` default, or this call's own `pattern`),
+  instead of having to reconstruct that entire pattern from scratch just to add one more sensitive
+  key name on top of it. `redactSensitiveData`'s own `pattern` parameter now accepts anything with a
+  `.test(key)` method (a real `RegExp` still works directly) — the new `buildKeyMatcher` helper is
+  what composes a base pattern with `extend` into one.
+- **`Logger.high(...data)`** (`logger`) — a new log severity between `warn` and `error`: for an
+  anomalous condition that deserves attention sooner than a routine `warn`, without necessarily
+  meaning the operation itself failed outright (unlike `error`). Persisted by default, same as
+  `warn`/`error`; dispatches through `console.error` (not `console.warn`) so stderr-only log
+  aggregators still surface it, with its own `🟣`/magenta styling distinct from both neighbors.
+  `LoggerMethods` gains `'high'`, and the new `ConsoleMethodFor<Method>` type (re-exported from
+  `@zanix/utils/types`) expresses which real `console` method a given logger method maps to.
+- **`IsObjectID` decorator, plus raw `isObjectId(value)`/`isObjectIdArray(value)` predicates**
+  (`validator`) — validates a MongoDB `ObjectId` (a 24-character hexadecimal string) against
+  `OBJECT_ID_REGEX`, the same pattern-validation shape every other `Is*` string decorator in this
+  module already follows.
+
+### Changed
+
+- **BREAKING: every regex constant in `/regex` renamed to `UPPER_SNAKE_CASE`** — all ~17 exported
+  and internal-only `RegExp` literals (`emailRegex` → `EMAIL_REGEX`, `uuidRegex` → `UUID_REGEX`,
+  `phoneRegex` → `PHONE_REGEX`, `urlRegex` → `URL_REGEX`, `objectIdRegex` → `OBJECT_ID_REGEX`,
+  `commentRegex` → `COMMENT_REGEX`, `isoDateRegex` → `ISO_DATE_REGEX`, `isoDatetimeRegex` →
+  `ISO_DATETIME_REGEX`, `keyValueRegex` → `KEY_VALUE_REGEX`, `localTimeRegex` →
+  `LOCAL_TIME_REGEX`, `securePasswordRegex` → `SECURE_PASSWORD_REGEX`, `singleQuoteRegex` →
+  `SINGLE_QUOTE_REGEX`, `usernameRegex` → `USERNAME_REGEX`, `utcTimeRegex` → `UTC_TIME_REGEX`,
+  `versionRegex` → `VERSION_REGEX`, `numericRegex` → `NUMERIC_REGEX`, `booleanRegex` →
+  `BOOLEAN_REGEX`, `enclosedStringRegex` → `ENCLOSED_STRING_REGEX`, plus the module's private-only
+  ones) — corrects a whole-file naming-convention deviation: a static `RegExp` literal with no
+  mutable state is a conceptual constant and belongs in `UPPER_SNAKE_CASE`, per this project's own
+  documented convention. No deprecated camelCase alias is kept (see rationale below) — this is a
+  clean rename, not additive. Any code importing a named regex export from `@zanix/utils/regex`
+  by its old camelCase name must update to the new `UPPER_SNAKE_CASE` name.
+
+### Fixed
+
+- `deno lint`'s own `@zanix/utils` plugin (`deno-zanix-plugin`) is now version-pinned
+  (`^3.0.0`, matching this same release) instead of resolving unpinned, so a lint run can no
+  longer silently pick up a newer, unreviewed plugin version.
+- **`compareUint8Arrays` (`helpers`, and `verifyHMAC` which relies on it) now runs in constant
+  time with respect to its content.** It used to return as soon as it found a mismatching byte —
+  timing that leaks how many leading bytes of a caller-supplied guess happened to match a secret
+  (an HMAC signature, an API key), letting a remote attacker recover it one byte at a time instead
+  of needing the full keyspace. Every index is now read regardless of where a mismatch occurs; a
+  length mismatch still returns immediately, since a fixed-length secret's length carries no
+  information about its actual bytes.
+- **`stripComments` (`helpers`/`stripComments` internal, used by `readConfig`/`readModuleConfig`
+  and the `zanix-logger` lint rule) no longer corrupts a JSONC string value that happens to contain
+  a `//`- or `/* ... */`-shaped substring** — a glob like `"src/@tests/**/*.test.ts"` used to come
+  back as `"src/@tests*.test.ts"`, because the previous regex-based implementation had no awareness
+  of JSON string boundaries and read the four characters right after `@tests` as a real block
+  comment. `stripComments` now walks the input character by character, tracking whether it's
+  inside a double-quoted string (respecting `\"`/`\\` escapes), and only treats `//`/`/* ... */` as
+  a comment when outside of one. An unterminated block comment is left untouched rather than
+  silently consuming the rest of the input. The function's signature is unchanged.
+- **`deno doc --lint` no longer reports 4 pre-existing errors on `LoggerFileOptions`/
+  `LoggerFunctionOptions`** — both were missing their own JSDoc, and both referenced the private
+  `BaseLoggerOptions`/`BaseStorage` types. `BaseLoggerOptions` and `BaseStorage` are now exported
+  (from `typings/logger.ts` and re-exported from `@zanix/utils/types`) and `LoggerFileOptions`/
+  `LoggerFunctionOptions` each have a one-line doc comment; no behavior change.
+- **`docs/helpers.md` and `docs/logger.md` now document `confinePath`, `SESSION_COOKIE_ATTRIBUTES`,
+  and `DEFAULT_REDACT_PATTERN`** — all three were already real exports (`confinePath` and
+  `SESSION_COOKIE_ATTRIBUTES` new in this same release, above) with no documented home in `docs/`.
+- **`docs/types.md`'s `LoggerMethods`/`ConsoleInfo` rows were stale** — they still listed the
+  method set from before `logger.high` was added and omitted the `ConsoleMethodFor` type it
+  introduced; both rows now match `typings/logger.ts`, and `ConsoleMethodFor` has its own row.
 
 ## [2.6.1] - 2026-08-19
 
@@ -45,7 +150,7 @@ and this project adheres to
   moved here from `@zanix/cli` (its own `utils/casing.ts`), the only consumer until now: generic,
   reusable string primitives belong in `@zanix/utils`, not in a specific CLI's own `utils/` folder
   (matching the same split already applied to path/config resolution and file-existence checks —
-  see `@zanix/cli`'s own `ENGINEERING.md` §3, "Config-split precedent"). `toPascalCase` now reuses
+  see `@zanix/cli`'s own `engineering.md` §3, "Config-split precedent"). `toPascalCase` now reuses
   `capitalize` internally
   for each word's own capitalization, instead of duplicating that logic inline. See
   [Utils](docs/utils.md#capitalization--casing) for the full reference, including how these differ

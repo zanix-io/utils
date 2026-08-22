@@ -23,17 +23,38 @@ import logger from 'jsr:@zanix/utils@[version]/logger'
 
 logger.info('Server started', { port: 3000 })
 logger.warn('Cache miss', { key: 'user:42' })
+logger.high('Retry budget exhausted for job "sync-catalog", falling back to manual mode', context)
 logger.error('Failed to fetch user', someError)
 logger.debug('Incoming payload', { body: requestBody })
 logger.success('Migration completed')
 ```
 
-`info`, `warn` and `error` are persisted according to the configured storage
-strategy (by default, JSON files under the `.logs` folder). `debug` and
+`info`, `warn`, `high` and `error` are persisted according to the configured
+storage strategy (by default, JSON files under the `.logs` folder). `debug` and
 `success`, however, are **never persisted**, even with the default logger — they
 are only printed to the console and are meant for local development or
 informational purposes, since they tend to generate high volumes of noise
 without carrying critical information.
+
+### `high`: between `warn` and `error`
+
+`high` is for an anomalous condition that deserves attention sooner than a
+routine `warn` — but where the operation itself didn't necessarily fail
+outright, unlike `error`. It prints with its own color (magenta, not shared
+with `warn`'s yellow or `error`'s red, so it reads as its own severity tier at
+a glance) and, under the hood, through `console.error` rather than
+`console.warn` — so log aggregators that only elevate stderr-level output
+still surface it. It does **not** perform `error`'s own already-logged
+(`_logged`) dedup against `Error` instances — pass one the same way you would
+to `warn`, as plain extra data.
+
+Use `warn` for something anomalous but routine/expected (a cache miss, a
+degraded-but-functioning fallback). Reach for `high` when the same kind of
+"not a hard failure" condition is significant enough that an operator
+shouldn't have to go looking for it — a retry budget exhausted before falling
+back, a security-relevant pattern (e.g. repeated failed auth attempts from one
+session) that isn't itself an error. Reserve `error` for an operation that
+actually failed.
 
 Any `Error` instance passed as an extra argument to `info`/`warn`/`error` — e.g.
 `logger.warn('Sync failed, continuing without it', someError)` — is serialized
@@ -228,6 +249,23 @@ value serializes to `{}` under `JSON.stringify`, but Deno's own console
 inspector still prints its full contents, `Authorization` included, when one is
 logged directly or nested inside another object.
 
+The default set also covers common PII/PCI form-field naming beyond classic
+HTTP credentials: `newPassword`/`confirmPassword`/`oldPassword`/
+`currentPassword`, `creditCardNumber`/`cardNumber`, `ssn`, `cvv`/`cvc`,
+`pinCode`/`securityPin`, and `bankAccountNumber`/`bankAccount`. A bare `pin` is
+deliberately **not** matched — unlike `ssn`/`cvv`, it collides too often with
+ordinary non-sensitive usage (a pinned dependency version, a UI "pin" action, a
+GPIO pin); redact a genuinely bare `pin` field via `redact.extend` instead.
+
+**This is key-name matching only, not content scanning.** The redactor never
+looks at a string's _content_ to guess whether it looks like a credential —
+only whether the _field it's stored under_ is named like one. A secret pasted
+into a field named `notes`, `description`, or any other name this pattern
+doesn't recognize reaches the log untouched. If your domain has its own
+sensitive field names this default doesn't cover (a `taxId`, an internal
+`licenseKey`, ...), add them via `redact.extend` — don't rely on the default
+alone for anything domain-specific.
+
 ```ts
 import { Logger } from 'jsr:@zanix/utils@[version]/logger'
 
@@ -249,15 +287,21 @@ import { Logger } from 'jsr:@zanix/utils@[version]/logger'
 // (e.g. it never receives request/header data or user input).
 const trustedLogger = new Logger({ redact: false })
 
-// Keep redaction on, but match this project's own conventions instead of the built-in pattern.
+// Also redact a couple of extra key names, on top of (not instead of) the built-in pattern — the
+// common case, and the one to reach for first: a plain string matches a key name exactly,
+// case-insensitively, same as every built-in entry; a RegExp matches more broadly (e.g. any key
+// ending in "Secret").
 const logger = new Logger({
+  redact: { extend: ['dbPassword', /secret$/i] },
+})
+
+// Match this project's own conventions instead of the built-in pattern entirely — `pattern`
+// *replaces* the built-in set rather than extending it; combine it with `extend` (composed on top
+// of whichever `pattern` applies) if you still want a couple of extra names beyond your own set.
+const customLogger = new Logger({
   redact: { pattern: /^(authorization|x-internal-.*)$/i },
 })
 ```
-
-A custom `pattern` **replaces** the built-in one rather than extending it — if
-you still want the built-in credential names redacted too, include them in your
-own pattern.
 
 ### Changing the default for every caller, not just one `Logger`
 
@@ -281,6 +325,23 @@ setDefaultRedactOptions({ pattern: /^(authorization|x-internal-.*)$/i })
 
 An explicit `redact` — whether on a `Logger` or passed directly to
 `serializeError` — always wins over this default, at any call site.
+
+`DEFAULT_REDACT_PATTERN` (also from `@zanix/utils/errors`) is the built-in
+credential-key pattern itself — the effective pattern whenever nothing has
+overridden it via `setDefaultRedactOptions`. Compose against it directly, or
+use it to restore the process-wide default in a test that changed it and
+needs to clean up after itself:
+
+```ts
+import { DEFAULT_REDACT_PATTERN, setDefaultRedactOptions } from 'jsr:@zanix/utils@[version]/errors'
+
+setDefaultRedactOptions({ pattern: /^(authorization|x-internal-.*)$/i })
+// ...test body...
+setDefaultRedactOptions({ pattern: DEFAULT_REDACT_PATTERN }) // restore the built-in default
+```
+
+`RedactOptions.extend` is still the more convenient way to add a key name on
+top of the built-in pattern without reconstructing it by hand.
 
 ## Accessing the logger globally
 

@@ -1,3 +1,5 @@
+import { ApplicationError } from 'modules/errors/main.ts'
+
 /**
  * Parses a human-readable time duration (e.g., `"1h"`, `"30m"`, `"7d"`) or a numeric
  * value representing seconds, and returns the duration in seconds.
@@ -18,7 +20,7 @@
  *
  * @returns {number} The parsed duration in seconds.
  *
- * @throws {Error} If the provided string does not match a valid TTL pattern.
+ * @throws {ApplicationError} If the provided string does not match a valid TTL pattern.
  *
  * @example
  * parseTTL("1h")   // → 3600
@@ -36,7 +38,12 @@ export function parseTTL(input: number | string): number {
   const clean = input.trim().replace(/\s+/g, '')
 
   const match = /^(\d+)(s|m|h|d|w|mo|y)$/.exec(clean)
-  if (!match) throw new Error(`Invalid TTL format: ${input}`)
+  if (!match) {
+    throw new ApplicationError(`Invalid TTL format: ${input}`, {
+      code: 'UTILS_TTL_INVALID_FORMAT',
+      meta: { input },
+    })
+  }
 
   const value = Number(match[1])
   const unit = match[2]

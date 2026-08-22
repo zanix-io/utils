@@ -37,9 +37,12 @@ export type {
 
 export type {
   BaseFormattedLog,
+  BaseLoggerOptions,
   BaseMethods,
+  BaseStorage,
   Console as GlobalConsole,
   ConsoleInfo,
+  ConsoleMethodFor,
   DefaultFormattedLog,
   DefaultResponse,
   Formatter as LoggerFormatter,

@@ -26,8 +26,8 @@ const rules: Record<string, Deno.lint.Rule> = {
           // Check if the import path starts with '@zanix' and ends with any extension
           if (
             typeof importPath === 'string' &&
-            regex.zanixScopeLib.test(importPath) &&
-            regex.anyExtensionRegex.test(importPath)
+            regex.ZANIX_SCOPE_LIB_REGEX.test(importPath) &&
+            regex.ANY_EXTENSION_REGEX.test(importPath)
           ) {
             context.report({
               node,

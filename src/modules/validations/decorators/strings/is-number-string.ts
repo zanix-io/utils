@@ -2,7 +2,7 @@ import type { ValidationDecorator, ValidationDecoratorDefinition } from 'typings
 
 import { defineValidationDecorator } from 'modules/validations/base/definitions/decorators.ts'
 import { match, matchArray } from './match.ts'
-import { numericRegex } from 'utils/regex.ts'
+import { NUMERIC_REGEX } from 'utils/regex.ts'
 
 /**
  * Is number string validation
@@ -13,7 +13,7 @@ import { numericRegex } from 'utils/regex.ts'
  * @category validations
  */
 export function isNumberString(value?: string): boolean {
-  return match(numericRegex, value)
+  return match(NUMERIC_REGEX, value)
 }
 
 /**
@@ -25,7 +25,7 @@ export function isNumberString(value?: string): boolean {
  * @category validations
  */
 export function isNumberStringArray(value: string[]): boolean {
-  return matchArray(numericRegex, value)
+  return matchArray(NUMERIC_REGEX, value)
 }
 
 /**

@@ -11,6 +11,8 @@ const validData: Partial<EachBranchesRTO> = {
     '9b2f0d5b-3a3e-4c2d-b4d6-8e6f5a1c2e79',
     '9b2f0d5b-3a3e-4c2d-b4d6-8e6f5a1c2379',
   ],
+  objectId: '507f1f77bcf86cd799439011',
+  objectIds: ['507f1f77bcf86cd799439011', '507f191e810c19729de860ea'],
   url: 'http://www.zanix.co',
   urls: ['http://www.zanix.co', 'http://www.zanix.mx'],
   phone: '3333333333',
@@ -80,6 +82,26 @@ Deno.test('EachBranchesRTO - rejects invalid scalar values', async () => {
             constraints: ["'uuid' must be a valid UUID."],
             value: 'not-a-uuid',
             plainValue: 'not-a-uuid',
+          }])
+          throw err
+        }),
+    HttpError,
+    'BAD_REQUEST',
+  )
+})
+
+Deno.test('EachBranchesRTO - rejects invalid objectId value', async () => {
+  await assertRejects(
+    () =>
+      classValidation(EachBranchesRTO, {
+        ...validData,
+        objectId: 'not-an-objectid',
+      })
+        .catch((err) => {
+          assertEquals(err.cause.properties.objectId, [{
+            constraints: ["'objectId' must be a valid ObjectID."],
+            value: 'not-an-objectid',
+            plainValue: 'not-an-objectid',
           }])
           throw err
         }),

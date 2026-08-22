@@ -7,6 +7,7 @@ import {
   IsEmail,
   IsEnum,
   IsNumberString,
+  IsObjectID,
   IsUrl,
   IsUUID,
   Length,
@@ -46,6 +47,12 @@ export class EachBranchesRTO extends BaseRTO {
 
   @IsUUID({ each: true, optional: true })
   accessor uuids: string[] | undefined
+
+  @IsObjectID({ optional: true })
+  accessor objectId: string | undefined
+
+  @IsObjectID({ each: true, optional: true })
+  accessor objectIds: string[] | undefined
 
   @IsUrl({ optional: true })
   accessor url: string | undefined
