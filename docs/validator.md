@@ -141,7 +141,42 @@ Pass `throwErrors` if you want to handle the raw `ValidationError[]` yourself
 > standalone (outside a Zanix framework), or for validating a payload outside
 > the request/response cycle (e.g. a message-queue job or a CLI argument).
 
-### `defineValidationDecorator(validation, options?)`
+### `classMetadata(RTO)`
+
+Returns the static field metadata for a `BaseRTO` subclass: which validation
+decorator each accessor uses, with what arguments, and its
+`each`/`optional`/`expose` flags — derived purely from the class definition, no
+instance to construct and no plain object to validate. Where `classValidation`
+runs the validation pipeline against real data, `classMetadata` introspects the
+class itself, which is what a build-time consumer (an OpenAPI generator, a
+form/table renderer, ...) needs.
+
+```typescript
+class UserRTO extends BaseRTO {
+  @IsString({ expose: true })
+  accessor name!: string
+
+  @IsEnum(['admin', 'user'], { expose: true, optional: true })
+  accessor role!: string
+}
+
+classMetadata(UserRTO)
+// {
+//   name: { decorator: 'IsString', args: [], each: false, optional: false, expose: true },
+//   role: { decorator: 'IsEnum', args: [['admin', 'user']], each: false, optional: true, expose: true },
+// }
+```
+
+Fields declared on a parent `BaseRTO` class are included for a subclass that
+extends it — a field the subclass redeclares overrides the parent's entry.
+`decorator` is `undefined` for a custom decorator built with `Validation()` or
+a raw `defineValidationDecorator()` call, since neither registers a decorator
+name; `args` holds whatever decorator-specific arguments the decorator was
+called with beyond `ValidationOptions` (e.g. `IsEnum`'s allowed values), and is
+empty for a decorator that takes none. See `RTOFieldMetadata` in the
+[Types reference](./types.md).
+
+### `defineValidationDecorator(validation, options?, meta?)`
 
 The primitive used internally to build every decorator in this module. It turns
 a validation function into an accessor decorator, wiring the setter (runs on
@@ -150,6 +185,13 @@ constructor-time `init` hook (applies `expose`/`optional` semantics). Reach for
 it when none of the built-in decorators fit and you want full control over
 transform/expose behavior; for most custom checks, `Validation()` (below) is the
 simpler option.
+
+The optional third argument, `meta`, tags the field for `classMetadata`'s
+class-level introspection — pass `{ decorator: 'MyDecoratorName' }`, plus
+`args` for any decorator-specific arguments beyond `ValidationOptions` (see
+`IsEnum`'s implementation for an example). It has no effect on validation
+itself; omit it and the field still registers, just without a known
+`decorator` name.
 
 ```typescript
 const IsPositive = () =>
@@ -170,16 +212,19 @@ class OrderRTO extends BaseRTO {
 | `IsString`             | `(options?: ValidationOptions) => ValidationDecoratorDefinition`                                              | Validates that the value is a `string` (or, with `each: true`, an array of strings).                                        |
 | `isString`             | `(value?: string) => boolean`                                                                                 | Raw predicate: `typeof value === 'string'`.                                                                                 |
 | `isStringArray`        | `(value: string[]) => boolean`                                                                                | Raw predicate for arrays of strings.                                                                                        |
-| `IsEmail`              | `(options?: ValidationOptions) => ValidationDecoratorDefinition`                                              | Validates an email address against `emailRegex`.                                                                            |
+| `IsEmail`              | `(options?: ValidationOptions) => ValidationDecoratorDefinition`                                              | Validates an email address against `EMAIL_REGEX`.                                                                           |
 | `isEmail`              | `(value?: string) => boolean`                                                                                 | Raw email predicate.                                                                                                        |
 | `isEmailArray`         | `(value: string[]) => boolean`                                                                                | Raw predicate for arrays of emails.                                                                                         |
-| `IsUrl`                | `(options?: ValidationOptions) => ValidationDecoratorDefinition`                                              | Validates a URL against `urlRegex` (scheme and `www.` are optional).                                                        |
+| `IsUrl`                | `(options?: ValidationOptions) => ValidationDecoratorDefinition`                                              | Validates a URL against `URL_REGEX` (scheme and `www.` are optional).                                                       |
 | `isUrl`                | `(value?: string) => boolean`                                                                                 | Raw URL predicate.                                                                                                          |
 | `isUrlArray`           | `(value: string[]) => boolean`                                                                                | Raw predicate for arrays of URLs.                                                                                           |
-| `IsUUID`               | `(options?: ValidationOptions) => ValidationDecoratorDefinition`                                              | Validates a UUID against `uuidRegex`.                                                                                       |
+| `IsUUID`               | `(options?: ValidationOptions) => ValidationDecoratorDefinition`                                              | Validates a UUID against `UUID_REGEX`.                                                                                      |
 | `isUUID`               | `(value?: string) => boolean`                                                                                 | Raw UUID predicate.                                                                                                         |
 | `isUUIDArray`          | `(value: string[]) => boolean`                                                                                | Raw predicate for arrays of UUIDs.                                                                                          |
-| `IsPhone`              | `(options?: ValidationOptions) => ValidationDecoratorDefinition`                                              | Validates an E.164-like phone number against `phoneRegex` (optional leading `+`, 2-15 digits).                              |
+| `IsObjectID`           | `(options?: ValidationOptions) => ValidationDecoratorDefinition`                                              | Validates a MongoDB `ObjectId` (24-character hex string) against `OBJECT_ID_REGEX`.                                         |
+| `isObjectId`           | `(value?: string) => boolean`                                                                                 | Raw ObjectId predicate.                                                                                                     |
+| `isObjectIdArray`      | `(value: string[]) => boolean`                                                                                | Raw predicate for arrays of ObjectIds.                                                                                      |
+| `IsPhone`              | `(options?: ValidationOptions) => ValidationDecoratorDefinition`                                              | Validates an E.164-like phone number against `PHONE_REGEX` (optional leading `+`, 2-15 digits).                             |
 | `isPhone`              | `(value?: string) => boolean`                                                                                 | Raw phone predicate.                                                                                                        |
 | `isPhoneArray`         | `(value: string[]) => boolean`                                                                                | Raw predicate for arrays of phone numbers.                                                                                  |
 | `IsNumberString`       | `(options?: ValidationOptions) => ValidationDecoratorDefinition`                                              | Validates that the value is a numeric string (`^\d+(\.\d+)?$`), e.g. `"12"` or `"12.5"`. Does not convert it to a `number`. |

@@ -30,7 +30,7 @@ Deno.test('baseHeaderLog picks the terminal (ANSI) branch inside a real Deno pro
 
 Deno.test('buildHeaderLog (browser variant) uses %c + a CSS string instead of ANSI escapes', () => {
   for (
-    const method of ['info', 'success', 'error', 'warn', 'debug'] as const
+    const method of ['info', 'success', 'error', 'high', 'warn', 'debug'] as const
   ) {
     const [header, style, ...rest] = buildHeaderLog(method, true)
 

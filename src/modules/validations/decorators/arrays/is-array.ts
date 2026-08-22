@@ -55,5 +55,5 @@ export const IsArray: ValidationDecorator = function (
   return defineValidationDecorator(validation, {
     message: defaultMessage,
     ...options,
-  })
+  }, { decorator: 'IsArray' })
 }

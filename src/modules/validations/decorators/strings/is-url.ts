@@ -2,7 +2,7 @@ import type { ValidationDecorator, ValidationDecoratorDefinition } from 'typings
 
 import { defineValidationDecorator } from 'modules/validations/base/definitions/decorators.ts'
 import { match, matchArray } from './match.ts'
-import { urlRegex } from 'utils/regex.ts'
+import { URL_REGEX } from 'utils/regex.ts'
 
 /**
  * Is url validation
@@ -13,7 +13,7 @@ import { urlRegex } from 'utils/regex.ts'
  * @category validations
  */
 export function isUrl(value?: string): boolean {
-  return match(urlRegex, value)
+  return match(URL_REGEX, value)
 }
 
 /**
@@ -25,7 +25,7 @@ export function isUrl(value?: string): boolean {
  * @category validations
  */
 export function isUrlArray(value: string[]): boolean {
-  return matchArray(urlRegex, value)
+  return matchArray(URL_REGEX, value)
 }
 
 /**

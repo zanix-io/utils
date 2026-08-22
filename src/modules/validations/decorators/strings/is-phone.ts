@@ -2,7 +2,7 @@ import type { ValidationDecorator, ValidationDecoratorDefinition } from 'typings
 
 import { defineValidationDecorator } from 'modules/validations/base/definitions/decorators.ts'
 import { match, matchArray } from './match.ts'
-import { phoneRegex } from 'utils/regex.ts'
+import { PHONE_REGEX } from 'utils/regex.ts'
 
 /**
  * Is phone validation
@@ -13,7 +13,7 @@ import { phoneRegex } from 'utils/regex.ts'
  * @category validations
  */
 export function isPhone(value?: string): boolean {
-  return match(phoneRegex, value)
+  return match(PHONE_REGEX, value)
 }
 
 /**
@@ -25,7 +25,7 @@ export function isPhone(value?: string): boolean {
  * @category validations
  */
 export function isPhoneArray(value: string[]): boolean {
-  return matchArray(phoneRegex, value)
+  return matchArray(PHONE_REGEX, value)
 }
 
 /**

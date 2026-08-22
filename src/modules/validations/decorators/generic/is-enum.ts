@@ -79,5 +79,5 @@ export const IsEnum = (
   return defineValidationDecorator(validation, {
     message: defaultMessage,
     ...options,
-  })
+  }, { decorator: 'IsEnum', args: [validations] })
 }

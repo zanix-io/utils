@@ -172,6 +172,48 @@ export type ValidationDecorator<
   ) => ValidationDecoratorDefinition)
 
 /**
+ * Identifies which validation decorator produced a given {@linkcode RTOFieldMetadata} entry,
+ * plus any decorator-specific arguments it was called with beyond {@linkcode ValidationOptions}
+ * (e.g. `IsEnum`'s allowed values).
+ *
+ * Passed by a decorator to `defineValidationDecorator`'s third argument. A custom decorator that
+ * omits it still registers its field for {@linkcode RTOFieldMetadata} purposes, just without a
+ * known `decorator` name.
+ */
+export type ClassFieldDecoratorMeta = {
+  /** Name of the decorator applied, e.g. `'IsString'`, `'IsEnum'`. */
+  decorator: string
+  /** Decorator-specific arguments beyond `ValidationOptions`, e.g. `IsEnum`'s enum object/array. */
+  args?: unknown[]
+}
+
+/**
+ * Static, class-level description of a single `BaseRTO` field: which validation decorator was
+ * applied, with what arguments, and its `each`/`optional`/`expose` flags — everything a
+ * build-time consumer (an OpenAPI generator, a form/table renderer, ...) needs without
+ * constructing or validating a real instance.
+ */
+export type RTOFieldMetadata = {
+  /**
+   * Name of the validation decorator applied (e.g. `'IsString'`, `'IsEnum'`). `undefined` for a
+   * custom decorator that didn't register a name (built via `Validation()` or a raw
+   * `defineValidationDecorator()` call with no third argument).
+   */
+  decorator?: string
+  /**
+   * Decorator-specific arguments beyond `ValidationOptions`, e.g. `IsEnum`'s enum object/array.
+   * Empty when the decorator takes none.
+   */
+  args: unknown[]
+  /** Whether the decorator validates each item of an array (`each: true`) rather than the whole value. */
+  each: boolean
+  /** Whether the field is optional. */
+  optional: boolean
+  /** Whether the field is exposed in the validated output. */
+  expose: boolean
+}
+
+/**
  * Nested properties metadata types
  */
 export type NestedProperties<K extends 'error' | 'obj'> = K extends 'error'

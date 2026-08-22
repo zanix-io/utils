@@ -2,7 +2,7 @@ import type { ValidationDecorator, ValidationDecoratorDefinition } from 'typings
 
 import { defineValidationDecorator } from 'modules/validations/base/definitions/decorators.ts'
 import { match, matchArray } from './match.ts'
-import { booleanRegex } from 'utils/regex.ts'
+import { BOOLEAN_REGEX } from 'utils/regex.ts'
 
 /**
  * Is boolean validation
@@ -13,7 +13,7 @@ import { booleanRegex } from 'utils/regex.ts'
  * @category validations
  */
 export function isBooleanString(value?: string): boolean {
-  return match(booleanRegex, value)
+  return match(BOOLEAN_REGEX, value)
 }
 
 /**
@@ -25,7 +25,7 @@ export function isBooleanString(value?: string): boolean {
  * @category validations
  */
 export function isBooleanStringArray(value: string[]): boolean {
-  return matchArray(booleanRegex, value)
+  return matchArray(BOOLEAN_REGEX, value)
 }
 
 /**

@@ -1,7 +1,8 @@
-import { basename, fromFileUrl, join, relative } from '@std/path'
+import { basename, fromFileUrl, join, relative, resolve, SEPARATOR } from '@std/path'
 import { CONFIG_FILE } from 'utils/constants.ts'
 import { fileExists } from './files.ts'
 import { isFileUrl } from 'utils/urls.ts'
+import { ApplicationError } from 'modules/errors/main.ts'
 
 /**
  * Gets the root directory of the project
@@ -81,6 +82,43 @@ export function getPathFromCurrent(
   if (isFileUrl(callerUrl)) return fromFileUrl(path)
 
   return path
+}
+
+/**
+ * Resolves `key` against `rootDir` and rejects the result if it lands outside `rootDir` — the
+ * guard any storage/filesystem layer needs before touching disk with a caller-supplied `key`
+ * (or an id used to build one): `../` segments and an absolute `key` both escape containment the
+ * same way, since resolving an absolute `key` against `rootDir` simply overrides `rootDir`
+ * entirely rather than nesting under it — so both are caught by the one containment check below,
+ * neither treated as a special case. `key` resolving to `rootDir` itself (an empty/`.` key) is
+ * also rejected: a storage `key` always names something INSIDE the root, never the root.
+ *
+ * @param rootDir - The directory `key` must resolve strictly inside of. Relative or absolute.
+ * @param key - The caller-supplied path segment to confine — never trusted to already be safe.
+ * @returns The resolved, absolute path — safe to pass to any `Deno.*` filesystem call.
+ * @throws {ApplicationError} If the resolved path is `rootDir` itself or outside it.
+ *
+ * @example
+ * ```ts
+ * confinePath('/data/objects', 'assets/1/original') // '/data/objects/assets/1/original'
+ * confinePath('/data/objects', '../../etc/passwd')  // throws
+ * confinePath('/data/objects', '/etc/passwd')       // throws
+ * ```
+ *
+ * @category helpers
+ */
+export function confinePath(rootDir: string, key: string): string {
+  const root = resolve(rootDir)
+  const target = resolve(root, key)
+
+  if (!target.startsWith(root + SEPARATOR)) {
+    throw new ApplicationError(`Path traversal blocked: "${key}" resolves outside "${rootDir}"`, {
+      code: 'UTILS_PATHS_TRAVERSAL_BLOCKED',
+      meta: { rootDir, key },
+    })
+  }
+
+  return target
 }
 
 /**

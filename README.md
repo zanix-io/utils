@@ -69,7 +69,7 @@ import testPlugin from 'jsr:@zanix/utils@[version]/linter/deno-test-plugin'
 import zanixConstants, { CONFIG_FILE } from 'jsr:@zanix/utils@[version]/constants'
 
 // Regular expressions
-import zanixRegex, { emailRegex } from 'jsr:@zanix/utils@[version]/regex'
+import zanixRegex, { EMAIL_REGEX } from 'jsr:@zanix/utils@[version]/regex'
 
 // Logger
 import zanixLogger, { Logger } from 'jsr:@zanix/utils@[version]/logger'

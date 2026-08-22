@@ -21,6 +21,36 @@ import {
 } from 'jsr:@zanix/utils@[version]/errors'
 ```
 
+## Choosing a class
+
+Every error crossing a package boundary (thrown to a caller, returned in an
+HTTP response, or handed to `logger.error`) should be one of these four — never
+a plain `Error`/`Deno.errors.*`/a hand-rolled class, and never left unwrapped
+if it originates from a third-party library or driver. Which one:
+
+| Situation                                                                                                                                                                                                                | Class              | Why                                                                                                                                                                                                                                                            |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A genuine client-shaped failure — bad input, not found, forbidden, conflict — where you know the real HTTP status                                                                                                        | `HttpError`        | The only class with `.status`; without it, a client-facing response defaults to `500` (see `@zanix/server`'s `httpErrorResponse`), which would misreport a real client mistake as a server fault.                                                              |
+| An unexpected, critical fault the caller didn't cause — a DB/queue connection failure, a config invariant violated, a third-party SDK throwing something you didn't ask for, a `catch` around code that "shouldn't" fail | `InternalError`    | `shouldLog` defaults to `true` — self-logs the moment it's constructed, so failures like these don't depend on every catch site remembering to log them. Resolves to HTTP `500` by default (no `.status` of its own) when it reaches a client-facing response. |
+| An expected domain/business-rule failure that isn't shaped like an HTTP status at all (a validation invariant inside a non-HTTP-facing library, a state-machine transition that isn't allowed)                           | `ApplicationError` | `shouldLog` defaults to `false` — expected, recoverable failures shouldn't auto-flood the log the way a genuine `InternalError` should.                                                                                                                        |
+| An authorization/authentication failure specifically                                                                                                                                                                     | `PermissionDenied` | Same defaults as `ApplicationError`, but gives permission failures their own catchable type — a caller can `catch (e) { if (e instanceof PermissionDenied) ... }` without string-matching a message or a `code`.                                               |
+
+The dividing line between `InternalError` and `ApplicationError` is **"did the
+caller do something wrong, or did something the caller had no control over go
+wrong?"** — not severity alone. A DB connector that can't reach its database
+is `InternalError` even if it's "just" a connectivity blip, because the
+caller's request had nothing to do with it. A validation rule you deliberately
+enforce and expect to be hit sometimes is `ApplicationError` even though it's
+also "not the server's fault" — because it's the caller's own input, not an
+unrelated internal failure surfacing through your code.
+
+A plain `Error` (or a third-party library's own error type) reaching this far
+unwrapped is a strong signal something should have been an `InternalError`
+instead — see `@zanix/server`'s `httpErrorResponse` default (`500` when there's
+no `.status`) for what a client actually sees when that happens, and why the
+distinction matters even though both currently resolve to the same status
+code by default.
+
 ## HttpError
 
 `HttpError` extends Deno's `Http` error class and is meant for HTTP-related
@@ -35,14 +65,17 @@ since `Deno.errors.Http` doesn't exist there —
 way, as every one of them is set directly in `HttpError`'s own constructor
 rather than inherited from its base class.
 
-| Option      | Type                      | Default          | Description                                                          |
-| ----------- | ------------------------- | ---------------- | -------------------------------------------------------------------- |
-| `message`   | `string`                  | the error `code` | The main error message.                                              |
-| `shouldLog` | `boolean`                 | `false`          | Whether to log this error through the system logger on construction. |
-| `meta`      | `Record<string, unknown>` | `undefined`      | Optional metadata attached to the error for internal use.            |
-| `code`      | `string`                  | `undefined`      | Optional internal code identifier (distinct from the HTTP `code`).   |
-| `cause`     | `unknown`                 | `undefined`      | Optional inner exception or cause.                                   |
-| `id`        | `string`                  | generated UUID   | Identifier used to track or reference the error trace.               |
+| Option        | Type                      | Default          | Description                                                                                                                                                                                                            |
+| ------------- | ------------------------- | ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `message`     | `string`                  | the error `code` | The main error message — technical/dev-facing, not meant for an end user (see `userMessage`).                                                                                                                          |
+| `shouldLog`   | `boolean`                 | `false`          | Whether to log this error through the system logger on construction.                                                                                                                                                   |
+| `meta`        | `Record<string, unknown>` | `undefined`      | Optional metadata attached to the error for internal use.                                                                                                                                                              |
+| `userMessage` | `string`                  | `undefined`      | Optional, safe message meant to be shown directly to an end user, when this error is one a caller might realistically surface in a UI. See [Dev-facing vs. user-facing messages](#dev-facing-vs-user-facing-messages). |
+| `exposeMeta`  | `boolean`                 | `false`          | Whether `meta` is safe to include in a client-facing response. See [Deciding what a client-facing response includes](#deciding-what-a-client-facing-response-includes).                                                |
+| `exposeCause` | `boolean`                 | `false`          | Whether `cause` is safe to include in a client-facing response. Same section as `exposeMeta`.                                                                                                                          |
+| `code`        | `string`                  | `undefined`      | Optional internal code identifier (distinct from the HTTP `code`).                                                                                                                                                     |
+| `cause`       | `unknown`                 | `undefined`      | Optional inner exception or cause.                                                                                                                                                                                     |
+| `id`          | `string`                  | generated UUID   | Identifier used to track or reference the error trace.                                                                                                                                                                 |
 
 ```ts
 throw new HttpError('NOT_FOUND', {
@@ -70,13 +103,16 @@ explicitly.
 application errors, adding the same tracking properties as `HttpError` (`id`,
 `code`, `meta`, `cause`, `shouldLog`) but without any HTTP status mapping.
 
-| Option      | Type                      | Default        | Description                                                          |
-| ----------- | ------------------------- | -------------- | -------------------------------------------------------------------- |
-| `shouldLog` | `boolean`                 | `false`        | Whether to log this error through the system logger on construction. |
-| `meta`      | `Record<string, unknown>` | `undefined`    | Optional metadata attached to the error for internal use.            |
-| `code`      | `string`                  | `undefined`    | Optional error code for internal use.                                |
-| `cause`     | `unknown`                 | `undefined`    | Optional inner exception or cause.                                   |
-| `id`        | `string`                  | generated UUID | Identifier used to track or reference the error trace.               |
+| Option        | Type                      | Default        | Description                                                                                                                                                              |
+| ------------- | ------------------------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `shouldLog`   | `boolean`                 | `false`        | Whether to log this error through the system logger on construction.                                                                                                     |
+| `meta`        | `Record<string, unknown>` | `undefined`    | Optional metadata attached to the error for internal use.                                                                                                                |
+| `userMessage` | `string`                  | `undefined`    | Optional, safe message meant to be shown directly to an end user — see [Dev-facing vs. user-facing messages](#dev-facing-vs-user-facing-messages).                       |
+| `exposeMeta`  | `boolean`                 | `false`        | Whether `meta` is safe to include in a client-facing response — see [Deciding what a client-facing response includes](#deciding-what-a-client-facing-response-includes). |
+| `exposeCause` | `boolean`                 | `false`        | Whether `cause` is safe to include in a client-facing response. Same section as `exposeMeta`.                                                                            |
+| `code`        | `string`                  | `undefined`    | Optional error code for internal use.                                                                                                                                    |
+| `cause`       | `unknown`                 | `undefined`    | Optional inner exception or cause.                                                                                                                                       |
+| `id`          | `string`                  | generated UUID | Identifier used to track or reference the error trace.                                                                                                                   |
 
 ```ts
 const error = new ApplicationError('Something went wrong!', {
@@ -189,6 +225,75 @@ const serializedErrors = serializeMultipleErrors([
   'plain string',
 ])
 ```
+
+## Dev-facing vs. user-facing messages
+
+`message` is written for whoever is debugging the failure — it can be as
+technical as needed (a driver error string, a validation detail, an internal
+identifier) and is what shows up in logs, `cause` chains, and any API response
+consumed by another developer's code. It is **not** automatically safe to show
+a non-technical end user.
+
+Most errors never reach an end user at all — a failed DB connector, a
+rejected internal service call, a background job retry are all things a
+_developer_ observes, not something rendered in a UI. For the errors that
+_can_ realistically be shown directly to whoever triggered them (a form
+submission, a checkout flow, a CLI command a person is running themselves),
+set `userMessage` alongside `message`:
+
+```ts
+throw new HttpError('CONFLICT', {
+  message: 'Unique constraint violation on users.email (value already exists)',
+  userMessage: 'That email is already registered. Try signing in instead.',
+  code: 'USER_EMAIL_TAKEN',
+})
+```
+
+`userMessage` is `undefined` unless a caller sets it — there's no generic
+fallback synthesized from `message`, since a technical message being _absent_
+a safe rewrite is a much better default than silently showing raw internal
+detail to an end user. A caller building a user-facing surface (a REST error
+response meant for a browser to render as-is, a CLI's own top-level failure
+line, an SSR error boundary's fallback UI) should prefer `userMessage` when
+present and fall back to a generic, error-agnostic message — never to
+`message` — when it isn't.
+
+## Deciding what a client-facing response includes
+
+`meta` and `cause` are, by default, **not** included in a client-facing
+response — `@zanix/server`'s `getPublicErrorResponse`/`httpErrorResponse` omit
+them unless the error itself opts in via `exposeMeta`/`exposeCause`. Both
+still reach anywhere this error gets logged regardless of these flags — a
+`Logger`'s `storage.save`, or `@zanix/server`'s own `logAppError` — since
+that's `meta`/`cause`'s primary purpose: internal debugging context for
+whoever operates the system, not necessarily something the caller who
+triggered the error should see.
+
+Most `meta`/`cause` values fall into that "internal only" category — a
+connector name, an internal record id, a driver's raw error text, a
+downstream service's internal hostname. Only opt in when you've deliberately
+shaped one to be safe and useful for the caller:
+
+```ts
+// Internal — meta/cause never leave the log, by default. This is the common case.
+throw new InternalError('Failed to persist order after payment capture', {
+  cause: dbError, // may contain a connection string, a driver-specific detail
+  meta: { orderId, attempt: 3 },
+})
+
+// Client-facing — meta is deliberately shaped for the caller to act on.
+throw new HttpError('UNPROCESSABLE_ENTITY', {
+  message: 'Request failed validation',
+  meta: { field: 'email', reason: 'invalid_format' },
+  exposeMeta: true,
+  code: 'VALIDATION_FAILED',
+})
+```
+
+`exposeMeta`/`exposeCause` only affect what a package building a client-facing
+response chooses to include — they carry no behavior of their own inside
+`@zanix/utils`. See `@zanix/server`'s own documentation for exactly which
+fields a response includes by default.
 
 ## See also
 

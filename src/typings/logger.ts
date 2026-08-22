@@ -7,11 +7,25 @@ export type Console = typeof console
 /** The base method types */
 export type BaseMethods = Exclude<LoggerMethods, 'success'>
 
-/** The native `console` method invoked for a given base logger method. */
-export type ConsoleInfo<Method extends BaseMethods> = Console[Method]
+/**
+ * The real `console` method a given base logger method's argument shape is borrowed from.
+ * `console` has no `console.high` — `'high'` reuses `console.error`'s parameter shape (and, per
+ * {@linkcode showMessage}, its underlying console method) since it's the closer of the two native
+ * methods to `'high'`'s own "needs attention soon" severity.
+ */
+export type ConsoleMethodFor<Method extends BaseMethods> = Method extends 'high' ? 'error' : Method
 
-/** The logger available methods types */
-export type LoggerMethods = 'info' | 'error' | 'warn' | 'debug' | 'success'
+/** The native `console` method invoked for a given base logger method. */
+export type ConsoleInfo<Method extends BaseMethods> = Console[ConsoleMethodFor<Method>]
+
+/**
+ * The logger available methods types.
+ *
+ * `'high'` sits between `'warn'` and `'error'`: an anomalous condition that deserves attention
+ * sooner than a routine `warn`, but where the operation itself didn't necessarily fail outright
+ * (unlike `'error'`). Persisted by default, same as `'warn'`/`'error'` — see `docs/logger.md`.
+ */
+export type LoggerMethods = 'info' | 'error' | 'high' | 'warn' | 'debug' | 'success'
 
 /** The Logger data to be shown */
 export type LoggerData<Method extends LoggerMethods = 'info'> = Method extends 'success' ? string
@@ -133,8 +147,12 @@ export type SaveDataFileOptions = {
   save?: SaveDataFile
 }
 
-/** The base storage options */
-type BaseStorage = {
+/**
+ * The base storage options. Exported only so `LoggerFileOptions`/`LoggerFunctionOptions` (via
+ * `BaseLoggerOptions`) resolve for `deno doc --lint` — use `LoggerFileOptions`/
+ * `LoggerFunctionOptions` directly instead of this type.
+ */
+export type BaseStorage = {
   /**
    * This function allows you to modify or transform the data (e.g., formatting, sanitization)
    * prior to storage. If not provided, a default format will be applied.
@@ -149,8 +167,12 @@ type BaseStorage = {
   formatter?: Formatter
 }
 
-/** The base logger class options */
-type BaseLoggerOptions<
+/**
+ * The base logger class options. Exported only so `LoggerFileOptions`/`LoggerFunctionOptions`
+ * resolve for `deno doc --lint` — use `LoggerFileOptions`/`LoggerFunctionOptions` directly instead
+ * of this type.
+ */
+export type BaseLoggerOptions<
   Return extends unknown,
   Storage extends 'saveFile' | 'saveFunction',
 > = {
@@ -171,6 +193,9 @@ type BaseLoggerOptions<
    * // Disable entirely — only safe when this logger's output is already fully trusted.
    * new Logger({ redact: false })
    *
+   * // Also redact a couple of extra key names, on top of (not instead of) the built-in pattern.
+   * new Logger({ redact: { extend: ['dbPassword', /secret$/i] } })
+   *
    * // Match this codebase's own conventions instead of the built-in pattern.
    * new Logger({ redact: { pattern: /^(authorization|x-internal-.*)$/i } })
    * ```
@@ -190,11 +215,13 @@ type BaseLoggerOptions<
     | false
 }
 
+/** `LoggerOptions`'s file-based-storage half — `storage.save` is a `SaveDataFile` config object. */
 export type LoggerFileOptions<Return extends unknown> = BaseLoggerOptions<
   Return,
   'saveFile'
 >
 
+/** `LoggerOptions`'s function-based-storage half — `storage.save` is a `SaveDataFunction`. */
 export type LoggerFunctionOptions<Return extends unknown> = BaseLoggerOptions<
   Return,
   'saveFunction'

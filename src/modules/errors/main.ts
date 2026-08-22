@@ -20,15 +20,31 @@ function processError(
   else delete this.code
   if (options.meta) this.meta = options.meta
   else delete this.meta
+  if (options.userMessage) this.userMessage = options.userMessage
+  else delete this.userMessage
+  if (options.exposeMeta) this.exposeMeta = true
+  else delete this.exposeMeta
+  if (options.exposeCause) this.exposeCause = true
+  else delete this.exposeCause
   if (options.cause) this.cause = options.cause
 
   if (options.shouldLog) logger.error(this.message, this)
 
-  // Add it to the error instance in a controlled way
+  // A plain, writable data property — not a getter — specifically so a later, legitimate
+  // assignment (`error._logged = true`, or `Object.assign(error, { _logged: true })`) actually
+  // works. A getter-only accessor (this property's original shape) has no setter, so any such
+  // assignment fails: it throws in strict mode (every ES module is strict) or silently no-ops in
+  // sloppy mode — either way, `@zanix/server`'s `logAppError` relies on exactly this kind of
+  // post-log stamp to make itself idempotent per error instance (see its own doc), and a
+  // getter-only `_logged` defeats that silently (the assignment is wrapped in a `try/catch` there,
+  // so the failure never surfaces) — confirmed a real, reproducible double-log this way, not just
+  // a theoretical footgun. `serializeMultipleErrors`' own internal dedup (`Object.defineProperty`,
+  // not assignment) already tolerated the old shape as long as this property stayed configurable,
+  // so it's unaffected either way.
   Object.defineProperty(this, '_logged', {
-    get: function () {
-      return !!options.shouldLog
-    },
+    value: !!options.shouldLog,
+    writable: true,
+    configurable: true,
     enumerable: false, // This ensures it's not visible when printing the error
   })
 }
@@ -93,6 +109,12 @@ export class HttpError extends HttpErrorBase {
   public code?: string
   /** Optional metadata attached to this error for internal use. */
   public meta?: Record<string, unknown>
+  /** Optional, safe message meant to be shown directly to an end user — see {@link ErrorOptions.userMessage}. */
+  public userMessage?: string
+  /** Whether `meta` is safe to include in a client-facing response — see {@link ErrorOptions.exposeMeta}. */
+  public exposeMeta?: boolean
+  /** Whether `cause` is safe to include in a client-facing response — see {@link ErrorOptions.exposeCause}. */
+  public exposeCause?: boolean
   /** The HTTP error code and its corresponding numeric status value. */
   public status: { code: HttpErrorCodes; value: number }
   /** Tracks whether this error instance has already been logged, to avoid double-logging the same error when it is re-serialized (see `serializeMultipleErrors`). */
@@ -154,6 +176,12 @@ export class ApplicationError extends Error {
   public code?: string
   /** Optional metadata attached to this error for internal use. */
   public meta?: Record<string, unknown>
+  /** Optional, safe message meant to be shown directly to an end user — see {@link ErrorOptions.userMessage}. */
+  public userMessage?: string
+  /** Whether `meta` is safe to include in a client-facing response — see {@link ErrorOptions.exposeMeta}. */
+  public exposeMeta?: boolean
+  /** Whether `cause` is safe to include in a client-facing response — see {@link ErrorOptions.exposeCause}. */
+  public exposeCause?: boolean
   /** Tracks whether this error instance has already been logged, to avoid double-logging the same error when it is re-serialized (see `serializeMultipleErrors`). */
   private _logged: boolean = false
 

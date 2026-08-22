@@ -1,4 +1,5 @@
 import { assertEquals, assertThrows } from '@std/assert'
+import { ApplicationError } from 'modules/errors/main.ts'
 import { parseTTL } from 'utils/ttl.ts'
 
 Deno.test('parseTTL: parses seconds (s)', () => {
@@ -46,13 +47,14 @@ Deno.test('parseTTL: trims spaces inside string', () => {
 })
 
 Deno.test('parseTTL: throws on invalid formats', () => {
-  assertThrows(() => parseTTL('abc'))
-  assertThrows(() => parseTTL('10'))
-  assertThrows(() => parseTTL('5minutes'))
-  assertThrows(() => parseTTL('h'))
-  assertThrows(() => parseTTL('1x'))
+  assertThrows(() => parseTTL('abc'), ApplicationError)
+  assertThrows(() => parseTTL('10'), ApplicationError)
+  assertThrows(() => parseTTL('5minutes'), ApplicationError)
+  assertThrows(() => parseTTL('h'), ApplicationError)
+  const error = assertThrows(() => parseTTL('1x'), ApplicationError)
+  assertEquals(error.code, 'UTILS_TTL_INVALID_FORMAT')
 })
 
 Deno.test('parseTTL: throws on empty string', () => {
-  assertThrows(() => parseTTL(''))
+  assertThrows(() => parseTTL(''), ApplicationError)
 })

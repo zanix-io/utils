@@ -1,6 +1,6 @@
 import { linterMessageFormat } from 'modules/linter/commons/message.ts'
 import { Line } from 'modules/linter/commons/visitors.ts'
-import regex, { commentRegex, enclosedStringRegex } from 'utils/regex.ts'
+import regex, { COMMENT_REGEX, ENCLOSED_STRING_REGEX } from 'utils/regex.ts'
 
 /**
  * `Deno lint` rule to enforce a maximum line width limit in the code.
@@ -24,17 +24,17 @@ const rules: Record<string, Deno.lint.Rule> = {
         (
           { lineLength: baseLenght, lineStart, lineEnd, line, lines, index },
         ) => {
-          const cleanLine = line.replace(commentRegex, '').trim()
+          const cleanLine = line.replace(COMMENT_REGEX, '').trim()
           const lineLength = cleanLine.length
           const prevLine = (lines[index - 1] || '').trim()
           const nextLine = (lines[index + 1] || '').trim()
 
           const exceptions = lineLength <= maxLineWidth ||
             cleanLine.startsWith('import ') ||
-            cleanLine.replace(enclosedStringRegex, '').length < 2 ||
-            regex.baseLineCommentRegex.test(cleanLine) ||
-            regex.baseLineCommentRegex.test(prevLine) &&
-              (nextLine.endsWith('*/') && !commentRegex.test(prevLine) ||
+            cleanLine.replace(ENCLOSED_STRING_REGEX, '').length < 2 ||
+            regex.BASE_LINE_COMMENT_REGEX.test(cleanLine) ||
+            regex.BASE_LINE_COMMENT_REGEX.test(prevLine) &&
+              (nextLine.endsWith('*/') && !COMMENT_REGEX.test(prevLine) ||
                 nextLine.startsWith('*')) ||
             cleanLine.startsWith('return') || cleanLine.startsWith('`')
 

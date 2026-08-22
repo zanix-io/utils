@@ -1,18 +1,18 @@
 import { assertMatch } from '@std/assert'
 import { getISODate, getLocalTime, getUtcTime } from 'utils/dates.ts'
-import { isoDateRegex, localTimeRegex, utcTimeRegex } from 'utils/regex.ts'
+import { ISO_DATE_REGEX, LOCAL_TIME_REGEX, UTC_TIME_REGEX } from 'utils/regex.ts'
 
 Deno.test('getLocalTime returns a valid time string', () => {
   const localTime = getLocalTime()
-  assertMatch(localTime, localTimeRegex, 'Invalid local time format')
+  assertMatch(localTime, LOCAL_TIME_REGEX, 'Invalid local time format')
 })
 
 Deno.test('getUtcTime returns a valid UTC time', () => {
   const utcTime = getUtcTime()
-  assertMatch(utcTime, utcTimeRegex, 'Invalid UTC time format')
+  assertMatch(utcTime, UTC_TIME_REGEX, 'Invalid UTC time format')
 })
 
 Deno.test('getISODate returns a valid UTC time', () => {
   const isoDate = getISODate()
-  assertMatch(isoDate, isoDateRegex, 'Invalid UTC time format')
+  assertMatch(isoDate, ISO_DATE_REGEX, 'Invalid UTC time format')
 })

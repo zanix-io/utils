@@ -127,4 +127,17 @@ export class Logger<Return extends unknown = DefaultResponse> {
   public warn(...data: LoggerData<'warn'>): Return | undefined {
     return this.#log('warn', ...data)
   }
+
+  /**
+   * Logs a high-severity message with additional parameters — an anomalous condition that
+   * deserves attention sooner than a routine {@linkcode warn}, but where the operation itself
+   * didn't necessarily fail outright (unlike {@linkcode error}). Persisted by default, same as
+   * `warn`/`error`. Does not perform `error`'s own already-logged (`_logged`) dedup — pass an
+   * `Error` here the same way you would to `warn`, as plain extra data, not as something this
+   * method serializes/dedups on your behalf.
+   * @param data - Values to be printed to the console.
+   */
+  public high(...data: LoggerData<'high'>): Return | undefined {
+    return this.#log('high', ...data)
+  }
 }

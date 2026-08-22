@@ -1,5 +1,5 @@
 import { linterMessageFormat } from 'modules/linter/commons/message.ts'
-import { singleQuoteRegex } from 'utils/regex.ts'
+import { SINGLE_QUOTE_REGEX } from 'utils/regex.ts'
 
 /**
  * `Deno lint` rule to enforce the use of single quotes for string literals.
@@ -21,7 +21,7 @@ const rules: Record<string, Deno.lint.Rule> = {
       return {
         Literal(node) {
           if (
-            typeof node.value !== 'string' || !singleQuoteRegex.test(node.raw)
+            typeof node.value !== 'string' || !SINGLE_QUOTE_REGEX.test(node.raw)
           ) return
           context.report({
             node,

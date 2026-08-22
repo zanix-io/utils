@@ -39,9 +39,15 @@ export type SerializeError<T extends BaseSerializeError = BaseSerializeError> = 
  * storage backend: `true` (the default wherever this option appears) redacts using the built-in,
  * case-insensitive credential-key pattern; `false` disables redaction entirely — only safe when
  * the output is already fully trusted; `{ pattern }` keeps redaction on but matches key names
- * against a custom pattern instead of the built-in one.
+ * against a custom pattern instead of the built-in one; `{ extend }` keeps whichever pattern
+ * applies (built-in, or `pattern` if also given) and additionally redacts any key matching one of
+ * `extend`'s own entries — a plain string is matched as an exact key name, case-insensitively,
+ * the same way every built-in entry is; a `RegExp` is tested against the key directly, for a rule
+ * broader than one literal name (e.g. `/secret$/i` to catch any `...Secret`-suffixed key). Additive
+ * by design specifically so a caller doesn't have to reconstruct the built-in pattern from scratch
+ * just to add one more sensitive key name on top of it.
  */
-export type RedactOptions = boolean | { pattern?: RegExp }
+export type RedactOptions = boolean | { pattern?: RegExp; extend?: (string | RegExp)[] }
 
 /**
  * Error options to identify Custom Errors
@@ -67,6 +73,34 @@ export type ErrorOptions = {
    * An optional internal used meta info
    */
   meta?: Record<string, unknown>
+  /**
+   * An optional, safe message meant to be shown directly to an end user — as opposed to
+   * `message`, which stays technical/dev-facing (used in logs, `cause` chains, and API responses
+   * consumed by another developer's code). Not every error reaches an end user at all (most don't
+   * — a failed DB connector, a rejected internal service call), so this is deliberately optional:
+   * set it only on errors a caller might realistically surface directly in a UI, and never assume
+   * `message` itself is safe to show a non-technical audience — it's written for whoever is
+   * debugging the failure, not for whoever triggered it.
+   */
+  userMessage?: string
+  /**
+   * Whether `meta` is safe to include in a client-facing response (e.g. `@zanix/server`'s
+   * `getPublicErrorResponse`/`httpErrorResponse`), as opposed to only ever reaching the log
+   * `meta` is persisted to regardless of this flag. Defaults to `false`: most `meta` values are
+   * internal debugging context (a connector name, an internal id, a diagnostic reason) that was
+   * never meant for whoever called the API — set this only on an error whose `meta` you've
+   * deliberately shaped to be safe and useful for that caller (e.g. structured validation-failure
+   * detail).
+   */
+  exposeMeta?: boolean
+  /**
+   * Whether `cause` is safe to include in a client-facing response, same rationale as
+   * {@link exposeMeta}. Defaults to `false`: a `cause` is frequently another system's raw error
+   * (a driver, a downstream service) and can carry detail — connection strings, internal
+   * hostnames, a third party's own error text — that was never meant to leave the process. `cause`
+   * is still always available to whatever logs this error, regardless of this flag.
+   */
+  exposeCause?: boolean
   /**
    * An optional flag that determines whether to log the error using the system logger.
    */

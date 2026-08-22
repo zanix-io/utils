@@ -1,6 +1,6 @@
 import { getLogFileName, lastLogFilename } from './file.ts'
 import { getISODate } from 'utils/dates.ts'
-import { isoDateRegex } from 'utils/regex.ts'
+import { ISO_DATE_REGEX } from 'utils/regex.ts'
 
 /**
  * Function to define if a file should be deleted
@@ -22,7 +22,7 @@ export const shouldBeDeleted = (
  */
 export const extractLogDate = (file: string) => {
   const match = file.match(
-    new RegExp(isoDateRegex.source.replace('^', '').replace('$', '')),
+    new RegExp(ISO_DATE_REGEX.source.replace('^', '').replace('$', '')),
   )
 
   return match?.[0]

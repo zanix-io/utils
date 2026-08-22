@@ -51,5 +51,5 @@ export const IsBoolean: ValidationDecorator = function (
   return defineValidationDecorator(validation, {
     message: defaultMessage,
     ...options,
-  })
+  }, { decorator: 'IsBoolean' })
 }

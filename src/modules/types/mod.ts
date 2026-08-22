@@ -37,9 +37,12 @@ export type {
 
 export type {
   BaseFormattedLog,
+  BaseLoggerOptions,
   BaseMethods,
+  BaseStorage,
   Console as GlobalConsole,
   ConsoleInfo,
+  ConsoleMethodFor,
   DefaultFormattedLog,
   DefaultResponse,
   Formatter as LoggerFormatter,
@@ -71,7 +74,9 @@ export type { ConfigFile } from 'typings/config.ts'
 export type { FormatAvailableFiles, LinterAvailableFiles } from 'typings/files.ts'
 
 export type {
+  ClassFieldDecoratorMeta,
   DefaultTransformValidationOpts,
+  RTOFieldMetadata,
   RtoTypes,
   ValidationConstraints,
   ValidationDecorator,

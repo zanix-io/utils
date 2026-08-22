@@ -38,8 +38,16 @@ const sendError = (error: Error) => {
 }
 
 self.onerror = (event) => {
+  // `self.onerror`'s ambient type is shared with `window.onerror` (`Event | string`) — inside a
+  // dedicated worker's own global scope it always receives a real `ErrorEvent`, but narrowed
+  // explicitly here rather than cast, so a genuinely unexpected shape degrades gracefully instead
+  // of crashing on a property access TypeScript can't otherwise verify.
+  if (typeof event === 'string') {
+    sendError(new Error(event))
+    return true
+  }
   event.preventDefault?.()
-  sendError(event.error || event)
+  sendError('error' in event ? event.error : event)
   return true // Prevents the default error handling
 }
 

@@ -3,7 +3,7 @@ import { getLogFileName } from 'modules/logger/defaults/storage/file.ts'
 import { serializeError } from 'modules/errors/serialize.ts'
 import { fileExists } from 'modules/helpers/files.ts'
 import { canUseZnx } from 'modules/helpers/zanix/namespace.ts'
-import { isoDatetimeRegex, uuidRegex } from 'utils/regex.ts'
+import { ISO_DATETIME_REGEX, UUID_REGEX } from 'utils/regex.ts'
 import { Logger } from 'modules/logger/main.ts'
 import { HttpError } from 'modules/errors/main.ts'
 import { stub } from '@std/testing/mock'
@@ -41,8 +41,8 @@ Deno.test(
     const returned = await logger.warn('test message', { data: 'data warn' })
 
     assertExists(returned)
-    assertMatch(returned.id, uuidRegex)
-    assertMatch(returned.timestamp, isoDatetimeRegex)
+    assertMatch(returned.id, UUID_REGEX)
+    assertMatch(returned.timestamp, ISO_DATETIME_REGEX)
     assertEquals(returned.level, 'warn')
     assertEquals(returned.message, 'test message')
     assertEquals(returned.data, [{ data: 'data warn' }])
@@ -65,6 +65,40 @@ Deno.test(
       error,
     )
     assertEquals(serializedErrorLog?.data, [serializeError(error)])
+  },
+)
+
+Deno.test(
+  'logger.high persists like warn/error, and respects the explicit noSave flag',
+  async () => {
+    const logger = new Logger({
+      disableGlobalAssign: true,
+      storage: {
+        save(context) {
+          const data = context.getFmtLog()
+          return Promise.resolve(data)
+        },
+      },
+    })
+
+    const returnedHigh = await logger.high(
+      'Retry budget exhausted for job "sync-catalog", falling back to manual mode',
+      { attempts: 5 },
+    )
+    assertExists(returnedHigh)
+    assertEquals(returnedHigh.level, 'high')
+    assertEquals(
+      returnedHigh.message,
+      'Retry budget exhausted for job "sync-catalog", falling back to manual mode',
+    )
+    assertEquals(returnedHigh.data, [{ attempts: 5 }])
+
+    const skippedHigh = await logger.high(
+      'Retry budget exhausted for job "sync-catalog", falling back to manual mode',
+      { attempts: 5 },
+      'noSave',
+    )
+    assert(!skippedHigh)
   },
 )
 

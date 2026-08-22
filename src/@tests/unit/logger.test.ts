@@ -14,6 +14,12 @@ const ZnxMock = () => {
   if (typeof Znx === 'undefined') {
     Object.assign(globalThis, { Znx: { config: {} } }) // Define Znx mock
   }
+  // `modules/logger/mod.ts` creates the first `Logger` instance (and thus `Znx`) as an
+  // import-time side effect, reading this repo's own real `deno.jsonc` — whose `zanix.project`
+  // is `'library'`. Left as-is, `baseSaveData`'s own `project === 'library' || 'app'` guard
+  // would silently no-op below, the same way `@tests/integration/logger.test.ts` resets it to
+  // `'space'` before its own save-related tests for this exact reason.
+  Znx.config.project = 'space'
 }
 
 Deno.test('Ensures the logger correctly outputs messages to the console', () => {
@@ -64,6 +70,28 @@ Deno.test('Ensures the logger correctly outputs messages to the console', () => 
 
   showMessage('success', dataSucess)
   consoleSuccess.restore()
+})
+
+Deno.test("showMessage('high', ...) prints via console.error, not console.warn", () => {
+  const dataHigh = { data: 'test-high' }
+
+  // `high` sits between `warn` and `error` visually (its own color/icon), but operationally it
+  // must dispatch through `console.error` — not `console.warn` — so stderr-only log aggregators
+  // still surface it. Stubbing `console.warn` to throw catches a regression that routes it there
+  // instead, not just a missing/wrong icon.
+  const consoleWarn = stub(console, 'warn', () => {
+    throw new Error("showMessage('high', ...) must not print via console.warn")
+  })
+  const consoleError = stub(console, 'error', (...[message, ...data]) => {
+    assert(message.includes('🟣'))
+    assert(message.includes('ZNX-HIGH'))
+    assertEquals(data[0], dataHigh)
+  })
+
+  showMessage('high', dataHigh)
+
+  consoleError.restore()
+  consoleWarn.restore()
 })
 
 Deno.test("showMessage prints its args as-is — redaction is each caller's own job", () => {

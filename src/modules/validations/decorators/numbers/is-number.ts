@@ -72,5 +72,5 @@ export const IsNumber: ValidationDecorator<
     transform: defaultTransform(transform),
     message: defaultMessage,
     ...opts,
-  })
+  }, { decorator: 'IsNumber' })
 }

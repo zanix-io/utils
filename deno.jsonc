@@ -1,6 +1,6 @@
 {
   "name": "@zanix/utils",
-  "version": "2.6.1",
+  "version": "3.0.0",
   "license": "MIT",
   "nodeModulesDir": "auto",
   "compilerOptions": {
@@ -51,7 +51,7 @@
       // because the vscode-deno language server doesn't load lint plugins from a local relative
       // path — even after an LSP restart. `deno lint`/`deno publish` work fine with the local path,
       // but editor diagnostics need the resolved jsr specifier.
-      "jsr:@zanix/utils/linter/deno-zanix-plugin"
+      "jsr:@zanix/utils@^3.0.0/linter/deno-zanix-plugin"
     ],
     "report": "pretty"
   },
@@ -76,8 +76,7 @@
     "modules/": "./src/modules/"
   },
   "zanix": {
-    "project": "library",
-    "hash": "zu226a"
+    "project": "library"
   },
   "test": {
     "include": [

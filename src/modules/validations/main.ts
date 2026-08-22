@@ -1,8 +1,9 @@
 // deno-lint-ignore-file no-explicit-any
-import type { ValidationError } from 'typings/validations.ts'
+import type { RTOFieldMetadata, ValidationError } from 'typings/validations.ts'
 import type { BaseRTO } from './base/rto.ts'
 
 import validationsMetadata from './base/metadata.ts'
+import { resolveClassFields } from './base/definitions/class-fields.ts'
 import { errorValidationFormatting } from './errors.ts'
 import { HttpError } from 'modules/errors/main.ts'
 import { validate } from './verifier.ts'
@@ -91,6 +92,11 @@ export async function classValidation<T extends BaseRTO>(
         properties: errorValidationFormatting(errors),
         target: obj.constructor.name,
       },
+      // Unlike most `cause` values (typically another system's raw, internal error), this one is
+      // purpose-built per-field feedback about the caller's OWN submitted data — exactly the case
+      // `exposeCause` exists for: safe and directly actionable for whoever gets this response, not
+      // internal-only detail. See `@zanix/errors`' `ErrorOptions.exposeCause` doc.
+      exposeCause: true,
     })
   })
 
@@ -99,4 +105,44 @@ export async function classValidation<T extends BaseRTO>(
   if (errors.length) throwErrors(errors)
 
   return obj
+}
+
+/**
+ * Returns the static field metadata for a `BaseRTO` subclass: which validation decorator each
+ * accessor uses, with what arguments, and its `each`/`optional`/`expose` flags — derived purely
+ * from the class itself, with no instance to construct and no plain object to validate.
+ *
+ * Where `classValidation` runs the validation pipeline against real data, `classMetadata`
+ * introspects the class definition — the piece a build-time consumer (an OpenAPI generator, a
+ * form/table renderer, ...) needs.
+ *
+ * Fields declared on a parent `BaseRTO` class are included for a subclass that extends it
+ * (merged base-first, so a field the subclass redeclares overrides the parent's entry).
+ *
+ * @template T - The `BaseRTO` subclass to introspect.
+ * @param RTO - The class constructor of the RTO to introspect.
+ *
+ * @example
+ * ```ts
+ * class UserRTO extends BaseRTO {
+ *   ´@IsString({ expose: true })
+ *   accessor name!: string
+ *
+ *   ´@IsEnum(['admin', 'user'], { expose: true, optional: true })
+ *   accessor role!: string
+ * }
+ *
+ * classMetadata(UserRTO)
+ * // {
+ * //   name: { decorator: 'IsString', args: [], each: false, optional: false, expose: true },
+ * //   role: { decorator: 'IsEnum', args: [['admin', 'user']], each: false, optional: true, expose: true },
+ * // }
+ * ```
+ *
+ * @category validators
+ */
+export function classMetadata<T extends BaseRTO>(
+  RTO: new (...args: any[]) => T,
+): Record<string, RTOFieldMetadata> {
+  return resolveClassFields(RTO)
 }

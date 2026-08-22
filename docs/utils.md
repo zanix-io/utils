@@ -9,8 +9,8 @@ exports.
 
 Several higher-level features in the library build directly on top of these
 primitives. For example, the `IsEmail`, `IsUrl`, and `IsUUID` decorators
-documented in [Validator](./validator.md) use `emailRegex`, `urlRegex`, and
-`uuidRegex` internally, and the config-loading helpers documented in
+documented in [Validator](./validator.md) use `EMAIL_REGEX`, `URL_REGEX`, and
+`UUID_REGEX` internally, and the config-loading helpers documented in
 [Helpers](./helpers.md) rely on `stripComments` and the `CONFIG_FILE` constant.
 
 ## Encoding
@@ -170,52 +170,52 @@ Import the frozen default export, named exports, or both from the `/regex`
 subpath:
 
 ```ts
-import zanixRegex, { emailRegex } from 'jsr:@zanix/utils@[version]/regex'
+import zanixRegex, { EMAIL_REGEX } from 'jsr:@zanix/utils@[version]/regex'
 ```
 
 `zanixRegex` is a `Readonly` object exposing the same patterns as the named
 exports below.
 
-| Name                  | Purpose                                                                                                                                                                              | Example match                               |
-| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------- |
-| `booleanRegex`        | Matches the literal strings `true`/`false`, case-insensitive.                                                                                                                        | `'TRUE'`, `'false'`                         |
-| `commentRegex`        | Matches a `//` line comment or `/* ... */` block comment, as long as it isn't immediately preceded/followed by a quote character.                                                    | `'// comment'`, `'/* comment */'`           |
-| `emailRegex`          | Validates a basic email address shape (`local@domain.tld`).                                                                                                                          | `'usuario@example.com'`                     |
-| `enclosedStringRegex` | Matches any string enclosed by matching single quotes, double quotes, or backticks, including escaped quotes inside.                                                                 | `'"This is a test"'`                        |
-| `isoDateRegex`        | Validates an ISO date in `YYYY-MM-DD` format (does not check calendar validity).                                                                                                     | `'2025-03-09'`                              |
-| `isoDatetimeRegex`    | Validates an ISO 8601 datetime `YYYY-MM-DDTHH:MM:SS(.mmm)Z`, with optional milliseconds.                                                                                             | `'2025-03-09T21:40:18.443Z'`                |
-| `keyValueRegex`       | Matches a `key: "value"` style declaration where the key is a standard identifier and the value is quoted (single, double, or backtick).                                             | `'key: "value"'`                            |
-| `localTimeRegex`      | Validates a 12-hour time `H:MM:SS` with an optional trailing `AM`/`PM`.                                                                                                              | `'2:30:15 PM'`                              |
-| `numericRegex`        | Validates a numeric string, with an optional decimal part.                                                                                                                           | `'42'`, `'3.14'`                            |
-| `phoneRegex`          | Validates an international phone number: optional leading `+`, 2 to 15 digits, first digit non-zero.                                                                                 | `'+1234567890'`                             |
-| `securePasswordRegex` | Validates a password of at least 8 characters containing at least one lowercase letter, one uppercase letter, and one digit (special characters `@$!%*?&` allowed but not required). | `'Secure123!'`                              |
-| `singleQuoteRegex`    | Matches a string wrapped in double quotes that does not itself contain a single quote.                                                                                               | `'"This is valid"'`                         |
-| `urlRegex`            | Validates an `http`/`https` URL with an optional `www.` subdomain and a valid domain + TLD.                                                                                          | `'https://example.com'`, `'www.github.com'` |
-| `usernameRegex`       | Validates a username of 3 to 16 characters made of letters, digits, and underscores.                                                                                                 | `'usuario_123'`                             |
-| `utcTimeRegex`        | Validates a UTC time `HH:MM:SS.mmmZ` including mandatory milliseconds and trailing `Z`.                                                                                              | `'21:40:18.443Z'`                           |
-| `uuidRegex`           | Validates a UUID v4 string (case-insensitive).                                                                                                                                       | `'550e8400-e29b-41d4-a716-446655440000'`    |
-| `versionRegex`        | Validates a semantic version `x.y.z`, an optional pre-release suffix, or the literal string `'latest'`.                                                                              | `'2.0.1'`, `'1.0.0-beta.1'`, `'latest'`     |
+| Name                    | Purpose                                                                                                                                                                              | Example match                               |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------- |
+| `BOOLEAN_REGEX`         | Matches the literal strings `true`/`false`, case-insensitive.                                                                                                                        | `'TRUE'`, `'false'`                         |
+| `COMMENT_REGEX`         | Matches a `//` line comment or `/* ... */` block comment, as long as it isn't immediately preceded/followed by a quote character.                                                    | `'// comment'`, `'/* comment */'`           |
+| `EMAIL_REGEX`           | Validates a basic email address shape (`local@domain.tld`).                                                                                                                          | `'usuario@example.com'`                     |
+| `ENCLOSED_STRING_REGEX` | Matches any string enclosed by matching single quotes, double quotes, or backticks, including escaped quotes inside.                                                                 | `'"This is a test"'`                        |
+| `ISO_DATE_REGEX`        | Validates an ISO date in `YYYY-MM-DD` format (does not check calendar validity).                                                                                                     | `'2025-03-09'`                              |
+| `ISO_DATETIME_REGEX`    | Validates an ISO 8601 datetime `YYYY-MM-DDTHH:MM:SS(.mmm)Z`, with optional milliseconds.                                                                                             | `'2025-03-09T21:40:18.443Z'`                |
+| `KEY_VALUE_REGEX`       | Matches a `key: "value"` style declaration where the key is a standard identifier and the value is quoted (single, double, or backtick).                                             | `'key: "value"'`                            |
+| `LOCAL_TIME_REGEX`      | Validates a 12-hour time `H:MM:SS` with an optional trailing `AM`/`PM`.                                                                                                              | `'2:30:15 PM'`                              |
+| `NUMERIC_REGEX`         | Validates a numeric string, with an optional decimal part.                                                                                                                           | `'42'`, `'3.14'`                            |
+| `PHONE_REGEX`           | Validates an international phone number: optional leading `+`, 2 to 15 digits, first digit non-zero.                                                                                 | `'+1234567890'`                             |
+| `SECURE_PASSWORD_REGEX` | Validates a password of at least 8 characters containing at least one lowercase letter, one uppercase letter, and one digit (special characters `@$!%*?&` allowed but not required). | `'Secure123!'`                              |
+| `SINGLE_QUOTE_REGEX`    | Matches a string wrapped in double quotes that does not itself contain a single quote.                                                                                               | `'"This is valid"'`                         |
+| `URL_REGEX`             | Validates an `http`/`https` URL with an optional `www.` subdomain and a valid domain + TLD.                                                                                          | `'https://example.com'`, `'www.github.com'` |
+| `USERNAME_REGEX`        | Validates a username of 3 to 16 characters made of letters, digits, and underscores.                                                                                                 | `'usuario_123'`                             |
+| `UTC_TIME_REGEX`        | Validates a UTC time `HH:MM:SS.mmmZ` including mandatory milliseconds and trailing `Z`.                                                                                              | `'21:40:18.443Z'`                           |
+| `UUID_REGEX`            | Validates a UUID v4 string (case-insensitive).                                                                                                                                       | `'550e8400-e29b-41d4-a716-446655440000'`    |
+| `VERSION_REGEX`         | Validates a semantic version `x.y.z`, an optional pre-release suffix, or the literal string `'latest'`.                                                                              | `'2.0.1'`, `'1.0.0-beta.1'`, `'latest'`     |
 
 ### Examples
 
 ```ts
-emailRegex.test('usuario@example.com') // true
-emailRegex.test('usuario@com') // false — missing a valid TLD
+EMAIL_REGEX.test('usuario@example.com') // true
+EMAIL_REGEX.test('usuario@com') // false — missing a valid TLD
 
-urlRegex.test('www.github.com') // true
-urlRegex.test('notaurl') // false — no domain/TLD
+URL_REGEX.test('www.github.com') // true
+URL_REGEX.test('notaurl') // false — no domain/TLD
 
-uuidRegex.test('550e8400-e29b-41d4-a716-446655440000') // true
-uuidRegex.test('50e400-e29b-41d4-a716-446655440000') // false — wrong length
+UUID_REGEX.test('550e8400-e29b-41d4-a716-446655440000') // true
+UUID_REGEX.test('50e400-e29b-41d4-a716-446655440000') // false — wrong length
 
-phoneRegex.test('+1234567890') // true
-phoneRegex.test('+1 234 567 890') // false — spaces are not allowed
+PHONE_REGEX.test('+1234567890') // true
+PHONE_REGEX.test('+1 234 567 890') // false — spaces are not allowed
 
-isoDateRegex.test('2025-03-09') // true
-isoDateRegex.test('2025-03-09T21:40:18.443Z') // false — this is a datetime, not a plain date
+ISO_DATE_REGEX.test('2025-03-09') // true
+ISO_DATE_REGEX.test('2025-03-09T21:40:18.443Z') // false — this is a datetime, not a plain date
 
-securePasswordRegex.test('Secure123!') // true
-securePasswordRegex.test('weakpass') // false — no uppercase letter and no digit
+SECURE_PASSWORD_REGEX.test('Secure123!') // true
+SECURE_PASSWORD_REGEX.test('weakpass') // false — no uppercase letter and no digit
 ```
 
 ## See also
