@@ -149,6 +149,11 @@ and this project adheres to
 - **`docs/types.md`'s `LoggerMethods`/`ConsoleInfo` rows were stale** — they still listed the
   method set from before `logger.high` was added and omitted the `ConsoleMethodFor` type it
   introduced; both rows now match `typings/logger.ts`, and `ConsoleMethodFor` has its own row.
+
+## [3.0.1] - 2026-08-22
+
+### Fixed
+
 - **`readConfig` (`helpers`) now actually memoizes the config file it reads** — it compared the
   raw `configPath` argument against the previously _resolved_ path, so a call with no explicit
   path (the common case, e.g. every `logger.*()` call resolving the app name via
