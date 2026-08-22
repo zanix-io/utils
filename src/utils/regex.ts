@@ -123,6 +123,10 @@ const ANY_EXTENSION_REGEX = /\.[a-z]+$/
 const JSR_BASE_URL_REGEX = /^(https:\/\/[^\/]+\/[^\/]+\/[^\/]+\/\d+\.\d+\.\d+)(\/.*)?$/
 const KEY_PARTS_REGEX = /([^[\]]+)/g
 const KEY_PARTS_TEST_REGEX = /^[a-zA-Z0-9_]+(\[[a-zA-Z0-9_]+\])+$/
+// Same prefix `assertZnxCookieName` (`src/utils/cookies.ts`) enforces at runtime — kept as its own
+// regex here so `no-invalid-znx-cookie-name` (the lint-time counterpart, for the literal-string
+// case) shares the exact same rule instead of drifting from it.
+const ZNX_COOKIE_PREFIX_REGEX = /^X-Znx-/
 
 export default {
   ANY_EXTENSION_REGEX,
@@ -132,4 +136,5 @@ export default {
   JSR_BASE_URL_REGEX,
   KEY_PARTS_REGEX,
   KEY_PARTS_TEST_REGEX,
+  ZNX_COOKIE_PREFIX_REGEX,
 }

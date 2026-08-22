@@ -1,12 +1,14 @@
 // deno-lint-ignore-file no-explicit-any
 import type { BaseRTO } from 'modules/validations/base/rto.ts'
 import type {
+  ClassFieldDecoratorMeta,
   ValidationDecoratorDefinition,
   ValidationFunction,
   ValidationOptions,
 } from 'typings/validations.ts'
 
 import { defineInit, defineSetter } from './accessors.ts'
+import { registerClassField } from './class-fields.ts'
 import validationsMetadata from 'modules/validations/base/metadata.ts'
 
 /**
@@ -31,6 +33,12 @@ import validationsMetadata from 'modules/validations/base/metadata.ts'
 export function defineValidationDecorator<T extends BaseRTO = BaseRTO>(
   validation: ValidationFunction<T>,
   opts: ValidationOptions = {},
+  /**
+   * Identifies the decorator for `classMetadata`'s class-level introspection (e.g.
+   * `{ decorator: 'IsEnum', args: [allowedValues] }`). Optional — a custom decorator that omits
+   * it still registers its field, just without a known `decorator` name.
+   */
+  meta: ClassFieldDecoratorMeta | undefined = undefined,
 ): ValidationDecoratorDefinition {
   if (opts.transform) opts.expose = true // If 'transform' is enabled, 'expose' is set to true by default.
 
@@ -41,6 +49,8 @@ export function defineValidationDecorator<T extends BaseRTO = BaseRTO>(
 
   const decorator: ValidationDecoratorDefinition = ({ set }, context) => {
     const property = context.name.toString()
+
+    registerClassField(context, property, opts, meta)
 
     const { message = '' } = opts
 

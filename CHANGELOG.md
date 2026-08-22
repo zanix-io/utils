@@ -6,10 +6,47 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to
 [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [3.0.0] - 2026-08-21
+## [3.0.0] - 2026-08-22
 
 ### Added
 
+- **`_csrf` coverage in the default redaction pattern** (`errors/redact.ts`) — `_csrf` added to
+  `SENSITIVE_KEY_PATTERN`, matched by exact equality like every other credential-shaped field
+  except the `Csrf`-containment one below. Carries the exact same token as `X-Znx-Csrf`/
+  `X-Znx-Csrf-Token`, over a third channel `@zanix/space`'s `csrfGuard` accepts it on — a plain
+  HTML `<form>` submission's own field. Not customizable on `csrfGuard`, so an exact match is
+  always accurate, unlike the cookie/header names.
+- **`PUBLIC_COOKIE_ATTRIBUTES`** (`helpers`) — the shared `Path=/; Secure; SameSite=Lax` attribute
+  string for a client-readable, non-session cookie: no `HttpOnly` (client-side JS must read it) and
+  `SameSite=Lax` rather than `SESSION_COOKIE_ATTRIBUTES`'s `Strict` (must still be attached on a
+  normal top-level cross-site navigation — a bookmark or external link landing on a
+  `/es/...`-prefixed URL still needs the persisted preference recognized on that first request).
+  Ahead of wiring `@zanix/space`'s `langGuard`/`langPreHandler`/`populationGuard` — all three
+  currently hand-roll the literal `'Path=/; SameSite=Lax'` independently and are all missing
+  `Secure`, the only place in a full 12-repo audit that omits it.
+- **`assertZnxCookieName(name, sourceName, mustContain?)`** (`helpers`) — throws if `name` doesn't
+  start with `X-Znx-`, the ecosystem-wide framework-cookie convention `@zanix/server`'s
+  `cookiesGuard` silently enforces by dropping any non-conforming cookie from `ctx.cookies` before
+  any guard/handler runs. The optional `mustContain` also throws (case-insensitively) if `name`
+  doesn't contain a given keyword — for a customizable cookie name (e.g. a `csrfGuard`'s own
+  `cookieName` option) that a fuzzy redaction/matching rule elsewhere depends on staying
+  recognizable after customization. Meant to be called once, at construction time, never
+  per-request. Centralizes a check `@zanix/space`'s `csrfGuard`/`langGuard`/`langPreHandler`/
+  `populationGuard` will reuse instead of each re-deriving its own.
+- **`X-Znx-Captcha-Token`/`captchaToken` coverage in the default redaction pattern**
+  (`errors/redact.ts`) — `(?:x-znx-)?captcha[-_]?token` added to `SENSITIVE_KEY_PATTERN`, the same
+  shape `(?:x-znx-app-)?token` already gives `X-Znx-App-Token`. Added ahead of `@zanix/auth`'s new
+  `captchaGuard`, whose request header carries a bearer-shaped provider response token — a
+  framework-owned credential-carrying header is redacted by default, not left to each consumer's
+  own `RedactOptions.extend`.
+- **Any `X-Znx-`-prefixed key containing `Csrf` is now redacted, by containment rather than exact
+  match** (`errors/redact.ts`) — `x-znx-[\w-]*csrf[\w-]*` added to `SENSITIVE_KEY_PATTERN`. Every
+  other entry matches by exact key equality; this one deliberately doesn't, because
+  `@zanix/space`'s `csrfGuard` exposes its own cookie's name as a customizable `cookieName` option
+  (default `X-Znx-Csrf`) — an exact-name entry would only ever catch the untouched default and
+  silently miss a customized one. Safe specifically because `assertZnxCookieName`'s `mustContain`
+  check (see above) guarantees any name `csrfGuard` actually accepts still contains `Csrf`
+  somewhere, by construction.
 - **`no-znx-console` auto-fix** (`linter`) — `console.log`/`console.info`/`console.warn`/
   `console.error` are now auto-fixable via `deno lint --fix`, rewriting each call site to its
   `logger` equivalent (`logger.debug`/`logger.info`/`logger.warn`/`logger.error`) and inserting

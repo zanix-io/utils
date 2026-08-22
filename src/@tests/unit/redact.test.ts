@@ -94,6 +94,80 @@ Deno.test('redactSensitiveData redacts the PII/PCI batch: password/card/ssn/cvv/
   })
 })
 
+Deno.test('redactSensitiveData redacts captcha-token variants like x-znx-app-token', () => {
+  // Regression guard for @zanix/auth's captchaGuard: X-Znx-Captcha-Token carries a bearer-shaped
+  // provider response token, so it needs the same default coverage `(?:x-znx-app-)?token` already
+  // gives X-Znx-App-Token — not left to each consumer's own `RedactOptions.extend`.
+  const input = {
+    'X-Znx-Captcha-Token': 'response-token-value',
+    captchaToken: 'response-token-value',
+    'captcha-token': 'response-token-value',
+    safe: 'kept as-is',
+  }
+
+  assertEquals(redactSensitiveData(input), {
+    'X-Znx-Captcha-Token': '[REDACTED]',
+    captchaToken: '[REDACTED]',
+    'captcha-token': '[REDACTED]',
+    safe: 'kept as-is',
+  })
+})
+
+Deno.test(
+  'redactSensitiveData redacts any X-Znx--prefixed key containing "csrf", by containment not ' +
+    'exact match — the one entry in this pattern matched this way, deliberately',
+  () => {
+    // Regression guard: `@zanix/space`'s `csrfGuard` exposes its own cookie's name as a
+    // customizable `cookieName` option (default `X-Znx-Csrf`) — an exact-name entry here would
+    // only ever catch the untouched default and silently miss a customized one. This is safe only
+    // because `assertZnxCookieName`'s `mustContain` check (`src/utils/cookies.ts`) guarantees any
+    // name `csrfGuard` actually accepts still contains "csrf" somewhere.
+    const input = {
+      'X-Znx-Csrf': 'token-value',
+      'X-Znx-My-Csrf': 'token-value',
+      'X-Znx-Csrf-Token': 'token-value',
+      'x-znx-csrf': 'token-value',
+      // Not X-Znx--prefixed — a bare `csrf`-named field elsewhere in the app is NOT this guard's
+      // cookie, and blanket-matching any "csrf" substring regardless of prefix would be exactly
+      // the false-positive flood this pattern's "match by key name, not content" design avoids.
+      csrf: 'kept as-is',
+      csrfToken: 'kept as-is',
+      'X-Znx-Lang': 'kept as-is',
+    }
+
+    assertEquals(redactSensitiveData(input), {
+      'X-Znx-Csrf': '[REDACTED]',
+      'X-Znx-My-Csrf': '[REDACTED]',
+      'X-Znx-Csrf-Token': '[REDACTED]',
+      'x-znx-csrf': '[REDACTED]',
+      csrf: 'kept as-is',
+      csrfToken: 'kept as-is',
+      'X-Znx-Lang': 'kept as-is',
+    })
+  },
+)
+
+Deno.test(
+  'redactSensitiveData redacts `_csrf`, the same token carried over a third, ' +
+    'non-customizable channel',
+  () => {
+    // Regression guard: `csrfGuard` also accepts the CSRF token via a plain HTML `<form>`'s own
+    // `_csrf` field, alongside the `X-Znx-Csrf` cookie and `X-Znx-Csrf-Token` header. Unlike those
+    // two, `_csrf` isn't a configurable option on `csrfGuard` — there's nothing to customize away
+    // from it — so it's matched by exact equality, not containment.
+    const input = {
+      _csrf: 'token-value',
+      // Doesn't match — exact equality only, same as every other non-containment entry.
+      csrfField: 'kept as-is',
+    }
+
+    assertEquals(redactSensitiveData(input), {
+      _csrf: '[REDACTED]',
+      csrfField: 'kept as-is',
+    })
+  },
+)
+
 Deno.test('redactSensitiveData recurses into nested objects and arrays', () => {
   const input = {
     user: { name: 'Ada', credentials: { token: 'secret' } },

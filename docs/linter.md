@@ -169,11 +169,12 @@ Add it to `deno.jsonc`:
 Rules specific to the Zanix Framework, plus every rule from the three plugins
 above. Source: `src/modules/linter/plugins/zanix/mod.ts`.
 
-| Rule name                 | What it checks                                                                                                                                                                                                                                                          | Example message                                                                                                    |
-| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| `no-znx-console`          | Any call on the global `console` object (e.g. `console.log`, `console.error`) instead of the Zanix logger. `console.log`/`console.info`/`console.warn`/`console.error` are auto-fixable via `deno lint --fix` (see below); any other `console.*` method is report-only. | `❌ Disallows the use of 'console'.`                                                                               |
-| `no-explicit-znx-imports` | Imports from an `@zanix` scoped package that include an explicit file extension (e.g. `.ts`, `.js`), instead of importing the package by name.                                                                                                                          | `❌ Explicit imports from '@zanix' modules with file extensions are not allowed. Use the package imports instead.` |
-| `use-znx-flags`           | A bare string-literal expression statement as the very first statement of a file (the same grammar slot as `'use strict'`) whose value isn't one of the known `ZNX_FLAGS` (e.g. `'use comet'`). A string literal anywhere else in the file is ignored.                  | `❌ The flag "otherFlag" is invalid.`                                                                              |
+| Rule name                    | What it checks                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | Example message                                                                                                    |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `no-znx-console`             | Any call on the global `console` object (e.g. `console.log`, `console.error`) instead of the Zanix logger. `console.log`/`console.info`/`console.warn`/`console.error` are auto-fixable via `deno lint --fix` (see below); any other `console.*` method is report-only.                                                                                                                                                                                                                                                                                                                         | `❌ Disallows the use of 'console'.`                                                                               |
+| `no-explicit-znx-imports`    | Imports from an `@zanix` scoped package that include an explicit file extension (e.g. `.ts`, `.js`), instead of importing the package by name.                                                                                                                                                                                                                                                                                                                                                                                                                                                  | `❌ Explicit imports from '@zanix' modules with file extensions are not allowed. Use the package imports instead.` |
+| `use-znx-flags`              | A bare string-literal expression statement as the very first statement of a file (the same grammar slot as `'use strict'`) whose value isn't one of the known `ZNX_FLAGS` (e.g. `'use comet'`). A string literal anywhere else in the file is ignored.                                                                                                                                                                                                                                                                                                                                          | `❌ The flag "otherFlag" is invalid.`                                                                              |
+| `no-invalid-znx-cookie-name` | A LITERAL string `cookieName` passed to one of `@zanix/space`'s `csrfGuard`/`langGuard`/`langPreHandler`/`populationGuard` guards (confirmed, in the same file, to be a named import from `@zanix/space` — an unrelated same-named local function is never flagged) that doesn't start with `X-Znx-`, or — for `csrfGuard` specifically — starts with `X-Znx-` but doesn't contain `Csrf` (case-insensitive). A dynamically-computed `cookieName` (a variable, template, or call) can't be evaluated at lint time and is always skipped — that's `assertZnxCookieName`'s (runtime) job instead. | `❌ Cookie name "session" for 'csrfGuard' must start with "X-Znx-".`                                               |
 
 Real diagnostic captured with `Deno.lint.runPlugin`:
 
@@ -255,17 +256,77 @@ Add it to `deno.jsonc`:
 }
 ```
 
+### `no-invalid-znx-cookie-name` in action
+
+Only flags a call confirmed, in the same file, to be a named import from
+`@zanix/space` — this is the lint-time, earlier-feedback counterpart to
+`assertZnxCookieName` (see [Helpers](./helpers.md)), for the common case of a
+literal `cookieName`:
+
+```typescript
+import zanixPlugin from 'jsr:@zanix/utils@[version]/linter/deno-zanix-plugin'
+
+Deno.lint.runPlugin(
+  zanixPlugin,
+  'test.ts',
+  `import { csrfGuard } from '@zanix/space'\ncsrfGuard({ cookieName: 'session' })`,
+)
+// [{
+//   id: 'deno-zanix-plugin/no-invalid-znx-cookie-name',
+//   message: '❌ Cookie name "session" for \'csrfGuard\' must start with "X-Znx-".',
+//   hint: '@zanix/server\'s cookiesGuard silently drops any cookie outside the "X-Znx-" prefix from ctx.cookies before any guard/handler runs — rename it to e.g. "X-Znx-session".',
+//   range: [65, 74],
+//   fix: []
+// }]
+
+Deno.lint.runPlugin(
+  zanixPlugin,
+  'test.ts',
+  `import { csrfGuard } from '@zanix/space'\ncsrfGuard({ cookieName: 'X-Znx-Token' })`,
+)
+// [{
+//   id: 'deno-zanix-plugin/no-invalid-znx-cookie-name',
+//   message: '❌ Cookie name "X-Znx-Token" for \'csrfGuard\' must contain "Csrf" (case-insensitive).',
+//   ...
+// }]
+
+Deno.lint.runPlugin(
+  zanixPlugin,
+  'test.ts',
+  `import { csrfGuard } from '@zanix/space'\nconst n = 'session'\ncsrfGuard({ cookieName: n })`,
+)
+// [] — a dynamically-computed value can't be evaluated at lint time
+
+Deno.lint.runPlugin(
+  zanixPlugin,
+  'test.ts',
+  `function csrfGuard(o) { return o }\ncsrfGuard({ cookieName: 'session' })`,
+)
+// [] — not actually imported from '@zanix/space', just a same-named local function
+```
+
+Add it to `deno.jsonc`:
+
+```jsonc
+{
+  "lint": {
+    "plugins": ["jsr:@zanix/utils@[version]/linter/deno-zanix-plugin"]
+  }
+}
+```
+
 ## Combined plugin
 
-`deno-zanix-plugin` is not just `no-znx-console`, `no-explicit-znx-imports`, and
-`use-znx-flags` — its `mod.ts` spreads the rule sets of `deno-fmt-plugin`,
-`deno-std-plugin`, and `deno-test-plugin` into its own `rules` object, then adds
-its own three rules on top. In other words, enabling `deno-zanix-plugin` alone
-gives every rule documented above (`single-quote`, `line-width`, `no-require`,
-`no-useless-expression`, `require-access-modifier`, `no-only`, `no-ignore`,
-`no-znx-console`, `no-explicit-znx-imports`, `use-znx-flags`) in a single plugin
-entry, without having to list the other three subpaths individually in
-`deno.jsonc`.
+`deno-zanix-plugin` is not just `no-znx-console`, `no-explicit-znx-imports`,
+`use-znx-flags`, and `no-invalid-znx-cookie-name` — its `mod.ts` spreads the
+rule sets of `deno-fmt-plugin`, `deno-std-plugin`, and `deno-test-plugin` into
+its own `rules` object, then adds its own four rules on top. In other words,
+enabling `deno-zanix-plugin` alone gives every rule documented above
+(`single-quote`, `line-width`, `no-require`, `no-useless-expression`,
+`require-access-modifier`, `no-only`, `no-ignore`,
+`no-znx-console`, `no-explicit-znx-imports`, `use-znx-flags`,
+`no-invalid-znx-cookie-name`) in a single plugin entry, without having to list
+the other three subpaths individually in `deno.jsonc`.
 
 Diagnostics reported through the combined plugin still carry `deno-zanix-plugin`
 as the `id` prefix (e.g. `deno-zanix-plugin/single-quote`), not the id of the
@@ -278,3 +339,6 @@ name.
   subpath exports.
 - [Utils](./utils.md#constants) — `ZNX_FLAGS`, the list of flags `use-znx-flags`
   accepts.
+- [Helpers](./helpers.md) — `assertZnxCookieName`, the runtime counterpart to
+  `no-invalid-znx-cookie-name` for the cases the lint rule can't evaluate
+  (a dynamically-computed `cookieName`).

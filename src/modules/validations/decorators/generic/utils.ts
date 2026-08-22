@@ -64,7 +64,7 @@ export const Expose = function (
     expose: true,
     message: defaultMessage,
     ...options,
-  })
+  }, { decorator: 'Expose' })
 }
 
 /**

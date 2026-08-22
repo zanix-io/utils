@@ -279,10 +279,14 @@ Deno.test('sanitizeUrl rejects a non-image data: URL but allows a data:image one
   )
 })
 
-Deno.test('sanitizeUrl catches a scheme obfuscated with an embedded tab/CR/LF or leading control char', () => {
-  assertEquals(sanitizeUrl('java\tscript:alert(1)'), '')
-  assertEquals(sanitizeUrl('java\r\nscript:alert(1)'), '')
-  assertEquals(sanitizeUrl('\x00javascript:alert(1)'), '')
+Deno.test({
+  name:
+    'sanitizeUrl catches a scheme obfuscated with an embedded tab/CR/LF or leading control char',
+  fn: () => {
+    assertEquals(sanitizeUrl('java\tscript:alert(1)'), '')
+    assertEquals(sanitizeUrl('java\r\nscript:alert(1)'), '')
+    assertEquals(sanitizeUrl('\x00javascript:alert(1)'), '')
+  },
 })
 
 Deno.test('sanitizeUrl passes a non-string value through unchanged', () => {

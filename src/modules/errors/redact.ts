@@ -24,9 +24,32 @@ import type { RedactOptions } from 'typings/errors.ts'
  * `securityPin` are the namespaced forms worth catching automatically, same reasoning as `otp`
  * above — a consumer with a genuinely bare `pin` field should redact it via `RedactOptions.extend`
  * instead of leaning on the default here.
+ *
+ * `(?:x-znx-)?captcha[-_]?token` covers `@zanix/auth`'s `captchaGuard` request header
+ * (`X-Znx-Captcha-Token`) the same way `(?:x-znx-app-)?token` already covers `X-Znx-App-Token` —
+ * a bearer-shaped credential value, worth catching by default rather than requiring every consumer
+ * to configure `RedactOptions.extend` for a framework-owned header.
+ *
+ * `x-znx-[\w-]*csrf[\w-]*` is the one entry here matched by CONTAINMENT rather than exact equality
+ * — deliberately, not an oversight: `@zanix/space`'s `csrfGuard` exposes its own cookie's name as a
+ * customizable `cookieName` option (default `X-Znx-Csrf`), so an exact-name entry would only catch
+ * the untouched default and silently miss any customized name — the same class of silent gap this
+ * whole pattern exists to close. Safe specifically because `assertZnxCookieName`'s `mustContain`
+ * check (`@zanix/utils`'s own `src/utils/cookies.ts`) is what `csrfGuard` calls to validate a
+ * customized name, and it REQUIRES `Csrf` to appear somewhere in it — so this containment match is
+ * guaranteed to catch any name that constraint allows, by construction, not by coincidence. Every
+ * other entry here stays exact-match: this shape only works because a naming rule elsewhere
+ * guarantees it, and that guarantee doesn't exist for any other credential-shaped field.
+ *
+ * `_csrf` carries the exact same token as the entries above, over a third channel `csrfGuard`
+ * accepts it on — a normal HTML `<form>` submission's own `_csrf` field, alongside the
+ * `X-Znx-Csrf` cookie and the `X-Znx-Csrf-Token` header a fetch/XHR-based action sends instead.
+ * Matched by exact equality, not containment: unlike `cookieName`/`headerName`, this field's name
+ * isn't a configurable option on `csrfGuard` — there's nothing a consumer could customize away
+ * from it.
  */
 const SENSITIVE_KEY_PATTERN =
-  /^((?:x-znx-)?authorization|cookie|set-cookie|password|passwd|pwd|(?:new|confirm|old|current)[-_]?password|(?:x-znx-app-)?token|secret|api[-_]?key|refresh[-_]?token|access[-_]?token|client[-_]?secret|private[-_]?key|session(?:[-_]?id)?|credentials?|otp[-_]?code|otp[-_]?target|credit[-_]?card(?:[-_]?number)?|card[-_]?number|ssn|cvv|cvc|pin[-_]?code|security[-_]?pin|bank[-_]?account(?:[-_]?number)?)$/i
+  /^((?:x-znx-)?authorization|cookie|set-cookie|password|passwd|pwd|(?:new|confirm|old|current)[-_]?password|(?:x-znx-app-)?token|(?:x-znx-)?captcha[-_]?token|x-znx-[\w-]*csrf[\w-]*|_csrf|secret|api[-_]?key|refresh[-_]?token|access[-_]?token|client[-_]?secret|private[-_]?key|session(?:[-_]?id)?|credentials?|otp[-_]?code|otp[-_]?target|credit[-_]?card(?:[-_]?number)?|card[-_]?number|ssn|cvv|cvc|pin[-_]?code|security[-_]?pin|bank[-_]?account(?:[-_]?number)?)$/i
 
 /**
  * The built-in credential-key pattern — the effective pattern whenever nothing has overridden the
