@@ -23,9 +23,10 @@ let currentConfigPath: string | null = null
  * @category helpers
  */
 export function readConfig(configPath?: string | null): ConfigFile {
-  if (configFile && currentConfigPath === configPath) return configFile
-
   const configDir = configPath || getConfigDir()
+
+  if (configFile && currentConfigPath === configDir) return configFile
+
   currentConfigPath = configDir
 
   if (!configDir) {

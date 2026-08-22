@@ -2,17 +2,25 @@ import { assert, assertEquals, assertFalse } from '@std/assert'
 import { stub } from '@std/testing/mock'
 import { baseHeaderLog, buildHeaderLog } from 'modules/logger/base.ts'
 import { baseFormatter } from 'modules/logger/defaults/formatter.ts'
+import { getTemporaryFolder } from 'modules/helpers/paths.ts'
 
-Deno.test('baseHeaderLog omits the app name when the config file cannot be read', () => {
-  const readTextFileSyncStub = stub(Deno, 'readTextFileSync', () => {
-    throw new Error('boom')
-  })
+// `readConfig` memoizes its result by resolved config path, module-wide — by the time this test
+// runs, some earlier-loaded module has already primed that cache with this project's own real
+// `deno.jsonc`. Stubbing `Deno.readTextFileSync` alone can no longer force a read failure, since a
+// cache hit never reaches it; stubbing `Deno.cwd` to a directory with no config file at all makes
+// the resolved path itself come up empty, which is what actually forces `readConfig` to throw
+// (mirrors `config.test.ts`'s own "throws when no config file path can be resolved" case).
+Deno.test('baseHeaderLog omits the app name when the config file cannot be read', async () => {
+  const emptyDir = getTemporaryFolder(import.meta.url) + '/no-config-base'
+  await Deno.mkdir(emptyDir, { recursive: true })
+  const cwdStub = stub(Deno, 'cwd', () => emptyDir)
 
   let header: [string, ...string[]]
   try {
     header = baseHeaderLog('info')
   } finally {
-    readTextFileSyncStub.restore()
+    cwdStub.restore()
+    await Deno.remove(emptyDir, { recursive: true })
   }
 
   assert(header[0].includes('ZNX-INFO'))
@@ -41,21 +49,26 @@ Deno.test('buildHeaderLog (browser variant) uses %c + a CSS string instead of AN
   }
 })
 
-Deno.test('buildHeaderLog (browser): omits the app name when the config cannot be read', () => {
-  const readTextFileSyncStub = stub(Deno, 'readTextFileSync', () => {
-    throw new Error('boom')
-  })
+// See the comment on the analogous `baseHeaderLog` test above — same reasoning applies here.
+Deno.test(
+  'buildHeaderLog (browser): omits the app name when the config cannot be read',
+  async () => {
+    const emptyDir = getTemporaryFolder(import.meta.url) + '/no-config-browser'
+    await Deno.mkdir(emptyDir, { recursive: true })
+    const cwdStub = stub(Deno, 'cwd', () => emptyDir)
 
-  let header: string
-  try {
-    ;[header] = buildHeaderLog('warn', true)
-  } finally {
-    readTextFileSyncStub.restore()
-  }
+    let header: string
+    try {
+      ;[header] = buildHeaderLog('warn', true)
+    } finally {
+      cwdStub.restore()
+      await Deno.remove(emptyDir, { recursive: true })
+    }
 
-  assert(header.includes('ZNX-WARNING'))
-  assert(!header.includes('@zanix/utils'))
-})
+    assert(header.includes('ZNX-WARNING'))
+    assert(!header.includes('@zanix/utils'))
+  },
+)
 
 Deno.test('baseFormatter keeps processId null when Deno.uid throws', () => {
   const uidStub = stub(Deno, 'uid', () => {
