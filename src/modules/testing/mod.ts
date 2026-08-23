@@ -9,9 +9,11 @@
 
 /**
  * Testing utilities: `mockWrap` rewrites a function's source to inject mock dependencies
- * (globals, imports) without touching the original module.
+ * (globals, imports) without touching the original module. `resetConfig` clears `readConfig()`'s
+ * memoized result, for a test that needs to control what it resolves to.
  *
  * @module zanixTesting
  */
 
 export * from './mocks.ts'
+export { resetConfig } from 'modules/helpers/config.ts'

@@ -8,6 +8,7 @@
  */
 
 import { Logger as LoggerMainClass } from 'modules/logger/main.ts'
+import { registerLogSink } from 'modules/errors/main.ts'
 
 /**
  * A default, ready-to-use `logger` instance plus the `Logger` class for creating custom
@@ -178,4 +179,12 @@ const logger: Logger = new Proxy(Logger['prototype'], {
     return target[property].bind(target)
   },
 })
+
+// Wires this default `logger` in as `modules/errors/main.ts`'s log sink — an arrow function,
+// not a direct `logger.error.bind(logger)`, so every call still goes through the `Proxy` `get`
+// trap above and resolves whichever instance is currently `self.logger` at call time (the same
+// late-binding the `Proxy` itself exists for — see its own doc — rather than freezing in
+// whichever instance was current the moment this registration ran).
+registerLogSink((message, error) => logger.error(message, error))
+
 export default logger

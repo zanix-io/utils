@@ -60,22 +60,23 @@ export function baseSaveData(
   saveDataFunction?: SaveDataFile | SaveDataFunction | false,
   redact: ReturnType<typeof createRedactor> = createRedactor(),
 ): SaveDataFunction {
-  // Zanix libraries won't save logs unless a custom `saveDataFunction` is provided. A
-  // `defineZanixApp()` package ('app') gets the same treatment — like a library, it isn't
-  // necessarily a deployed long-running process on its own (a real host runs it, e.g. via
-  // `Zanix.start()`/`.serve()`), so it shouldn't assume a log file destination either.
-  if (
-    (Znx.config.project === 'library' || Znx.config.project === 'app') &&
-    !saveDataFunction
-  ) {
-    return () => {}
-  }
+  const hasCustomSaveDataFunction = !!saveDataFunction
+  const isFunction = typeof saveDataFunction === 'function'
 
-  let baseContext: SaveDataFile = {}
-  if (typeof saveDataFunction !== 'function') {
-    baseContext = typeof saveDataFunction !== 'string' ? { ...saveDataFunction } : {}
-    saveDataFunction = defaultSaveData
-  }
+  const baseContext: SaveDataFile = !isFunction
+    ? (typeof saveDataFunction !== 'string' ? { ...saveDataFunction } : {})
+    : {}
+  // The explicit function, when one was given — never resolved to `defaultSaveData` here. Doing
+  // that substitution eagerly (in this function's own synchronous body, not the closure below)
+  // reintroduces a real bug: `Logger`'s own module creates a default instance on import
+  // (`modules/logger/mod.ts`), which reaches this exact call — through a real circular import
+  // (`defaults/storage/main.ts` -> `modules/workers/mod.ts` -> ... -> `modules/logger/mod.ts` ->
+  // `modules/logger/main.ts` -> back to this file). Referencing `defaultSaveData` (declared
+  // further down THIS file) while that cycle is still resolving throws
+  // `ReferenceError: Cannot access 'defaultSaveData' before initialization` — confirmed by
+  // reproducing it directly. Deferring the reference into the closure below, which only actually
+  // runs at a real save (well after this module has finished initializing), avoids it.
+  const customFn = isFunction ? saveDataFunction as SaveDataFunction : undefined
 
   const catcher = (e: unknown) =>
     showMessage(
@@ -88,8 +89,26 @@ export function baseSaveData(
     )
 
   return (context) => {
+    // Zanix libraries won't save logs unless a custom `saveDataFunction` is provided. A
+    // `defineZanixApp()` package ('app') gets the same treatment — like a library, it isn't
+    // necessarily a deployed long-running process on its own (a real host runs it, e.g. via
+    // `Zanix.start()`/`.serve()`), so it shouldn't assume a log file destination either.
+    //
+    // Checked here, at the first real save — not at `baseSaveData`'s own call time (i.e.
+    // `Logger`'s constructor) — because `Znx.config` resolves lazily (see `setGlobalZnx`);
+    // reading it here instead of eagerly is what keeps merely constructing a `Logger` (`Logger`'s
+    // own module creates one on import) from forcing a synchronous config read off disk.
+    if (
+      (Znx.config.project === 'library' || Znx.config.project === 'app') &&
+      !hasCustomSaveDataFunction
+    ) {
+      return
+    }
+
+    const saveDataFn = customFn ?? defaultSaveData
+
     try {
-      const response = saveDataFunction({ ...context, ...baseContext })
+      const response = saveDataFn({ ...context, ...baseContext })
       if (response instanceof Promise) return response.catch(catcher)
       return response
     } catch (e) {

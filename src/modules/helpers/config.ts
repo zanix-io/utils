@@ -23,9 +23,10 @@ let currentConfigPath: string | null = null
  * @category helpers
  */
 export function readConfig(configPath?: string | null): ConfigFile {
-  if (configFile && currentConfigPath === configPath) return configFile
-
   const configDir = configPath || getConfigDir()
+
+  if (configFile && currentConfigPath === configDir) return configFile
+
   currentConfigPath = configDir
 
   if (!configDir) {
@@ -35,6 +36,23 @@ export function readConfig(configPath?: string | null): ConfigFile {
   configFile = JSON.parse(stripComments(Deno.readTextFileSync(configDir)))
 
   return configFile as ConfigFile
+}
+
+/**
+ * Clears `readConfig()`'s module-level memoized result, forcing its next call — with any
+ * `configPath` — to read the config file from disk again instead of returning the cached value.
+ *
+ * Test-only: production code relies on the cache staying warm for the process lifetime (that's
+ * the whole point of memoizing a disk read); calling this outside a test defeats that. Reach for
+ * it when a test needs to control what `readConfig()` (or anything that calls it internally,
+ * e.g. the logger's `Znx.config`) resolves to, and an earlier call in the same process may have
+ * already resolved and cached the real one first.
+ *
+ * @category testing
+ */
+export function resetConfig(): void {
+  configFile = null
+  currentConfigPath = null
 }
 
 /**

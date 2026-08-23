@@ -30,7 +30,9 @@ export * from 'utils/params.ts'
 export * from './zanix/namespace.ts'
 export * from './paths.ts'
 export * from './files.ts'
-export * from './config.ts'
+// Explicit, not `export *` — `resetConfig` (same file) is test-only and stays out of this
+// production surface; it's re-exported from `@zanix/utils/testing` instead.
+export { readConfig, readModuleConfig, saveConfig } from './config.ts'
 export * from 'utils/urls.ts'
 export * from 'utils/network.ts'
 export * from 'utils/objects.ts'
