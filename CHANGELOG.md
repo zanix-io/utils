@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to
 [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- **`WorkerManager` no longer hangs forever when the global `Znx` logger isn't installed**
+  (`workers`) — `invokeTask` referenced `Znx.logger.error(...)` directly in its timeout,
+  `onmessage`, and `onerror` handlers, but `Znx` is only defined once something has imported
+  `modules/logger/mod.ts` somewhere in the process. A `WorkerManager` consumer who never does that
+  hit a `ReferenceError` thrown inside those async handlers, silently swallowed before `onFinish`
+  could ever run — leaving any caller awaiting the task's promise stuck forever with no visible
+  error. These call sites now go through `getGlobalZnx()?.logger.error(...)`, falling back to
+  `console.error` when no logger has been installed, so the error is always reported and
+  `onFinish` always runs ([#7](https://github.com/zanix-io/utils/issues/7)).
+
 ## [3.0.1] - 2026-08-22
 
 ### Added
