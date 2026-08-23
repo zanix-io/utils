@@ -1,6 +1,6 @@
 import type { ConfigFile } from 'typings/config.ts'
 
-import { readConfig, saveConfig } from 'modules/helpers/config.ts'
+import { readConfig, resetConfig, saveConfig } from 'modules/helpers/config.ts'
 import { assertEquals, assertExists, assertStrictEquals, assertThrows } from '@std/assert'
 import { stub } from '@std/testing/mock'
 import { mockWrap } from 'modules/testing/mocks.ts'
@@ -61,6 +61,29 @@ Deno.test('readConfig returns the cached config on a second call with the same p
   const second = readConfig(realConfigPath)
 
   assertStrictEquals(second, first)
+})
+
+Deno.test('resetConfig forces the next readConfig() to re-read from disk', async () => {
+  const tempDir = getTemporaryFolder(import.meta.url) + '/reset-config'
+  await Deno.mkdir(tempDir, { recursive: true })
+  await Deno.writeTextFile(tempDir + '/deno.json', '{"name": "first"}')
+  const cwdStub = stub(Deno, 'cwd', () => tempDir)
+
+  try {
+    const first = readConfig()
+    assertEquals(first.name, 'first')
+
+    await Deno.writeTextFile(tempDir + '/deno.json', '{"name": "second"}')
+    const stillCached = readConfig()
+    assertEquals(stillCached.name, 'first') // memoized — the on-disk change alone isn't picked up
+
+    resetConfig()
+    const afterReset = readConfig()
+    assertEquals(afterReset.name, 'second')
+  } finally {
+    cwdStub.restore()
+    await Deno.remove(tempDir, { recursive: true })
+  }
 })
 
 Deno.test('readConfig throws when no config file path can be resolved', async () => {

@@ -2,7 +2,36 @@ import type { ErrorOptions, HttpErrorCodes } from 'typings/errors.ts'
 
 import httpErrorStatus from 'modules/errors/http-status-codes.ts'
 import { generateUUID } from 'utils/identifiers.ts'
-import logger from 'modules/logger/mod.ts'
+
+/**
+ * The sink invoked by {@linkcode processError} to log an error when `ErrorOptions.shouldLog` is
+ * set. Left unset (`undefined`) until {@linkcode registerLogSink} runs; every call site reads it
+ * through optional chaining, so an error thrown before registration is simply not logged instead
+ * of throwing.
+ *
+ * This indirection — a module-private variable plus a registration function, instead of
+ * `import logger from 'modules/logger/mod.ts'` directly — exists specifically to break an import
+ * cycle: `modules/logger/main.ts` itself imports from this module (`serializeMultipleErrors`,
+ * `createRedactor`), so a direct import back from here into `modules/logger/mod.ts` would close a
+ * real cycle, leaving a top-level statement in `modules/logger/mod.ts` (`export class Logger
+ * extends LoggerMainClass {}`) dependent on module-evaluation order to avoid a
+ * `ReferenceError: Cannot access 'X' before initialization`. A dynamic `import()` isn't an option
+ * either: `processError` is synchronous (called from constructors, which can't be `async`).
+ */
+let logSink: ((message: string, error: unknown) => void) | undefined
+
+/**
+ * Registers the sink used to log an error when `ErrorOptions.shouldLog` is set. Called once by
+ * `modules/logger/mod.ts`, after its own default `logger` instance is fully constructed, to wire
+ * itself in as this module's logging destination without this module ever importing the logger
+ * directly — see {@linkcode logSink}'s own doc for why that indirection is necessary.
+ *
+ * @param sink - Invoked with the error's message and the error instance itself, mirroring the
+ * real call site (`logger.error(this.message, this)`) this replaces.
+ */
+export function registerLogSink(sink: (message: string, error: unknown) => void): void {
+  logSink = sink
+}
 
 /**
  * Function to process and sanitize external error data
@@ -28,7 +57,7 @@ function processError(
   else delete this.exposeCause
   if (options.cause) this.cause = options.cause
 
-  if (options.shouldLog) logger.error(this.message, this)
+  if (options.shouldLog) logSink?.(this.message, this)
 
   // A plain, writable data property — not a getter — specifically so a later, legitimate
   // assignment (`error._logged = true`, or `Object.assign(error, { _logged: true })`) actually

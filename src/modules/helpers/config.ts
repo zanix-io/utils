@@ -39,6 +39,23 @@ export function readConfig(configPath?: string | null): ConfigFile {
 }
 
 /**
+ * Clears `readConfig()`'s module-level memoized result, forcing its next call — with any
+ * `configPath` — to read the config file from disk again instead of returning the cached value.
+ *
+ * Test-only: production code relies on the cache staying warm for the process lifetime (that's
+ * the whole point of memoizing a disk read); calling this outside a test defeats that. Reach for
+ * it when a test needs to control what `readConfig()` (or anything that calls it internally,
+ * e.g. the logger's `Znx.config`) resolves to, and an earlier call in the same process may have
+ * already resolved and cached the real one first.
+ *
+ * @category testing
+ */
+export function resetConfig(): void {
+  configFile = null
+  currentConfigPath = null
+}
+
+/**
  * Walks up from `metaUrl`'s own directory (never `Deno.cwd()`) looking for `configFile`, mirroring
  * how the JSR-fetch branch strips a module subpath down to its package root. Bounded by the
  * filesystem root so it can't loop forever.

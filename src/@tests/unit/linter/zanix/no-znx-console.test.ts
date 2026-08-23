@@ -64,7 +64,7 @@ Deno.test(
   'no-znx-console auto-fix maps every known console method to its logger equivalent, inserting the import exactly once',
   async () => {
     const filename = await createScratchProject({
-      '@zanix/logger': 'jsr:@zanix/utils@^2.6.1/logger',
+      '@zanix/logger': 'jsr:@zanix/utils@^3.0.0/logger',
     })
 
     const code = `console.log('a')\nconsole.error('b')\nconsole.info('c')\nconsole.warn('d')\n`
@@ -94,7 +94,7 @@ Deno.test(
   'no-znx-console auto-fix resolves the real alias from the target project, never a hardcoded one (space-ui convention)',
   async () => {
     const filename = await createScratchProject({
-      '@zanix/utils/logger': 'jsr:@zanix/utils@^2.6.1/logger',
+      '@zanix/utils/logger': 'jsr:@zanix/utils@^3.0.0/logger',
     })
 
     try {
@@ -114,7 +114,7 @@ Deno.test(
   'no-znx-console auto-fix reuses an existing logger import instead of inserting a second one',
   async () => {
     const filename = await createScratchProject({
-      '@zanix/logger': 'jsr:@zanix/utils@^2.6.1/logger',
+      '@zanix/logger': 'jsr:@zanix/utils@^3.0.0/logger',
     })
 
     const code = `import myLogger from '@zanix/logger'\n\nconsole.log('a')\nconsole.error('b')\n`
@@ -172,7 +172,7 @@ Deno.test(
   'no-znx-console auto-fix does not offer a fix for a console method with no safe 1:1 logger mapping',
   async () => {
     const filename = await createScratchProject({
-      '@zanix/logger': 'jsr:@zanix/utils@^2.6.1/logger',
+      '@zanix/logger': 'jsr:@zanix/utils@^3.0.0/logger',
     })
 
     try {
@@ -190,7 +190,7 @@ Deno.test(
   'no-znx-console auto-fix does not offer a fix for computed console member access',
   async () => {
     const filename = await createScratchProject({
-      '@zanix/logger': 'jsr:@zanix/utils@^2.6.1/logger',
+      '@zanix/logger': 'jsr:@zanix/utils@^3.0.0/logger',
     })
 
     try {
@@ -208,7 +208,7 @@ Deno.test(
   'no-znx-console auto-fix inserts the import after a leading directive-prologue flag, preserving its position-0 requirement',
   async () => {
     const filename = await createScratchProject({
-      '@zanix/logger': 'jsr:@zanix/utils@^2.6.1/logger',
+      '@zanix/logger': 'jsr:@zanix/utils@^3.0.0/logger',
     })
 
     try {

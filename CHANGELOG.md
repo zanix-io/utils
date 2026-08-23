@@ -6,6 +6,37 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to
 [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [3.0.1] - 2026-08-22
+
+### Added
+
+- **`resetConfig()`** (`testing`) — clears `readConfig`'s memoized result, forcing its next call
+  to re-read the config file from disk instead of returning the cached value. Test-only:
+  production code relies on that cache staying warm for the process lifetime. Doesn't retroactively
+  affect an already-resolved `Znx.config` (see the `Logger`/`setGlobalZnx` fix below) — that
+  resolves independently, once, on its own first access, regardless of this call.
+
+### Fixed
+
+- **`readConfig` (`helpers`) now actually memoizes the config file it reads** — it compared the
+  raw `configPath` argument against the previously _resolved_ path, so a call with no explicit
+  path (the common case, e.g. every `logger.*()` call resolving the app name via
+  `buildHeaderLog`) never matched and re-read and re-parsed the config file from disk on every
+  single call. The comparison now happens against the resolved path instead, so a cache hit is
+  recognized whenever the same file would be read again.
+- **`Logger`/`setGlobalZnx` no longer touch disk merely by being imported** (`logger`, `helpers`)
+  — `modules/logger/mod.ts` creates a default `Logger` instance at module load time, and its
+  constructor used to call `readConfig()` (via `setGlobalZnx`) and evaluate the
+  `Znx.config.project === 'library'/'app'` no-op-save check (via `baseSaveData`) both eagerly,
+  right then — requiring `allow-read`/`allow-env` and a resolvable config path the instant
+  anything imported the logger, before a single log was ever saved. Same class of bug
+  `@zanix/asyncmq` already had to fix once for its own eager `readConfig()` call
+  (`registerRabbitMQConnector`). `Znx.config` now resolves lazily, on its first real access, and
+  self-materializes into a plain, mutable object from then on — direct mutation
+  (`Znx.config.project = 'space'`, used throughout this package's own test suite) still works
+  exactly as before; only the timing of the underlying disk read changes, never the public
+  contract of `Znx`/`setGlobalZnx`/the logger's documented "just import and use it" usage.
+
 ## [3.0.0] - 2026-08-22
 
 ### Added
@@ -149,17 +180,6 @@ and this project adheres to
 - **`docs/types.md`'s `LoggerMethods`/`ConsoleInfo` rows were stale** — they still listed the
   method set from before `logger.high` was added and omitted the `ConsoleMethodFor` type it
   introduced; both rows now match `typings/logger.ts`, and `ConsoleMethodFor` has its own row.
-
-## [3.0.1] - 2026-08-22
-
-### Fixed
-
-- **`readConfig` (`helpers`) now actually memoizes the config file it reads** — it compared the
-  raw `configPath` argument against the previously _resolved_ path, so a call with no explicit
-  path (the common case, e.g. every `logger.*()` call resolving the app name via
-  `buildHeaderLog`) never matched and re-read and re-parsed the config file from disk on every
-  single call. The comparison now happens against the resolved path instead, so a cache hit is
-  recognized whenever the same file would be read again.
 
 ## [2.6.1] - 2026-08-19
 

@@ -20,16 +20,21 @@ Deno.test('getGlobalZnx returns the Znx namespace once it is defined', () => {
 })
 
 Deno.test('setGlobalZnx ignores a broken config file when initializing Znx', () => {
+  Reflect.deleteProperty(globalThis, 'Znx')
+
   const readTextFileSyncStub = stub(Deno, 'readTextFileSync', () => {
     throw new Error('boom')
   })
 
   try {
     setGlobalZnx({ config: {} })
+
+    assert(canUseZnx())
+    // `Znx.config` resolves lazily (see `setGlobalZnx`'s own doc) — the read has to happen, and
+    // fail, INSIDE this stub's window to actually exercise the ignored-error path; asserting
+    // after `restore()` would instead read this repo's own real `deno.jsonc`.
+    assertEquals(Znx.config, {})
   } finally {
     readTextFileSyncStub.restore()
   }
-
-  assert(canUseZnx())
-  assertEquals(Znx.config, {})
 })
