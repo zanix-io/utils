@@ -1,6 +1,6 @@
 import type { ValidationDecorator, ValidationDecoratorDefinition } from 'typings/validations.ts'
 
-import { defineValidationDecorator } from 'modules/validations/base/definitions/decorators.ts'
+import { defineCatalogValidationDecorator } from 'modules/validations/base/definitions/decorators.ts'
 import { match, matchArray } from './match.ts'
 import { EMAIL_REGEX } from 'utils/regex.ts'
 
@@ -51,8 +51,8 @@ export const IsEmail: ValidationDecorator = function (
     validation = isEmail
   }
 
-  return defineValidationDecorator(validation, {
+  return defineCatalogValidationDecorator(validation, {
     message: defaultMessage,
     ...options,
-  })
+  }, { decorator: 'IsEmail' })
 }

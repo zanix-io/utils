@@ -1,6 +1,6 @@
 import type { ValidationDecorator, ValidationDecoratorDefinition } from 'typings/validations.ts'
 
-import { defineValidationDecorator } from 'modules/validations/base/definitions/decorators.ts'
+import { defineCatalogValidationDecorator } from 'modules/validations/base/definitions/decorators.ts'
 
 /**
  * Is array validation
@@ -52,7 +52,7 @@ export const IsArray: ValidationDecorator = function (
     validation = isArray
   }
 
-  return defineValidationDecorator(validation, {
+  return defineCatalogValidationDecorator(validation, {
     message: defaultMessage,
     ...options,
   }, { decorator: 'IsArray' })

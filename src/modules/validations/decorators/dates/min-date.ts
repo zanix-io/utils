@@ -4,7 +4,7 @@ import type {
   ValidationDecoratorDefinition,
 } from 'typings/validations.ts'
 
-import { defineValidationDecorator } from 'modules/validations/base/definitions/decorators.ts'
+import { defineCatalogValidationDecorator } from 'modules/validations/base/definitions/decorators.ts'
 import { defaultTransform } from './defaults.ts'
 
 /**
@@ -74,9 +74,9 @@ export const MinDate: ValidationDecorator<
     validation = (value: Date) => minDate(date, value)
   }
 
-  return defineValidationDecorator(validation, {
+  return defineCatalogValidationDecorator(validation, {
     transform: defaultTransform(transform),
     message: defaultMessage,
     ...opts,
-  })
+  }, { decorator: 'MinDate', args: [date] })
 }

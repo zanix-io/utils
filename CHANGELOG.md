@@ -19,6 +19,29 @@ and this project adheres to
   error. These call sites now go through `getGlobalZnx()?.logger.error(...)`, falling back to
   `console.error` when no logger has been installed, so the error is always reported and
   `onFinish` always runs ([#7](https://github.com/zanix-io/utils/issues/7)).
+- **Importing `@zanix/utils` (or `workers`/`logger`/`helpers`) no longer suppresses unhandled
+  promise rejections process-wide** (`workers`) — `modules/workers/processor.ts` statically
+  pulled in Worker-only runtime code (`self.onerror`, an `unhandledrejection` listener calling
+  `preventDefault()`) as a side effect of import, meant to run only inside a spawned Worker's own
+  isolated realm but actually running in whichever realm imported the module — including a host
+  process's main thread, where it silently swallowed every unhandled rejection instead of letting
+  Deno crash as expected. That runtime code now lives in a new `worker-entry.ts`, loaded only as a
+  spawned Worker's own entry module and never statically imported by the host; `processor.ts`
+  keeps just the side-effect-free `getWebProcessWorker` spawner
+  ([#10](https://github.com/zanix-io/utils/issues/10)).
+- **`classMetadata` now tags all ~22 catalog validation decorators with `meta.decorator`, not just
+  6** (`validator`) — `ValidateNested`, `Match`, `IsUrl`, `IsNumberString`, `IsEmail`,
+  `IsBooleanString`, `IsObjectID`, `Length`, `IsUUID`, `MinDate`, `MaxDate`, `IsPhone`, `IsDate`,
+  `MinNumber`, `ArrayLength`, and `MaxNumber` registered with `decorator: undefined`,
+  indistinguishable from a genuinely custom decorator to a downstream consumer (e.g. an OpenAPI
+  generator) trying to map a field back to its decorator. Each now supplies its own
+  `meta: { decorator: 'X', args: [...] }` through a new internal-only
+  `defineCatalogValidationDecorator` — identical to the public `defineValidationDecorator` but
+  with `meta` required, so a future catalog decorator that omits it fails `deno check`/`deno
+  publish` at compile time instead of silently producing an untagged entry. The public
+  `defineValidationDecorator` (and the `Validation()` custom-decorator helper) keep `meta`
+  optional — that remains the escape hatch for consumer-authored custom decorators
+  ([#11](https://github.com/zanix-io/utils/issues/11)).
 
 ## [3.0.1] - 2026-08-22
 

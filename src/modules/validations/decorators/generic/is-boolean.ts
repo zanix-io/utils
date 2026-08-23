@@ -1,6 +1,6 @@
 import type { ValidationDecorator, ValidationDecoratorDefinition } from 'typings/validations.ts'
 
-import { defineValidationDecorator } from 'modules/validations/base/definitions/decorators.ts'
+import { defineCatalogValidationDecorator } from 'modules/validations/base/definitions/decorators.ts'
 
 /**
  * Is boolean validation
@@ -48,7 +48,7 @@ export const IsBoolean: ValidationDecorator = function (
     validation = isBoolean
   }
 
-  return defineValidationDecorator(validation, {
+  return defineCatalogValidationDecorator(validation, {
     message: defaultMessage,
     ...options,
   }, { decorator: 'IsBoolean' })

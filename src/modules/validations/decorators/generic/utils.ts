@@ -5,7 +5,10 @@ import type {
   ValidationOptions,
 } from 'typings/validations.ts'
 
-import { defineValidationDecorator } from 'modules/validations/base/definitions/decorators.ts'
+import {
+  defineCatalogValidationDecorator,
+  defineValidationDecorator,
+} from 'modules/validations/base/definitions/decorators.ts'
 
 /**
  * A decorator function designed to expose accessor properties that are not defined in
@@ -60,7 +63,7 @@ export const Expose = function (
   options?: Pick<ValidationOptions, 'message' | 'optional' | 'transform'>,
 ): ValidationDecoratorDefinition {
   const defaultMessage = (property: string) => `The '${property}' property must be defined.`
-  return defineValidationDecorator(() => true, {
+  return defineCatalogValidationDecorator(() => true, {
     expose: true,
     message: defaultMessage,
     ...options,

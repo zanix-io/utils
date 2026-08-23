@@ -4,7 +4,7 @@ import type {
   ValidationOptions,
 } from 'typings/validations.ts'
 
-import { defineValidationDecorator } from 'modules/validations/base/definitions/decorators.ts'
+import { defineCatalogValidationDecorator } from 'modules/validations/base/definitions/decorators.ts'
 
 /**
  * Validate if has valid length
@@ -55,5 +55,8 @@ export const ArrayLength: ValidationDecorator<
   } = options
 
   const validation = (value: unknown[]) => arrayLength(value, min, max)
-  return defineValidationDecorator(validation, { message, ...opts })
+  return defineCatalogValidationDecorator(validation, { message, ...opts }, {
+    decorator: 'ArrayLength',
+    args: [{ min, max }],
+  })
 }

@@ -1,5 +1,5 @@
 import type { ValidationDecoratorDefinition, ValidationOptions } from 'typings/validations.ts'
-import { defineValidationDecorator } from 'modules/validations/base/definitions/decorators.ts'
+import { defineCatalogValidationDecorator } from 'modules/validations/base/definitions/decorators.ts'
 
 /** An enum-like object, or an array of literal values treated as an enum. */
 export type EnumType = Record<string, unknown> | unknown[]
@@ -76,7 +76,7 @@ export const IsEnum = (
     defaultMessage = (property: string) => `'${property}' must be a valid enum member`
   }
 
-  return defineValidationDecorator(validation, {
+  return defineCatalogValidationDecorator(validation, {
     message: defaultMessage,
     ...options,
   }, { decorator: 'IsEnum', args: [validations] })

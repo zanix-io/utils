@@ -8,7 +8,7 @@ import type {
   ValidationOptions,
 } from 'modules/types/mod.ts'
 
-import { defineValidationDecorator } from 'modules/validations/base/definitions/decorators.ts'
+import { defineCatalogValidationDecorator } from 'modules/validations/base/definitions/decorators.ts'
 import validationsMetadata from 'modules/validations/base/metadata.ts'
 import { validate } from '../verifier.ts'
 
@@ -114,9 +114,9 @@ export const ValidateNested: ValidationDecorator<
     )
   }
 
-  return defineValidationDecorator(validation, {
+  return defineCatalogValidationDecorator(validation, {
     message: defaultMessage,
     expose: true,
     ...options,
-  })
+  }, { decorator: 'ValidateNested', args: [Type] })
 }

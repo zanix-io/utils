@@ -1,6 +1,6 @@
 import type { ValidationDecorator, ValidationDecoratorDefinition } from 'typings/validations.ts'
 
-import { defineValidationDecorator } from 'modules/validations/base/definitions/decorators.ts'
+import { defineCatalogValidationDecorator } from 'modules/validations/base/definitions/decorators.ts'
 import { match, matchArray } from './match.ts'
 import { URL_REGEX } from 'utils/regex.ts'
 
@@ -50,8 +50,8 @@ export const IsUrl: ValidationDecorator = function (
     validation = isUrl
   }
 
-  return defineValidationDecorator(validation, {
+  return defineCatalogValidationDecorator(validation, {
     message: defaultMessage,
     ...options,
-  })
+  }, { decorator: 'IsUrl' })
 }

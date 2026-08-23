@@ -4,6 +4,7 @@ import {
   classValidation,
   defineValidationDecorator,
 } from 'modules/validations/mod.ts'
+import { defineCatalogValidationDecorator } from 'modules/validations/base/definitions/decorators.ts'
 import { IsArray } from 'modules/validations/decorators/arrays/is-array.ts'
 import { IsBoolean } from 'modules/validations/decorators/generic/is-boolean.ts'
 import { IsEnum } from 'modules/validations/decorators/generic/is-enum.ts'
@@ -140,6 +141,100 @@ Deno.test('classMetadata - a custom decorator with no meta tag has no known deco
 
   assertEquals(meta.quantity.decorator, undefined)
   assertEquals(meta.quantity.args, [])
+})
+
+// The counterpart to the case above: `defineValidationDecorator`'s third `meta` argument is
+// optional (so a fully custom, consumer-authored decorator can omit it, as proven above), but a
+// caller that DOES pass it — even without going through the internal, meta-required
+// `defineCatalogValidationDecorator` every catalog `IsX` decorator uses (see
+// `base/definitions/decorators.ts`) — must still have it threaded through to `classMetadata`
+// exactly like a real catalog decorator would. Confirms the public function's optional `meta`
+// isn't optional-and-silently-dropped-when-present, just optional-to-omit.
+Deno.test({
+  name:
+    'classMetadata - a custom decorator WITH an explicit meta tag reports it like a catalog decorator',
+  fn: () => {
+    const IsPositive = () =>
+      defineValidationDecorator((val: number) => val > 0, { message: 'Must be positive' }, {
+        decorator: 'IsPositive',
+        args: ['custom-arg'],
+      })
+
+    class OrderRTO extends BaseRTO {
+      @IsPositive()
+      accessor quantity!: number
+    }
+
+    const meta = classMetadata(OrderRTO)
+
+    assertEquals(meta.quantity.decorator, 'IsPositive')
+    assertEquals(meta.quantity.args, ['custom-arg'])
+  },
+})
+
+// `defineValidationDecorator`'s `message` option accepts a plain string OR a
+// `(property, value, target) => string` function — internally normalized via
+// `const messageResult = typeof message === 'string' ? () => message : message`. Every other
+// test in this file that passes a string `message` (like the "no meta tag" case above) only
+// calls `classMetadata`, which never runs the setter path that actually invokes `messageResult`
+// — this is the only test that drives a real validation failure through `classValidation`,
+// exercising the plain-string branch instead of just the function branch.
+Deno.test({
+  name: 'a decorator with a plain string message threads it through a real validation failure',
+  fn: async () => {
+    const IsPositive = () =>
+      defineValidationDecorator((val: number) => val > 0, { message: 'Must be positive' })
+
+    class OrderRTO extends BaseRTO {
+      // An explicit assignment (as `BaseRTO`'s own doc example does) is required here: `expose`
+      // defaults to `false` for a bare `defineValidationDecorator` call with no `transform`/
+      // `expose` option, so nothing would otherwise copy `quantity` from the plain payload onto
+      // the accessor — and the setter (the only thing that calls `messageResult`) never fires
+      // for a value that's never assigned.
+      constructor(data: { quantity: number }) {
+        super()
+        this.quantity = data.quantity
+      }
+
+      @IsPositive()
+      accessor quantity!: number
+    }
+
+    let ran = false
+    await classValidation(OrderRTO, { quantity: -1 }, {
+      throwErrors: (errors) => {
+        ran = true
+        assertEquals(errors[0].constraints, ['Must be positive'])
+      },
+    })
+    assertEquals(ran, true)
+  },
+})
+
+// Direct coverage of `defineCatalogValidationDecorator` itself (see `base/definitions/
+// decorators.ts`) rather than only exercising it indirectly through a real `IsX` file — every
+// catalog decorator (`decorator-catalog-metadata.test.ts`) already proves it threads `meta`
+// through correctly in practice; this isolates that it's a genuine passthrough to
+// `defineValidationDecorator`, not a diverging implementation.
+Deno.test({
+  name:
+    'classMetadata - defineCatalogValidationDecorator threads its required meta through exactly like the public function',
+  fn: () => {
+    const IsEven = () =>
+      defineCatalogValidationDecorator((val: number) => val % 2 === 0, {
+        message: 'Must be even',
+      }, { decorator: 'IsEven', args: [] })
+
+    class OrderRTO extends BaseRTO {
+      @IsEven()
+      accessor count!: number
+    }
+
+    const meta = classMetadata(OrderRTO)
+
+    assertEquals(meta.count.decorator, 'IsEven')
+    assertEquals(meta.count.args, [])
+  },
 })
 
 Deno.test('classMetadata - coexists with classValidation without interfering', async () => {
