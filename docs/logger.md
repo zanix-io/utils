@@ -272,11 +272,14 @@ const { type, ...data } = await request.json()
 logger.ingest(type, data.message, data)
 ```
 
-`ingest` runs the full local pipeline (redact, print, persist) on data that
-already came formatted from elsewhere — never `noSave` — so a relayed
-browser log persists through whichever backend the server's own `Logger`
-instance is already configured with (file, Elasticsearch, a custom sink),
-with no separate wiring needed for browser-originated logs.
+`ingest` redacts and persists the raw data given exactly as `warn`/`error`/etc.
+would — never `noSave` — so a relayed browser log persists through whichever
+backend the server's own `Logger` instance is already configured with (file,
+Elasticsearch, a custom sink), with no separate wiring needed for
+browser-originated logs. Unlike every other log method, it skips the console
+print step: the remote origin already surfaced this entry through its own
+console/UI, so printing it again here would misrepresent a relayed remote
+event as a genuine local one on this process's own console.
 
 A server-side caller that wants file-based storage explicitly — bypassing
 `Logger`'s own automatic default, or building a `createClientLogger`-style

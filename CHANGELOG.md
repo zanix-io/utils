@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to
 [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [3.1.1] - 2026-08-24
+
+### Fixed
+
+- **`Logger#ingest` printed a relayed remote log to this process's own console, same as a
+  genuine local log** (`logger`) — introduced in `3.1.0`, `ingest` shared its full pipeline with
+  `warn`/`error`/etc. via the private `#log`, including `showMessage`'s console print. A log
+  relayed from a browser client (via `@zanix/utils/logger/client`'s `createClientLogger`, through
+  an app's own HTTP endpoint) already surfaced through its own console/UI on the client side;
+  printing it again on the server misrepresented a remote event as a local one, and could flood
+  the server's own console under real client traffic. `ingest` still redacts and persists exactly
+  as before (never `noSave`) — it just no longer calls `showMessage`.
+
 ## [3.1.0] - 2026-08-24
 
 ### Fixed

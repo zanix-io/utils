@@ -475,8 +475,7 @@ Deno.test(
 )
 
 Deno.test(
-  "Logger#ingest persists an already-formatted payload through this instance's own save " +
-    'function, never noSave',
+  "Logger#ingest persists a raw payload through this instance's own save function, never noSave",
   async () => {
     const persisted: unknown[] = []
     const logger = new Logger({
@@ -495,6 +494,22 @@ Deno.test(
 
     assertEquals(returned, 'saved')
     assertEquals(persisted.length, 1)
+  },
+)
+
+Deno.test(
+  'Logger#ingest never reaches showMessage — unlike every other log method, a relayed remote ' +
+    "log must not print again on THIS process's own console",
+  async () => {
+    const warnCallsBefore = warn.calls.length
+    const logger = new Logger({
+      disableGlobalAssign: true,
+      storage: { save: () => Promise.resolve('saved') },
+    })
+
+    await logger.ingest('warn', 'relayed warning, must never print locally')
+
+    assertEquals(warn.calls.length, warnCallsBefore)
   },
 )
 

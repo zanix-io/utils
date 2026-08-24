@@ -134,20 +134,22 @@ export class Logger<Return extends unknown = DefaultResponse> {
   }
 
   /**
-   * Persists an already-formatted log entry through this instance's OWN configured save
-   * function — for relaying a log that was already fully formatted and redacted elsewhere (e.g.
-   * a browser client's own `@zanix/utils/logger/client` instance, via an HTTP relay endpoint like
-   * `@zanix/space`'s `/api/log`). Runs the full pipeline (redact, print, persist) the same as
-   * `warn`/`error`/etc. — never `noSave` — since a relayed remote log is exactly the kind of
-   * thing worth persisting through this instance's own configured backend (Elasticsearch
-   * included). Not part of the everyday debug/info/warn/error/high API; a relay endpoint's own
-   * use only.
+   * Persists a log entry that originated elsewhere (e.g. a browser client's own
+   * `@zanix/utils/logger/client` instance, relayed through an HTTP endpoint like
+   * `@zanix/space`'s `/api/log`) through this instance's OWN configured save function. Redacts
+   * and formats the raw data given exactly as `warn`/`error`/etc. would — never `noSave` — since
+   * a relayed remote log is exactly the kind of thing worth persisting through this instance's
+   * own configured backend (Elasticsearch included). Deliberately skips `showMessage`'s console
+   * print, unlike every other log method: the remote origin already surfaced this entry through
+   * its own console (or its own UI) — printing it again here would misrepresent a relayed remote
+   * event as if it were a genuine local one on THIS process's own console. Not part of the
+   * everyday debug/info/warn/error/high API; a relay endpoint's own use only.
    * @param type - The severity the remote origin itself logged at.
    * @param data - The remote origin's own raw, unformatted log data — this instance's own
    * `redact`/`formatter` still run on it here, exactly as they would for a local call.
    */
   public ingest(type: LoggerMethods, ...data: LoggerData): Return | undefined {
-    return this.#log(type, ...data)
+    return this.#log(type, false, ...data)
   }
 
   /**
@@ -155,13 +157,15 @@ export class Logger<Return extends unknown = DefaultResponse> {
    * `#storage` (file/custom `storage.save` — Elasticsearch included), rather than each redacting
    * its own copy of the same raw input. `showMessage` itself never redacts (see its own doc), so
    * this is the only place that does for this call.
+   * @param print - Whether to run `showMessage`'s console print at all — every public method
+   * passes `true` except {@linkcode ingest}, which never does (see its own doc for why).
    */
-  #log(type: LoggerMethods, ...data: LoggerData): Return | undefined {
+  #log(type: LoggerMethods, print: boolean, ...data: LoggerData): Return | undefined {
     const hasNoSave = data[data.length - 1] === 'noSave'
     if (hasNoSave) data.length = data.length - 1
 
     const redactedData = data.map(this.#redact) as LoggerData
-    showMessage(type, ...redactedData)
+    if (print) showMessage(type, ...redactedData)
     if (hasNoSave) return undefined
 
     return this.#storage(type, redactedData) as Return
@@ -178,7 +182,7 @@ export class Logger<Return extends unknown = DefaultResponse> {
    * @param data - Values to be printed to the console.
    */
   public debug(...data: LoggerData<'debug'>): Return | undefined {
-    return this.#log('debug', ...data, 'noSave')
+    return this.#log('debug', true, ...data, 'noSave')
   }
 
   /**
@@ -193,7 +197,7 @@ export class Logger<Return extends unknown = DefaultResponse> {
     const errors = serializeMultipleErrors(rest, { redact: false })
 
     if (!errors.length && rest.length) return
-    return this.#log('error', message, ...errors)
+    return this.#log('error', true, message, ...errors)
   }
 
   /**
@@ -201,7 +205,7 @@ export class Logger<Return extends unknown = DefaultResponse> {
    * @param data - Values to be printed to the console.
    */
   public info(...data: LoggerData<'info'>): Return | undefined {
-    return this.#log('info', ...data)
+    return this.#log('info', true, ...data)
   }
 
   /**
@@ -209,7 +213,7 @@ export class Logger<Return extends unknown = DefaultResponse> {
    * @param data - The primary message.
    */
   public success(message: LoggerData<'success'>): Return | undefined {
-    return this.#log('success', message, 'noSave')
+    return this.#log('success', true, message, 'noSave')
   }
 
   /**
@@ -217,7 +221,7 @@ export class Logger<Return extends unknown = DefaultResponse> {
    * @param data - Values to be printed to the console.
    */
   public warn(...data: LoggerData<'warn'>): Return | undefined {
-    return this.#log('warn', ...data)
+    return this.#log('warn', true, ...data)
   }
 
   /**
@@ -230,7 +234,7 @@ export class Logger<Return extends unknown = DefaultResponse> {
    * @param data - Values to be printed to the console.
    */
   public high(...data: LoggerData<'high'>): Return | undefined {
-    return this.#log('high', ...data)
+    return this.#log('high', true, ...data)
   }
 }
 
