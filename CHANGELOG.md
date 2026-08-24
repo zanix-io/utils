@@ -8,6 +8,22 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Fixed
+
+- **`getWebProcessWorker`'s `new Worker(...)` options broke a real Vite client build the moment
+  its URL argument became a genuine `new URL('./worker-entry.ts', import.meta.url)`** (`workers`)
+  — introduced as a side effect of `3.0.2`'s `worker-entry.ts` split, which changed the Worker
+  constructor's first argument from a bare `import.meta.url` to that exact
+  `new URL(..., import.meta.url)` shape. Vite's own `worker-import-meta-url` plugin specifically
+  targets that shape for static analysis and needs `type` to resolve to a literal; a spread placed
+  AFTER `type: 'module'` in the options object — present since `2.6.0`, but never actually
+  exercised by Vite because the OLD bare-`import.meta.url` argument never triggered that plugin's
+  parsing at all — made it fail with "Expected object spread to be used before the definition of
+  the type property," aborting the whole build. Any consumer whose client bundle reaches this
+  module transitively (e.g. `@zanix/space` apps, via `@zanix/logger`) hit this on every build. The
+  spread now comes before `type`, an identical runtime object either way (it only ever contributes
+  a `deno` key), confirmed against a real Vite 8.2.2/rolldown build.
+
 ## [3.0.2] - 2026-08-23
 
 ### Fixed
