@@ -6,18 +6,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to
 [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [3.1.1] - 2026-08-24
+## [Unreleased]
 
 ### Fixed
 
-- **`Logger#ingest` printed a relayed remote log to this process's own console, same as a
-  genuine local log** (`logger`) — introduced in `3.1.0`, `ingest` shared its full pipeline with
-  `warn`/`error`/etc. via the private `#log`, including `showMessage`'s console print. A log
-  relayed from a browser client (via `@zanix/utils/logger/client`'s `createClientLogger`, through
-  an app's own HTTP endpoint) already surfaced through its own console/UI on the client side;
-  printing it again on the server misrepresented a remote event as a local one, and could flood
-  the server's own console under real client traffic. `ingest` still redacts and persists exactly
-  as before (never `noSave`) — it just no longer calls `showMessage`.
 - **`docs/logger.md`'s own `/api/log` relay example destructured a `type` field that
   `createClientLogger`'s fetcher never actually sends** (`logger`) — the fetcher receives a
   `DefaultFormattedLog`-shaped object, whose severity field is `level`, not `type`. A relay
@@ -32,6 +24,19 @@ and this project adheres to
   (browser) realm, since every real consumer imports it directly. Not a fix for a cross-realm
   collision risk (a browser tab's `globalThis` and a server process's `globalThis` were never the
   same object to begin with) — purely removes an unused global assignment.
+
+## [3.1.1] - 2026-08-24
+
+### Fixed
+
+- **`Logger#ingest` printed a relayed remote log to this process's own console, same as a
+  genuine local log** (`logger`) — introduced in `3.1.0`, `ingest` shared its full pipeline with
+  `warn`/`error`/etc. via the private `#log`, including `showMessage`'s console print. A log
+  relayed from a browser client (via `@zanix/utils/logger/client`'s `createClientLogger`, through
+  an app's own HTTP endpoint) already surfaced through its own console/UI on the client side;
+  printing it again on the server misrepresented a remote event as a local one, and could flood
+  the server's own console under real client traffic. `ingest` still redacts and persists exactly
+  as before (never `noSave`) — it just no longer calls `showMessage`.
 
 ## [3.1.0] - 2026-08-24
 
