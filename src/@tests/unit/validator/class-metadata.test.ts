@@ -9,7 +9,9 @@ import { IsArray } from 'modules/validations/decorators/arrays/is-array.ts'
 import { IsBoolean } from 'modules/validations/decorators/generic/is-boolean.ts'
 import { IsEnum } from 'modules/validations/decorators/generic/is-enum.ts'
 import { IsNumber } from 'modules/validations/decorators/numbers/is-number.ts'
+import { IsEmail } from 'modules/validations/decorators/strings/is-email.ts'
 import { IsString } from 'modules/validations/decorators/strings/is-string.ts'
+import { Length } from 'modules/validations/decorators/strings/length.ts'
 import { Expose } from 'modules/validations/decorators/generic/utils.ts'
 import { assertEquals } from '@std/assert'
 
@@ -275,4 +277,63 @@ Deno.test('classMetadata - two unrelated classes never leak fields into each oth
 
   assertEquals(classMetadata(FirstRTO).value.decorator, 'IsString')
   assertEquals(classMetadata(SecondRTO).value.decorator, 'IsNumber')
+})
+
+// Regression coverage for the real gap this stacking support fixes: `registerClassField` used to
+// plain-overwrite a field's entry on every decorator registration, so a field carrying two or
+// more stacked decorators (a common, realistic shape — e.g. `@IsString() @Length(...)`) only ever
+// reported the LAST one applied, silently losing every earlier decorator from `classMetadata`.
+Deno.test('classMetadata - stacked decorators accumulate; `decorator`/`args` stay as-is', () => {
+  class ContactRTO extends BaseRTO {
+    // Decorators apply bottom-up: `Length` (closest to the accessor) registers first, `IsString`
+    // (topmost) registers last — so `decorator`/`args` below reflect `IsString`, unchanged from
+    // this function's original single-decorator behavior.
+    @IsString({ expose: true })
+    @Length({ min: 1, max: 100 }, { optional: true })
+    accessor nickname!: string
+  }
+
+  const meta = classMetadata(ContactRTO)
+
+  // Unchanged (last-registered-wins) singular fields — a consumer reading only these two keeps
+  // working exactly as before.
+  assertEquals(meta.nickname.decorator, 'IsString')
+  assertEquals(meta.nickname.args, [])
+
+  // New: the full stack, in registration order, with nothing lost.
+  assertEquals(meta.nickname.decorators, [
+    { decorator: 'Length', args: [{ min: 1, max: 100 }] },
+    { decorator: 'IsString', args: [] },
+  ])
+
+  // `expose`/`optional` are field-wide runtime state, not one decorator's identity: `IsString`
+  // set `expose: true` and `Length` set `optional: true` — since either stacked decorator's own
+  // options actually flip that shared runtime behavior on for the whole property (see
+  // `class-fields.ts`), both must be reported `true` here too, not overwritten by whichever
+  // decorator happened to register last.
+  assertEquals(meta.nickname.expose, true)
+  assertEquals(meta.nickname.optional, true)
+  assertEquals(meta.nickname.each, false)
+})
+
+Deno.test('classMetadata - a single-decorator field never gets a `decorators` entry', () => {
+  const meta = classMetadata(ProfileRTO)
+
+  assertEquals('decorators' in meta.name, false)
+})
+
+Deno.test('classMetadata - a realistic email + length stack reports every decorator', () => {
+  class SignupRTO extends BaseRTO {
+    @IsEmail({ expose: true })
+    @Length({ max: 255 })
+    accessor email!: string
+  }
+
+  const meta = classMetadata(SignupRTO)
+
+  assertEquals(meta.email.decorator, 'IsEmail')
+  assertEquals(meta.email.decorators, [
+    { decorator: 'Length', args: [{ min: 0, max: 255 }] },
+    { decorator: 'IsEmail', args: [] },
+  ])
 })

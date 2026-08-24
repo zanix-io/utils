@@ -176,6 +176,49 @@ called with beyond `ValidationOptions` (e.g. `IsEnum`'s allowed values), and is
 empty for a decorator that takes none. See `RTOFieldMetadata` in the
 [Types reference](./types.md).
 
+A field carrying two or more stacked decorators (e.g. `@IsString() @Length({
+min: 1, max: 100 })`) reports a `decorators` array alongside `decorator`/
+`args` — one entry per decorator applied, in registration order:
+
+```typescript
+class ContactRTO extends BaseRTO {
+  @IsString({ expose: true })
+  @Length({ min: 1, max: 100 })
+  accessor nickname!: string
+}
+
+classMetadata(ContactRTO)
+// {
+//   nickname: {
+//     decorator: 'IsString',   // last-registered decorator, unchanged from a single-decorator field
+//     args: [],
+//     decorators: [
+//       { decorator: 'Length', args: [{ min: 1, max: 100 }] },
+//       { decorator: 'IsString', args: [] },
+//     ],
+//     each: false,
+//     optional: false,
+//     expose: true,
+//   },
+// }
+```
+
+`decorator`/`args` always mirror the last-registered decorator, exactly as
+they do for a field with only one decorator — so an existing consumer reading
+only those two fields keeps working unchanged. `decorators` is present only
+when the field has more than one; a single-decorator field never carries it.
+`each`/`optional`/`expose` are OR-merged across the stack, since that mirrors
+their real runtime effect: `classValidation` treats a value as optional, or
+exposes it, the moment ANY decorator in the stack says so, regardless of what
+the others say.
+
+`ValidateNested(NestedRTO)`'s entry carries `args: [NestedRTO]` — a real,
+directly usable `BaseRTO` subclass constructor, not serialized data. Call
+`classMetadata(NestedRTO)` on it to introspect the nested class's own fields;
+resolve it yourself before passing this output through something like
+`JSON.stringify` (e.g. across a subprocess boundary), since a live class
+constructor doesn't survive serialization.
+
 ### `defineValidationDecorator(validation, options?, meta?)`
 
 The primitive used internally to build every decorator in this module. It turns

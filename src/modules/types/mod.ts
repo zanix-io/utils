@@ -76,6 +76,7 @@ export type { FormatAvailableFiles, LinterAvailableFiles } from 'typings/files.t
 export type {
   ClassFieldDecoratorMeta,
   DefaultTransformValidationOpts,
+  RTOFieldDecoratorEntry,
   RTOFieldMetadata,
   RtoTypes,
   ValidationConstraints,

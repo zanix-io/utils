@@ -188,6 +188,19 @@ export type ClassFieldDecoratorMeta = {
 }
 
 /**
+ * One decorator's identity within a field's {@linkcode RTOFieldMetadata.decorators} stack —
+ * the same `decorator`/`args` shape as the field-level entry, minus the field-wide
+ * `each`/`optional`/`expose` flags that apply to the property as a whole rather than to a
+ * single decorator.
+ */
+export type RTOFieldDecoratorEntry = {
+  /** Name of this decorator (e.g. `'IsString'`, `'Length'`), `undefined` if it registered with no known name. */
+  decorator?: string
+  /** This decorator's own arguments beyond `ValidationOptions`. Empty when it takes none. */
+  args: unknown[]
+}
+
+/**
  * Static, class-level description of a single `BaseRTO` field: which validation decorator was
  * applied, with what arguments, and its `each`/`optional`/`expose` flags — everything a
  * build-time consumer (an OpenAPI generator, a form/table renderer, ...) needs without
@@ -198,13 +211,30 @@ export type RTOFieldMetadata = {
    * Name of the validation decorator applied (e.g. `'IsString'`, `'IsEnum'`). `undefined` for a
    * custom decorator that didn't register a name (built via `Validation()` or a raw
    * `defineValidationDecorator()` call with no third argument).
+   *
+   * When more than one decorator is stacked on the same field, this reflects only the
+   * last-registered decorator — read {@linkcode RTOFieldMetadata.decorators} for the full stack.
    */
   decorator?: string
   /**
    * Decorator-specific arguments beyond `ValidationOptions`, e.g. `IsEnum`'s enum object/array.
    * Empty when the decorator takes none.
+   *
+   * When more than one decorator is stacked on the same field, this reflects only the
+   * last-registered decorator — read {@linkcode RTOFieldMetadata.decorators} for the full stack.
    */
   args: unknown[]
+  /**
+   * Every validation decorator applied to this field, in registration order. Present only when
+   * two or more decorators are stacked on the same property (e.g. `@IsString() @Length({ min: 1,
+   * max: 100 })`) — a field with a single decorator omits this entirely, since `decorator`/`args`
+   * above already describe it fully.
+   *
+   * `decorator`/`args` still mirror the last-registered decorator unchanged, so an existing
+   * consumer that only reads those two fields keeps working identically; a consumer that wants
+   * every constraint a stacked field enforces reads this instead.
+   */
+  decorators?: RTOFieldDecoratorEntry[]
   /** Whether the decorator validates each item of an array (`each: true`) rather than the whole value. */
   each: boolean
   /** Whether the field is optional. */

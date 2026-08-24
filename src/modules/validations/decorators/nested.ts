@@ -26,6 +26,12 @@ import { validate } from '../verifier.ts'
  * ```
  * `someValue` will not be validated by decorators because it is set directly by the code.
  *
+ * `classMetadata`'s entry for a `ValidateNested` field carries `args: [Type]` — the real `Type`
+ * constructor passed here, not serialized data. Call `classMetadata(Type)` on it directly to
+ * introspect the nested class's own fields; a consumer that needs to serialize `classMetadata`'s
+ * output (e.g. across a subprocess boundary via `JSON.stringify`) must resolve this nested class
+ * itself first, since a live constructor doesn't survive serialization.
+ *
  * @category Validations
  */
 export const ValidateNested: ValidationDecorator<

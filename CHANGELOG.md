@@ -42,6 +42,18 @@ and this project adheres to
   `defineValidationDecorator` (and the `Validation()` custom-decorator helper) keep `meta`
   optional — that remains the escape hatch for consumer-authored custom decorators
   ([#11](https://github.com/zanix-io/utils/issues/11)).
+- **`classMetadata` now reports every decorator stacked on a field, not just the last one
+  registered** (`validator`) — `registerClassField` plain-overwrote a field's entry on each
+  decorator registration, so a field carrying two or more decorators (e.g. `@IsString()
+  @Length({ min: 1, max: 100 })`, or `@IsEmail() @Length({ max: 255 })`) only ever reported the
+  last one applied, silently dropping every earlier decorator from a downstream consumer's view
+  (e.g. an OpenAPI generator). `RTOFieldMetadata` gains a new `decorators` array — every decorator
+  in the stack, in registration order — populated only when a field has more than one; a
+  single-decorator field never carries it. `decorator`/`args` keep reflecting only the
+  last-registered decorator, unchanged, so an existing consumer reading just those two fields
+  keeps working identically. `each`/`optional`/`expose` are now OR-merged across a stacked field's
+  decorators instead of overwritten, matching their real runtime behavior: `classValidation`
+  treats a value as optional, or exposes it, the moment any decorator in the stack says so.
 
 ## [3.0.1] - 2026-08-22
 
