@@ -22,8 +22,18 @@ export const getWebProcessWorker = (
   permissions?: Deno.PermissionOptions,
 ): WorkerEntry => {
   const worker = new Worker(new URL('./worker-entry.ts', import.meta.url), {
-    type: 'module',
+    // The spread comes BEFORE `type` (never after) — the same runtime object either way, since
+    // the spread only ever contributes a `deno` key, never `type`. The URL argument above is a
+    // real `new URL(..., import.meta.url)` — exactly the `new Worker(new URL(...), options)`
+    // shape Vite's own `worker-import-meta-url` plugin statically parses wherever a client bundle
+    // reaches this module (e.g. `@zanix/space`'s client bundle, via `@zanix/logger`). That plugin
+    // needs `type` to resolve to a literal, and refuses to parse an options object with a spread
+    // AFTER `type` ("Expected object spread to be used before the definition of the type
+    // property"), since it can no longer prove the spread won't overwrite it. Confirmed
+    // empirically against a real Vite 8.2.2/rolldown build: this key order parses cleanly; `type`
+    // before the spread does not.
     ...(permissions !== undefined ? { deno: { permissions } } : {}),
+    type: 'module',
   })
   return { worker, status: 'free' }
 }
