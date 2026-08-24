@@ -236,6 +236,60 @@ to synthesizing its own timestamp only when nothing suitable is already present
 timestamp under a different name, and one that has no time field at all, without
 `Logger` ever needing to know why.
 
+### 7. Browser clients: `createClientLogger` and `Logger#ingest`
+
+`new Logger(...)`'s own default storage (style 2 above) reads/writes files via
+`Deno.readTextFile`/`Deno.writeTextFile`, and its optional worker offload
+(style 3) spawns a real `Deno.Worker` — neither exists in a browser, and
+importing `Logger` transitively pulls both in regardless of which storage
+style a caller actually configures, since they're part of the same module
+graph a bundler has to resolve. `createClientLogger` is the browser-safe
+alternative: a `Logger` whose default storage is a genuine no-op instead of a
+file, so importing it never reaches either.
+
+```ts
+import { createClientLogger } from 'jsr:@zanix/utils@[version]/logger/client'
+
+const logger = createClientLogger((fmtLog) =>
+  fetch('/api/log', { method: 'POST', body: JSON.stringify(fmtLog) })
+)
+
+logger.warn('Something worth a look, from the browser')
+```
+
+`createClientLogger`'s `fetcher` receives one already-formatted log entry per
+call as a typed object (`BaseFormattedLog`, `DefaultFormattedLog` by
+default) — never `JSON.stringify`'d on its behalf, so the fetcher decides
+whether/how to serialize it. It's typically sent to this app's own backend
+endpoint, which then persists it through the SAME pipeline a server-side log
+already uses via `Logger#ingest`:
+
+```ts
+// the app's own backend route, e.g. `POST /api/log`
+import logger from 'jsr:@zanix/utils@[version]/logger'
+
+const { type, ...data } = await request.json()
+logger.ingest(type, data.message, data)
+```
+
+`ingest` runs the full local pipeline (redact, print, persist) on data that
+already came formatted from elsewhere — never `noSave` — so a relayed
+browser log persists through whichever backend the server's own `Logger`
+instance is already configured with (file, Elasticsearch, a custom sink),
+with no separate wiring needed for browser-originated logs.
+
+A server-side caller that wants file-based storage explicitly — bypassing
+`Logger`'s own automatic default, or building a `createClientLogger`-style
+factory of its own — imports `saveDataFileFunction` alongside `Logger`:
+
+```ts
+import { Logger, saveDataFileFunction } from 'jsr:@zanix/utils@[version]/logger'
+
+const logger = new Logger({
+  storage: { save: saveDataFileFunction({ folder: 'myCustomFolder' }) },
+})
+```
+
 ## Redacting sensitive data
 
 Every log — console output and whatever storage strategy you picked — is

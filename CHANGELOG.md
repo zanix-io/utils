@@ -6,6 +6,41 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to
 [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [3.1.0] - 2026-08-24
+
+### Fixed
+
+- **Importing `@zanix/logger` in a browser client bundle unconditionally pulled in
+  `WorkerManager`/`Deno.readTextFile`, breaking the build** (`logger`) — `Logger`'s default
+  file-based storage lived in the same module `Logger` itself was defined in, so a bundler's
+  module graph reached `WorkerManager` the moment anything imported `Logger` at all, regardless
+  of which storage a caller actually configured. Any consumer whose client bundle imported
+  `@zanix/logger` transitively (e.g. `@zanix/space` apps) hit this, even when the app never used
+  the file-based default. `Logger`'s own module (`@zanix/utils/logger/client`, see below) no
+  longer imports `WorkerManager` at all, not even dynamically — confirmed against a real, minified
+  Vite build: no `new Worker(...)`, no `worker-entry` chunk. Every existing server-side consumer
+  (`@zanix/utils/logger`, `@zanix/logger`) keeps its current automatic file-based default with no
+  code changes required on their part.
+
+### Added
+
+- **`@zanix/utils/logger/client` — a new, browser-safe entrypoint for `Logger`** (`logger`) —
+  `createClientLogger(fetcher)` builds a `Logger` whose default storage sends each log through
+  `fetcher` instead of to a file. `fetcher` receives one already-formatted log entry per call as a
+  typed object (`BaseFormattedLog`, `DefaultFormattedLog` by default) — never `JSON.stringify`'d
+  on its behalf, so the caller decides whether/how to serialize it — typically sent to the app's
+  own backend endpoint.
+- **`Logger#ingest(type, ...data)`** (`logger`) — relays an already-formatted remote log (e.g. one
+  received by a backend endpoint from a `createClientLogger` instance) through this instance's own
+  configured save pipeline (redact, print, persist), the same as `warn`/`error`/etc., never
+  `noSave` — letting a browser-originated log persist through whichever backend the server's own
+  `Logger` instance is already configured with (file, Elasticsearch, a custom sink), with no
+  separate wiring needed.
+- **`saveDataFileFunction`** (`logger`) — the file-based `SaveDataFile` resolver, now exported
+  publicly from `@zanix/utils/logger`, for a server-side caller that wants file-based storage
+  explicitly — bypassing `Logger`'s own automatic default, or building a `createClientLogger`-style
+  factory of its own.
+
 ## [3.0.3] - 2026-08-23
 
 ### Fixed
