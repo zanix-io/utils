@@ -4,6 +4,7 @@ import { showMessage } from 'modules/logger/base.ts'
 import { baseFormatter } from 'modules/logger/defaults/formatter.ts'
 import { mockWrap } from 'modules/testing/mocks.ts'
 import { baseSaveData } from 'modules/logger/defaults/storage/main.ts'
+import { saveDataFileFunction } from 'modules/logger/defaults/storage/default.ts'
 import { getTemporaryFolder } from 'modules/helpers/paths.ts'
 import { cleanupExpiredLogs, shouldBeDeleted } from 'modules/logger/defaults/storage/cleanup.ts'
 import { getLogFileName } from 'modules/logger/defaults/storage/file.ts'
@@ -145,28 +146,25 @@ Deno.test('Validates the custom log message formatter', () => {
   )
 })
 
-Deno.test('Validates the default save log', () => {
-  ZnxMock()
+Deno.test(
+  "saveDataFileFunction merges its SaveDataFile options into defaultSaveData's context",
+  () => {
+    const context = {
+      // deno-lint-ignore no-explicit-any
+      defaultSaveData: (_ctx?: any) => '',
+    }
+    const defaultSave = stub(context, 'defaultSaveData', returnsNext(['data']))
 
-  const context = {
-    canUseZnx: () => false,
-    defaultSaveData: () => '',
-    // `baseSaveData`'s own `redact` parameter defaults to `createRedactor()` — mocked here as an
-    // identity factory since this test only exercises the save-function dispatch, not redaction.
-    createRedactor: () => (value: unknown) => value,
-  }
-  const defaultSave = stub(context, 'defaultSaveData', returnsNext(['data']))
+    const saveDataFileFunctionMock = mockWrap(saveDataFileFunction, context, true)
 
-  const baseSaveDataMock = mockWrap(baseSaveData, context, true)
+    saveDataFileFunctionMock({ folder: 'custom-folder' })({ getFmtLog: () => ({}) } as never)
 
-  baseSaveDataMock()({} as never)
+    assertSpyCall(defaultSave, 0, { returned: 'data' })
+    assertEquals(defaultSave.calls[0]?.args[0]?.folder, 'custom-folder')
 
-  assertSpyCall(defaultSave, 0, {
-    returned: 'data',
-  })
-
-  defaultSave.restore()
-})
+    defaultSave.restore()
+  },
+)
 
 Deno.test('Validates the custom save log', () => {
   ZnxMock()
@@ -179,7 +177,7 @@ Deno.test('Validates the custom save log', () => {
     'saveDataFunction',
     returnsNext(['called']),
   )
-  baseSaveData(saveDataFunctionMocked)({} as never)
+  baseSaveData(saveDataFunctionMocked, true)({} as never)
 
   assertSpyCall(saveDataFunctionMocked, 0, {
     returned: 'called',
@@ -197,7 +195,7 @@ Deno.test('Validates the custom save log error', () => {
     throw new Error(errorMessage)
   }
 
-  baseSaveData(saveDataFunction)({} as never)
+  baseSaveData(saveDataFunction, true)({} as never)
 
   assertEquals(consoleMock.calls[0].args[2].cause.message, errorMessage)
 })

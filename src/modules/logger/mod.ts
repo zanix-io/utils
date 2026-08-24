@@ -7,8 +7,55 @@
  * \_____/ \__,_||_| |_||_|/_/\_\
  */
 
-import { Logger as LoggerMainClass } from 'modules/logger/main.ts'
+import { Logger as LoggerMainClass, registerFileSaveFactory } from 'modules/logger/main.ts'
 import { registerLogSink } from 'modules/errors/main.ts'
+import { saveDataFileFunction } from 'modules/logger/defaults/storage/default.ts'
+import type {
+  BaseFormattedLog,
+  BaseMethods,
+  Console,
+  ConsoleInfo,
+  ConsoleMethodFor,
+  DefaultFormattedLog,
+  DefaultResponse,
+  LoggerData,
+  LoggerMethods,
+  SaveDataFile,
+  SaveDataFunction,
+} from 'typings/logger.ts'
+import type { TaskCallback, TaskCallbackResponse } from 'typings/workers.ts'
+
+// Registers this package's real, file/`WorkerManager`-backed default — the only place in this
+// module allowed to import `defaults/storage/default.ts`. Every `Logger` constructed by any real
+// consumer (anyone importing it via `@zanix/logger`, which always loads this module first) picks
+// this up automatically from here on — see `registerFileSaveFactory`'s own doc (`main.ts`) for
+// the full reasoning, and why `main.ts` itself never imports this directly.
+registerFileSaveFactory(saveDataFileFunction)
+
+/** Re-exported so a server-side caller can opt into file-based storage explicitly (e.g.
+ * `new Logger({ storage: { save: saveDataFileFunction({ folder: 'custom' }) } })`) without
+ * reaching into this package's own internal `defaults/storage/default.ts` module directly. */
+export { saveDataFileFunction }
+
+// Re-exported only so `saveDataFileFunction`'s own signature resolves for `deno doc --lint` —
+// the same `LoggerFileOptions`/`LoggerFunctionOptions` precedent `typings/logger.ts` already
+// documents for `BaseLoggerOptions`. Use `SaveDataFile`/`SaveDataFunction` directly for a custom
+// `storage.save` implementation; `DefaultResponse` is `Logger`'s own default `Return` generic.
+export type {
+  BaseFormattedLog,
+  BaseMethods,
+  Console,
+  ConsoleInfo,
+  ConsoleMethodFor,
+  DefaultFormattedLog,
+  DefaultResponse,
+  LoggerData,
+  LoggerMethods,
+  SaveDataFile,
+  SaveDataFunction,
+  TaskCallback,
+  TaskCallbackResponse,
+}
 
 /**
  * A default, ready-to-use `logger` instance plus the `Logger` class for creating custom
@@ -160,7 +207,9 @@ import { registerLogSink } from 'modules/errors/main.ts'
  */
 export class Logger extends LoggerMainClass {} //Necessary to extend because of docs
 
-new Logger() // Creating the first instance of Logger
+new Logger() // Creating the first instance of Logger — defaults to file-based storage, same as
+// always, via `registerFileSaveFactory` above (see `main.ts`'s own doc for why that indirection
+// exists at all instead of `Logger`'s constructor importing `saveDataFileFunction` directly).
 
 /**
  * This provides a default instance of the `Logger` class to help avoid direct usage of `console`,

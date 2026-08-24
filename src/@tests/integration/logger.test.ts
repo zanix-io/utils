@@ -4,15 +4,25 @@ import { serializeError } from 'modules/errors/serialize.ts'
 import { fileExists } from 'modules/helpers/files.ts'
 import { canUseZnx } from 'modules/helpers/zanix/namespace.ts'
 import { ISO_DATETIME_REGEX, UUID_REGEX } from 'utils/regex.ts'
-import { Logger } from 'modules/logger/main.ts'
+import { createClientLogger, Logger, registerFileSaveFactory } from 'modules/logger/main.ts'
+import type { DefaultFormattedLog } from 'typings/logger.ts'
+import { saveDataFileFunction } from 'modules/logger/defaults/storage/default.ts'
 import { HttpError } from 'modules/errors/main.ts'
 import { stub } from '@std/testing/mock'
+
+// This file imports `Logger` directly from `main.ts` (to test the class in isolation, not
+// `mod.ts`'s own Proxy/global-instance machinery) — so, unlike a real consumer importing
+// `Logger` via `@zanix/logger`, `mod.ts`'s own `registerFileSaveFactory(saveDataFileFunction)`
+// call never ran. Every test below that relies on file-based storage needs it registered
+// explicitly here instead — see `main.ts`'s own `registerFileSaveFactory` doc for why `Logger`
+// itself never does this on its own.
+registerFileSaveFactory(saveDataFileFunction)
 
 // Disable logs by testing
 stub(console, 'error')
 const info = stub(console, 'info')
 stub(console, 'debug')
-stub(console, 'warn')
+const warn = stub(console, 'warn')
 
 Deno.test(
   'Define a logger with a custom save function and default formatter without global assing.',
@@ -411,3 +421,103 @@ Deno.test('Define a save logger in file using a worker', async () => {
   assert(fileExists(file))
   await Deno.remove(file)
 })
+
+// ================================================================================================
+// createClientLogger / Logger#ingest — the browser-safe relay pair this file's own module graph
+// never touches `WorkerManager`/`Deno.readTextFile` for (see `main.ts`'s own doc). Both are
+// exercised here through their real, public behavior — never through internals — since the whole
+// point of the split is that these two work identically to any other `storage.save`/`Logger`
+// call, just without the file-based default.
+// ================================================================================================
+
+Deno.test(
+  'createClientLogger: the given fetcher receives one already-formatted log entry, as an object',
+  async () => {
+    const posted: DefaultFormattedLog[] = []
+    const logger = createClientLogger((fmtLog) => {
+      posted.push(fmtLog as unknown as DefaultFormattedLog)
+    })
+
+    await logger.warn('hello from the browser', { extra: 'data' })
+
+    assertEquals(posted.length, 1)
+    assertEquals(posted[0].level, 'warn')
+    assertEquals(posted[0].message, 'hello from the browser')
+    assertEquals(posted[0].data, [{ extra: 'data' }])
+  },
+)
+
+Deno.test(
+  'createClientLogger: a rejected fetcher is caught the same way any custom save function is',
+  async () => {
+    const logger = createClientLogger(() => Promise.reject(new Error('network down')))
+
+    await logger.warn('this must not throw')
+
+    const lastWarnCall = warn.calls.at(-1)
+    assertEquals(lastWarnCall?.args[2]?.cause?.message, 'network down')
+  },
+)
+
+Deno.test(
+  'createClientLogger: debug/success still redact+print but never reach the fetcher (noSave)',
+  async () => {
+    const posted: DefaultFormattedLog[] = []
+    const logger = createClientLogger((fmtLog) => {
+      posted.push(fmtLog as unknown as DefaultFormattedLog)
+    })
+
+    await logger.debug('never persisted')
+    await logger.success('never persisted either')
+
+    assertEquals(posted.length, 0)
+  },
+)
+
+Deno.test(
+  "Logger#ingest persists an already-formatted payload through this instance's own save " +
+    'function, never noSave',
+  async () => {
+    const persisted: unknown[] = []
+    const logger = new Logger({
+      disableGlobalAssign: true,
+      storage: {
+        save: (context) => {
+          persisted.push(context.getFmtLog())
+          return Promise.resolve('saved')
+        },
+      },
+    })
+
+    const returned = await logger.ingest('warn', 'relayed from a browser client', {
+      source: 'client',
+    })
+
+    assertEquals(returned, 'saved')
+    assertEquals(persisted.length, 1)
+  },
+)
+
+Deno.test(
+  'A Logger constructed repeatedly with no storage option always defaults to file storage — ' +
+    'the registered FileSaveFactory persists across every instance, not just the first',
+  async () => {
+    Znx.config.project = 'space'
+    const file = '.logs/' + getLogFileName()
+    if (fileExists(file)) await Deno.remove(file)
+
+    new Logger()
+    await self.logger.info('from the first bare instance')
+    assert(fileExists(file), 'the first bare Logger() must still default to file storage')
+    await Deno.remove(file)
+
+    new Logger()
+    await self.logger.info('from a second, later bare instance')
+    assert(
+      fileExists(file),
+      'a LATER bare Logger() must default to file storage too — the registered ' +
+        'FileSaveFactory is not a one-shot, first-instance-only wiring',
+    )
+    await Deno.remove(file)
+  },
+)
