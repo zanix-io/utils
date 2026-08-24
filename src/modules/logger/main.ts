@@ -194,12 +194,14 @@ export class Logger<Return extends unknown = DefaultResponse> {
    * this is the only place that does for this call.
    * @param print - Whether to run `showMessage`'s console print at all — every public method
    * passes `true` except {@linkcode ingest}, which never does (see its own doc for why).
-   * @param origin - Forwarded to `#storage` as a top-level `origin` field on the persisted (and,
-   * if `print`, shown) formatted log — only {@linkcode ingest} passes one; every other method
-   * passes `undefined`. Kept OUT of `data` entirely (not appended/redacted alongside it), so a
-   * caller's own genuine trailing `'noSave'` sentinel (the last element of `data` itself) is still
-   * exactly what gets checked below — nothing about `origin` can ever displace it from that
-   * position.
+   * @param origin - Forwarded to `#storage` as a top-level `origin` field on the PERSISTED
+   * formatted log only — never reaches `showMessage`'s console print, regardless of `print`,
+   * since `origin` is merged in inside `#storage`'s own closure, downstream of the
+   * `showMessage(type, ...redactedData)` call above. Only {@linkcode ingest} passes one; every
+   * other method passes `undefined`. Kept OUT of `data` entirely (not appended/redacted alongside
+   * it), so a caller's own genuine trailing `'noSave'` sentinel (the last element of `data`
+   * itself) is still exactly what gets checked below — nothing about `origin` can ever displace it
+   * from that position.
    */
   #log(
     type: LoggerMethods,
