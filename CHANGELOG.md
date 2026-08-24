@@ -6,6 +6,41 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to
 [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [3.1.2] - 2026-08-24
+
+### Fixed
+
+- **`docs/logger.md`'s own `/api/log` relay example destructured a `type` field that
+  `createClientLogger`'s fetcher never actually sends** (`logger`) — the fetcher receives a
+  `DefaultFormattedLog`-shaped object, whose severity field is `level`, not `type`. A relay
+  endpoint following the example as written would always parse `type` as `undefined`.
+  `Logger#ingest`'s own parameter happens to be named `type`, but that's just its local name —
+  the doc now destructures `level` and passes it positionally.
+
+### Changed
+
+- **`createClientLogger` now defaults to `disableGlobalAssign: true`, overridable via a new
+  second `options` parameter** (`logger`) — a browser client instance has no real reason to own
+  `globalThis.logger`/`Znx.logger` in its own (browser) realm by default, since every real
+  consumer imports it directly. Not a fix for a cross-realm collision risk (a browser tab's
+  `globalThis` and a server process's `globalThis` were never the same object to begin with) —
+  purely removes an unused global assignment by default. Pass
+  `createClientLogger(fetcher, { disableGlobalAssign: false })` to opt back in — e.g. for a
+  `window.logger`-style debugging convenience in a dev build — instead of wiring the global
+  assignment by hand.
+- **`Logger#ingest` gains a new `origin` parameter, defaulting to `'client'`** (`logger`) —
+  `ingest(type, origin, ...data)`; `origin` is merged onto the persisted log as a TOP-LEVEL field
+  (`DefaultFormattedLog.origin`), sibling to `timestamp`/`level`/etc., not buried inside `data` —
+  so a stored/queried log can be filtered or aggregated by origin directly, and can be told apart
+  from one this instance logged locally itself. Defaults to `'client'` since `ingest`'s only real
+  use is relaying an entry a browser client's own `createClientLogger` instance already logged —
+  pass an explicit value for a non-browser origin relaying through the same endpoint (another
+  service, a mobile app, ...). Kept entirely separate from `data` internally, specifically so a
+  relayed caller's own genuine trailing `'noSave'` sentinel is still correctly detected — `origin`
+  can never displace it. This is a signature change to a method introduced only hours earlier in
+  this same unreleased cycle, with no real external consumer yet — existing callers (e.g.
+  `@zanix/space`'s own `/api/log` handler) are updated in the same change.
+
 ## [3.1.1] - 2026-08-24
 
 ### Fixed

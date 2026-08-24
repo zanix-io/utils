@@ -257,6 +257,15 @@ const logger = createClientLogger((fmtLog) =>
 logger.warn('Something worth a look, from the browser')
 ```
 
+By default, the returned instance never claims `globalThis.logger`/`Znx.logger` in the
+browser — every real consumer imports it directly (see `@zanix/space`'s own shared
+`client-logger.ts` module for the pattern). Pass a second argument to opt back in, e.g.
+for a `window.logger`-style debugging convenience in a dev build:
+
+```ts
+const logger = createClientLogger(fetcher, { disableGlobalAssign: false })
+```
+
 `createClientLogger`'s `fetcher` receives one already-formatted log entry per
 call as a typed object (`BaseFormattedLog`, `DefaultFormattedLog` by
 default) — never `JSON.stringify`'d on its behalf, so the fetcher decides
@@ -268,13 +277,41 @@ already uses via `Logger#ingest`:
 // the app's own backend route, e.g. `POST /api/log`
 import logger from 'jsr:@zanix/utils@[version]/logger'
 
-const { type, ...data } = await request.json()
-logger.ingest(type, data.message, data)
+// `level`, not `type` — the field `DefaultFormattedLog` (what `fetcher` above actually received
+// and serialized) itself uses for severity. `ingest`'s own parameter is called `type`, but that's
+// just its own local name — pass whatever field the formatted log itself carries positionally.
+const { level, origin, ...data } = await request.json()
+logger.ingest(level, origin, data.message, data)
+```
+
+`ingest`'s second parameter, `origin`, defaults to `'client'` when omitted —
+`ingest`'s only real use is relaying an entry a BROWSER client's own
+`createClientLogger` instance already logged, so that's the sensible default;
+pass an explicit value for a non-browser origin relaying through the same
+endpoint (another service, a mobile app, ...). It's merged onto the persisted
+log as a TOP-LEVEL `origin` field (`DefaultFormattedLog.origin`), sibling to
+`timestamp`/`level`/etc. — not buried inside `data` — so a stored/queried log
+can be filtered or aggregated by origin directly:
+
+```json
+{
+  "id": "1c49db8c-8b76-4c32-b293-51eca9d8e899",
+  "level": "warn",
+  "message": "Something worth a look, from the browser",
+  "timestamp": "2026-08-24T16:59:03.179Z",
+  "context": { "processId": 501 },
+  "data": [{ "extra": "data" }],
+  "origin": "client"
+}
 ```
 
 `ingest` redacts and persists the raw data given exactly as `warn`/`error`/etc.
-would — never `noSave` — so a relayed browser log persists through whichever
-backend the server's own `Logger` instance is already configured with (file,
+would. Unlike `debug`/`success`, it never appends `'noSave'` itself, so it
+always attempts to persist by default — a caller's own raw data genuinely
+ending with the literal string `'noSave'` is still honored, exactly as it
+would be for any local call, so a relayed browser log persists through
+whichever backend the server's own `Logger` instance is already configured
+with (file,
 Elasticsearch, a custom sink), with no separate wiring needed for
 browser-originated logs. Unlike every other log method, it skips the console
 print step: the remote origin already surfaced this entry through its own

@@ -448,6 +448,25 @@ Deno.test(
 )
 
 Deno.test(
+  'createClientLogger: never assigns itself as the global logger by default — ' +
+    'disableGlobalAssign defaults to true',
+  () => {
+    const before = self.logger
+    createClientLogger(() => {})
+    assertEquals(self.logger, before, 'globalThis.logger must be untouched by default')
+  },
+)
+
+Deno.test(
+  'createClientLogger: disableGlobalAssign: false opts back into claiming the global logger, ' +
+    'e.g. for a window.logger-style debugging convenience',
+  () => {
+    const instance = createClientLogger(() => {}, { disableGlobalAssign: false })
+    assertEquals(self.logger, instance, 'globalThis.logger must be this instance when opted in')
+  },
+)
+
+Deno.test(
   'createClientLogger: a rejected fetcher is caught the same way any custom save function is',
   async () => {
     const logger = createClientLogger(() => Promise.reject(new Error('network down')))
@@ -477,6 +496,72 @@ Deno.test(
 Deno.test(
   "Logger#ingest persists a raw payload through this instance's own save function, never noSave",
   async () => {
+    const persisted: DefaultFormattedLog[] = []
+    const logger = new Logger({
+      disableGlobalAssign: true,
+      storage: {
+        save: (context) => {
+          persisted.push(context.getFmtLog())
+          return Promise.resolve('saved')
+        },
+      },
+    })
+
+    const returned = await logger.ingest('warn', 'client', 'relayed from a browser client', {
+      source: 'client',
+    })
+
+    assertEquals(returned, 'saved')
+    assertEquals(persisted.length, 1)
+  },
+)
+
+Deno.test(
+  "Logger#ingest defaults origin to 'client' when omitted, merged as a TOP-LEVEL field on the " +
+    'persisted log, not buried inside data',
+  async () => {
+    const persisted: DefaultFormattedLog[] = []
+    const logger = new Logger({
+      disableGlobalAssign: true,
+      storage: {
+        save: (context) => {
+          persisted.push(context.getFmtLog())
+          return Promise.resolve()
+        },
+      },
+    })
+
+    await logger.ingest('warn', undefined, 'relayed with no explicit origin')
+
+    assertEquals(persisted[0]?.origin, 'client')
+    assertEquals(persisted[0]?.data, undefined, 'origin must not leak into data')
+  },
+)
+
+Deno.test(
+  'Logger#ingest accepts an explicit non-default origin, e.g. for a non-browser relay caller',
+  async () => {
+    const persisted: DefaultFormattedLog[] = []
+    const logger = new Logger({
+      disableGlobalAssign: true,
+      storage: {
+        save: (context) => {
+          persisted.push(context.getFmtLog())
+          return Promise.resolve()
+        },
+      },
+    })
+
+    await logger.ingest('warn', 'mobile-app', 'relayed from a mobile client')
+
+    assertEquals(persisted[0]?.origin, 'mobile-app')
+  },
+)
+
+Deno.test(
+  "Logger#ingest still honors the caller's own trailing 'noSave' — origin, kept entirely " +
+    "separate from data, must not shift 'noSave' detection off the real last data element",
+  async () => {
     const persisted: unknown[] = []
     const logger = new Logger({
       disableGlobalAssign: true,
@@ -488,12 +573,10 @@ Deno.test(
       },
     })
 
-    const returned = await logger.ingest('warn', 'relayed from a browser client', {
-      source: 'client',
-    })
+    const returned = await logger.ingest('warn', 'client', 'relayed but opted out', 'noSave')
 
-    assertEquals(returned, 'saved')
-    assertEquals(persisted.length, 1)
+    assertEquals(returned, undefined, "'noSave' must still skip persistence")
+    assertEquals(persisted.length, 0)
   },
 )
 
@@ -507,7 +590,7 @@ Deno.test(
       storage: { save: () => Promise.resolve('saved') },
     })
 
-    await logger.ingest('warn', 'relayed warning, must never print locally')
+    await logger.ingest('warn', 'client', 'relayed warning, must never print locally')
 
     assertEquals(warn.calls.length, warnCallsBefore)
   },

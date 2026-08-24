@@ -66,15 +66,34 @@ export function registerFileSaveFactory(factory: FileSaveFactory): void {
  * browser client bundle (`@zanix/space`'s own client barrel, for one) from ever reaching
  * `defaults/storage/default.ts`'s `WorkerManager`/`Deno.readTextFile` — not a separate class, not
  * a separate entrypoint, just never calling anything that imports that file.
+ *
+ * Defaults to `disableGlobalAssign: true` — a browser client instance has no reason to own
+ * `globalThis.logger`/`Znx.logger` in its own (browser) realm by default, since every real
+ * consumer imports it directly rather than reaching for a global. This isn't what keeps it from
+ * clobbering a server's own default `Logger` instance (a browser tab's `globalThis` and a server
+ * process's `globalThis` are already different realms entirely, so that was never at risk) — it's
+ * purely about not leaving an unused global assigned in the browser for no reason. Pass
+ * `disableGlobalAssign: false` to opt back in — e.g. for a `window.logger`-style debugging
+ * convenience in a dev build — rather than wiring the global assignment by hand.
  * @param fetcher - Receives one already-formatted log entry per call — never `JSON.stringify`'d
  * on its behalf, so it decides whether/how to serialize it — and sends it somewhere, typically a
  * `fetch()` to this app's own backend endpoint (e.g. `@zanix/space`'s `/api/log`), which relays
  * it into the server's own `Logger` via `Logger#ingest`.
+ * @param options - Just `disableGlobalAssign` — a plain, standalone shape rather than
+ * `Pick<LoggerFunctionOptions<...>, 'disableGlobalAssign'>`, deliberately: everything else about
+ * the underlying `Logger` (storage, formatting) is fixed by this function's own contract, so no
+ * other `LoggerFunctionOptions` field belongs here, and reusing that type would pull its own
+ * unrelated `storage`/`redact` fields into this signature for no reason.
  */
 export function createClientLogger(
   fetcher: <T extends BaseFormattedLog = DefaultFormattedLog>(fmtLog: T) => void | Promise<void>,
+  options: { disableGlobalAssign?: boolean } = {},
 ): Logger {
-  return new Logger<DefaultResponse>({ storage: { save: saveDataFetcherFunction(fetcher) } })
+  const { disableGlobalAssign = true } = options
+  return new Logger<DefaultResponse>({
+    disableGlobalAssign,
+    storage: { save: saveDataFetcherFunction(fetcher) },
+  })
 }
 
 /**
@@ -137,19 +156,35 @@ export class Logger<Return extends unknown = DefaultResponse> {
    * Persists a log entry that originated elsewhere (e.g. a browser client's own
    * `@zanix/utils/logger/client` instance, relayed through an HTTP endpoint like
    * `@zanix/space`'s `/api/log`) through this instance's OWN configured save function. Redacts
-   * and formats the raw data given exactly as `warn`/`error`/etc. would — never `noSave` — since
-   * a relayed remote log is exactly the kind of thing worth persisting through this instance's
-   * own configured backend (Elasticsearch included). Deliberately skips `showMessage`'s console
-   * print, unlike every other log method: the remote origin already surfaced this entry through
-   * its own console (or its own UI) — printing it again here would misrepresent a relayed remote
-   * event as if it were a genuine local one on THIS process's own console. Not part of the
-   * everyday debug/info/warn/error/high API; a relay endpoint's own use only.
+   * and formats the raw data given exactly as `warn`/`error`/etc. would — a relayed remote log is
+   * exactly the kind of thing worth persisting through this instance's own configured backend
+   * (Elasticsearch included). Unlike `debug`/`success`, `ingest` never appends `'noSave'` itself,
+   * so it always attempts to persist by default — but it doesn't strip the sentinel either: if the
+   * remote origin's own raw `data` genuinely ends with the literal string `'noSave'`, that's still
+   * honored the exact same way a local call's own trailing `'noSave'` would be (see `#log`'s own
+   * doc for why `origin`, kept entirely separate from `data`, never interferes with that
+   * detection). Deliberately skips `showMessage`'s console print, unlike every other log method:
+   * the remote origin already surfaced this entry through its own console (or its own UI) —
+   * printing it again here would misrepresent a relayed remote event as if it were a genuine local
+   * one on THIS process's own console. Not part of the everyday debug/info/warn/error/high API; a
+   * relay endpoint's own use only.
    * @param type - The severity the remote origin itself logged at.
+   * @param origin - Where the relayed entry actually came from — merged onto the persisted log as
+   * a top-level `origin` field (see {@linkcode DefaultFormattedLog.origin}), sibling to
+   * `timestamp`/`level`/etc., not buried inside `data` — so a stored/queried log can be filtered
+   * or aggregated by origin directly. Defaults to `'client'`: `ingest`'s only real use is relaying
+   * an entry a BROWSER client's own `createClientLogger` instance already logged (see this
+   * method's own doc above) — pass an explicit value for a non-browser origin relaying through
+   * the same endpoint (another service, a mobile app, ...).
    * @param data - The remote origin's own raw, unformatted log data — this instance's own
    * `redact`/`formatter` still run on it here, exactly as they would for a local call.
    */
-  public ingest(type: LoggerMethods, ...data: LoggerData): Return | undefined {
-    return this.#log(type, false, ...data)
+  public ingest(
+    type: LoggerMethods,
+    origin: string = 'client',
+    ...data: LoggerData
+  ): Return | undefined {
+    return this.#log(type, false, origin, ...data)
   }
 
   /**
@@ -159,8 +194,21 @@ export class Logger<Return extends unknown = DefaultResponse> {
    * this is the only place that does for this call.
    * @param print - Whether to run `showMessage`'s console print at all — every public method
    * passes `true` except {@linkcode ingest}, which never does (see its own doc for why).
+   * @param origin - Forwarded to `#storage` as a top-level `origin` field on the PERSISTED
+   * formatted log only — never reaches `showMessage`'s console print, regardless of `print`,
+   * since `origin` is merged in inside `#storage`'s own closure, downstream of the
+   * `showMessage(type, ...redactedData)` call above. Only {@linkcode ingest} passes one; every
+   * other method passes `undefined`. Kept OUT of `data` entirely (not appended/redacted alongside
+   * it), so a caller's own genuine trailing `'noSave'` sentinel (the last element of `data`
+   * itself) is still exactly what gets checked below — nothing about `origin` can ever displace it
+   * from that position.
    */
-  #log(type: LoggerMethods, print: boolean, ...data: LoggerData): Return | undefined {
+  #log(
+    type: LoggerMethods,
+    print: boolean,
+    origin: string | undefined,
+    ...data: LoggerData
+  ): Return | undefined {
     const hasNoSave = data[data.length - 1] === 'noSave'
     if (hasNoSave) data.length = data.length - 1
 
@@ -168,12 +216,15 @@ export class Logger<Return extends unknown = DefaultResponse> {
     if (print) showMessage(type, ...redactedData)
     if (hasNoSave) return undefined
 
-    return this.#storage(type, redactedData) as Return
+    return this.#storage(type, redactedData, origin) as Return
   }
 
-  #storage(type: LoggerMethods, log: LoggerData) {
+  #storage(type: LoggerMethods, log: LoggerData, origin?: string) {
     return this.#saveFuntion({
-      getFmtLog: <T>() => this.#formatter(type, log) as T,
+      getFmtLog: <T>() => {
+        const formatted = this.#formatter(type, log)
+        return (origin ? { ...formatted, origin } : formatted) as T
+      },
     })
   }
 
@@ -182,7 +233,7 @@ export class Logger<Return extends unknown = DefaultResponse> {
    * @param data - Values to be printed to the console.
    */
   public debug(...data: LoggerData<'debug'>): Return | undefined {
-    return this.#log('debug', true, ...data, 'noSave')
+    return this.#log('debug', true, undefined, ...data, 'noSave')
   }
 
   /**
@@ -197,7 +248,7 @@ export class Logger<Return extends unknown = DefaultResponse> {
     const errors = serializeMultipleErrors(rest, { redact: false })
 
     if (!errors.length && rest.length) return
-    return this.#log('error', true, message, ...errors)
+    return this.#log('error', true, undefined, message, ...errors)
   }
 
   /**
@@ -205,7 +256,7 @@ export class Logger<Return extends unknown = DefaultResponse> {
    * @param data - Values to be printed to the console.
    */
   public info(...data: LoggerData<'info'>): Return | undefined {
-    return this.#log('info', true, ...data)
+    return this.#log('info', true, undefined, ...data)
   }
 
   /**
@@ -213,7 +264,7 @@ export class Logger<Return extends unknown = DefaultResponse> {
    * @param data - The primary message.
    */
   public success(message: LoggerData<'success'>): Return | undefined {
-    return this.#log('success', true, message, 'noSave')
+    return this.#log('success', true, undefined, message, 'noSave')
   }
 
   /**
@@ -221,7 +272,7 @@ export class Logger<Return extends unknown = DefaultResponse> {
    * @param data - Values to be printed to the console.
    */
   public warn(...data: LoggerData<'warn'>): Return | undefined {
-    return this.#log('warn', true, ...data)
+    return this.#log('warn', true, undefined, ...data)
   }
 
   /**
@@ -234,7 +285,7 @@ export class Logger<Return extends unknown = DefaultResponse> {
    * @param data - Values to be printed to the console.
    */
   public high(...data: LoggerData<'high'>): Return | undefined {
-    return this.#log('high', true, ...data)
+    return this.#log('high', true, undefined, ...data)
   }
 }
 
