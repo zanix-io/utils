@@ -288,13 +288,30 @@ logger.ingest(level, origin, data.message, data)
 `ingest`'s only real use is relaying an entry a BROWSER client's own
 `createClientLogger` instance already logged, so that's the sensible default;
 pass an explicit value for a non-browser origin relaying through the same
-endpoint (another service, a mobile app, ...). It's appended onto the
-persisted log's own data as `{ origin }`, so a stored/queried log can be told
-apart from one this instance logged locally itself.
+endpoint (another service, a mobile app, ...). It's merged onto the persisted
+log as a TOP-LEVEL `origin` field (`DefaultFormattedLog.origin`), sibling to
+`timestamp`/`level`/etc. — not buried inside `data` — so a stored/queried log
+can be filtered or aggregated by origin directly:
+
+```json
+{
+  "id": "1c49db8c-8b76-4c32-b293-51eca9d8e899",
+  "level": "warn",
+  "message": "Something worth a look, from the browser",
+  "timestamp": "2026-08-24T16:59:03.179Z",
+  "context": { "processId": 501 },
+  "data": [{ "extra": "data" }],
+  "origin": "client"
+}
+```
 
 `ingest` redacts and persists the raw data given exactly as `warn`/`error`/etc.
-would — never `noSave` — so a relayed browser log persists through whichever
-backend the server's own `Logger` instance is already configured with (file,
+would. Unlike `debug`/`success`, it never appends `'noSave'` itself, so it
+always attempts to persist by default — a caller's own raw data genuinely
+ending with the literal string `'noSave'` is still honored, exactly as it
+would be for any local call, so a relayed browser log persists through
+whichever backend the server's own `Logger` instance is already configured
+with (file,
 Elasticsearch, a custom sink), with no separate wiring needed for
 browser-originated logs. Unlike every other log method, it skips the console
 print step: the remote origin already surfaced this entry through its own

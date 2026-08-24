@@ -53,6 +53,12 @@ export type DefaultFormattedLog = {
   context: {
     processId: number | null
   }
+  /**
+   * Where this entry actually came from — present only on a log persisted via `Logger#ingest`
+   * (e.g. `'client'`, its own default, for one relayed from a browser's `createClientLogger`
+   * instance); absent on anything logged locally through `debug`/`info`/`warn`/`error`/`high`.
+   */
+  origin?: string
 }
 
 /** Formatter function type */

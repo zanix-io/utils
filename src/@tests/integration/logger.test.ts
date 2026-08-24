@@ -517,7 +517,8 @@ Deno.test(
 )
 
 Deno.test(
-  "Logger#ingest defaults origin to 'client' when omitted, appended onto the persisted data",
+  "Logger#ingest defaults origin to 'client' when omitted, merged as a TOP-LEVEL field on the " +
+    'persisted log, not buried inside data',
   async () => {
     const persisted: DefaultFormattedLog[] = []
     const logger = new Logger({
@@ -532,7 +533,8 @@ Deno.test(
 
     await logger.ingest('warn', undefined, 'relayed with no explicit origin')
 
-    assertEquals(persisted[0]?.data.at(-1), { origin: 'client' })
+    assertEquals(persisted[0]?.origin, 'client')
+    assertEquals(persisted[0]?.data, undefined, 'origin must not leak into data')
   },
 )
 
@@ -552,7 +554,29 @@ Deno.test(
 
     await logger.ingest('warn', 'mobile-app', 'relayed from a mobile client')
 
-    assertEquals(persisted[0]?.data.at(-1), { origin: 'mobile-app' })
+    assertEquals(persisted[0]?.origin, 'mobile-app')
+  },
+)
+
+Deno.test(
+  "Logger#ingest still honors the caller's own trailing 'noSave' — origin, kept entirely " +
+    "separate from data, must not shift 'noSave' detection off the real last data element",
+  async () => {
+    const persisted: unknown[] = []
+    const logger = new Logger({
+      disableGlobalAssign: true,
+      storage: {
+        save: (context) => {
+          persisted.push(context.getFmtLog())
+          return Promise.resolve('saved')
+        },
+      },
+    })
+
+    const returned = await logger.ingest('warn', 'client', 'relayed but opted out', 'noSave')
+
+    assertEquals(returned, undefined, "'noSave' must still skip persistence")
+    assertEquals(persisted.length, 0)
   },
 )
 
