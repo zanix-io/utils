@@ -8,6 +8,8 @@ and this project adheres to
 
 ## [Unreleased]
 
+## [3.0.2] - 2026-08-23
+
 ### Fixed
 
 - **`WorkerManager` no longer hangs forever when the global `Znx` logger isn't installed**
