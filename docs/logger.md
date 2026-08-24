@@ -268,8 +268,11 @@ already uses via `Logger#ingest`:
 // the app's own backend route, e.g. `POST /api/log`
 import logger from 'jsr:@zanix/utils@[version]/logger'
 
-const { type, ...data } = await request.json()
-logger.ingest(type, data.message, data)
+// `level`, not `type` — the field `DefaultFormattedLog` (what `fetcher` above actually received
+// and serialized) itself uses for severity. `ingest`'s own parameter is called `type`, but that's
+// just its own local name — pass whatever field the formatted log itself carries positionally.
+const { level, ...data } = await request.json()
+logger.ingest(level, data.message, data)
 ```
 
 `ingest` redacts and persists the raw data given exactly as `warn`/`error`/etc.

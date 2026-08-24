@@ -448,6 +448,16 @@ Deno.test(
 )
 
 Deno.test(
+  'createClientLogger: never assigns itself as the global logger — disableGlobalAssign is ' +
+    'always true',
+  () => {
+    const before = self.logger
+    createClientLogger(() => {})
+    assertEquals(self.logger, before, 'globalThis.logger must be untouched by createClientLogger')
+  },
+)
+
+Deno.test(
   'createClientLogger: a rejected fetcher is caught the same way any custom save function is',
   async () => {
     const logger = createClientLogger(() => Promise.reject(new Error('network down')))

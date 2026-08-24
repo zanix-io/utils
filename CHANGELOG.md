@@ -18,6 +18,20 @@ and this project adheres to
   printing it again on the server misrepresented a remote event as a local one, and could flood
   the server's own console under real client traffic. `ingest` still redacts and persists exactly
   as before (never `noSave`) — it just no longer calls `showMessage`.
+- **`docs/logger.md`'s own `/api/log` relay example destructured a `type` field that
+  `createClientLogger`'s fetcher never actually sends** (`logger`) — the fetcher receives a
+  `DefaultFormattedLog`-shaped object, whose severity field is `level`, not `type`. A relay
+  endpoint following the example as written would always parse `type` as `undefined`.
+  `Logger#ingest`'s own parameter happens to be named `type`, but that's just its local name —
+  the doc now destructures `level` and passes it positionally.
+
+### Changed
+
+- **`createClientLogger` now always builds with `disableGlobalAssign: true`** (`logger`) — a
+  browser client instance has no real reason to own `globalThis.logger`/`Znx.logger` in its own
+  (browser) realm, since every real consumer imports it directly. Not a fix for a cross-realm
+  collision risk (a browser tab's `globalThis` and a server process's `globalThis` were never the
+  same object to begin with) — purely removes an unused global assignment.
 
 ## [3.1.0] - 2026-08-24
 

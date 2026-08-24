@@ -66,6 +66,13 @@ export function registerFileSaveFactory(factory: FileSaveFactory): void {
  * browser client bundle (`@zanix/space`'s own client barrel, for one) from ever reaching
  * `defaults/storage/default.ts`'s `WorkerManager`/`Deno.readTextFile` — not a separate class, not
  * a separate entrypoint, just never calling anything that imports that file.
+ *
+ * Always builds with `disableGlobalAssign: true` — a browser client instance has no reason to own
+ * `globalThis.logger`/`Znx.logger` in its own (browser) realm, since every real consumer imports
+ * it directly rather than reaching for a global. This isn't what keeps it from clobbering a
+ * server's own default `Logger` instance (a browser tab's `globalThis` and a server process's
+ * `globalThis` are already different realms entirely, so that was never at risk) — it's purely
+ * about not leaving an unused global assigned in the browser for no reason.
  * @param fetcher - Receives one already-formatted log entry per call — never `JSON.stringify`'d
  * on its behalf, so it decides whether/how to serialize it — and sends it somewhere, typically a
  * `fetch()` to this app's own backend endpoint (e.g. `@zanix/space`'s `/api/log`), which relays
@@ -74,7 +81,10 @@ export function registerFileSaveFactory(factory: FileSaveFactory): void {
 export function createClientLogger(
   fetcher: <T extends BaseFormattedLog = DefaultFormattedLog>(fmtLog: T) => void | Promise<void>,
 ): Logger {
-  return new Logger<DefaultResponse>({ storage: { save: saveDataFetcherFunction(fetcher) } })
+  return new Logger<DefaultResponse>({
+    disableGlobalAssign: true,
+    storage: { save: saveDataFetcherFunction(fetcher) },
+  })
 }
 
 /**
