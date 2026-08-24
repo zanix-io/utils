@@ -83,3 +83,25 @@ export function defineValidationDecorator<T extends BaseRTO = BaseRTO>(
   }
   return decorator
 }
+
+/**
+ * Internal-only variant of {@link defineValidationDecorator} for every decorator in this
+ * package's own `IsX` catalog (`modules/validations/decorators/**`, e.g. `IsString`, `IsEmail`,
+ * `MinDate`) — `meta` is REQUIRED here, unlike the public function, so a catalog decorator that
+ * forgets to identify itself fails `deno check`/`deno publish` immediately instead of silently
+ * producing an untagged `RTOFieldMetadata` entry (the exact gap
+ * https://github.com/zanix-io/utils/issues/11 reported: `classMetadata`/OpenAPI generation can't
+ * recognize a field's decorator without it).
+ *
+ * Never exported from `mod.ts`. A consumer building a fully custom decorator via the public
+ * `defineValidationDecorator` (or this package's own `Validation()` helper) legitimately has no
+ * fixed `decorator` name to give, and must keep using that one instead — this only tightens the
+ * requirement for decorators shipped as part of this package's own known catalog.
+ */
+export function defineCatalogValidationDecorator<T extends BaseRTO = BaseRTO>(
+  validation: ValidationFunction<T>,
+  opts: ValidationOptions,
+  meta: ClassFieldDecoratorMeta,
+): ValidationDecoratorDefinition {
+  return defineValidationDecorator(validation, opts, meta)
+}

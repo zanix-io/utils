@@ -119,6 +119,17 @@ export async function classValidation<T extends BaseRTO>(
  * Fields declared on a parent `BaseRTO` class are included for a subclass that extends it
  * (merged base-first, so a field the subclass redeclares overrides the parent's entry).
  *
+ * A field carrying two or more stacked decorators (e.g. `@IsString() @Length({ min: 1, max: 100
+ * })`) reports its `decorator`/`args` as only the last-registered decorator, plus a `decorators`
+ * array listing every decorator in the stack — read that array to see every constraint the field
+ * actually enforces.
+ *
+ * `ValidateNested(NestedRTO)`'s entry carries `args: [NestedRTO]` — a real, directly usable
+ * `BaseRTO` subclass constructor, not serialized data. A consumer that needs the nested class's
+ * own field shape calls `classMetadata(NestedRTO)` recursively; one that needs to serialize this
+ * output (e.g. `JSON.stringify` across a subprocess boundary) must resolve that nested class
+ * itself first, since a live constructor doesn't survive serialization.
+ *
  * @template T - The `BaseRTO` subclass to introspect.
  * @param RTO - The class constructor of the RTO to introspect.
  *

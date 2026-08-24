@@ -4,7 +4,7 @@ import type {
   ValidationDecoratorDefinition,
 } from 'typings/validations.ts'
 
-import { defineValidationDecorator } from 'modules/validations/base/definitions/decorators.ts'
+import { defineCatalogValidationDecorator } from 'modules/validations/base/definitions/decorators.ts'
 import { defaultTransform } from './defaults.ts'
 
 /**
@@ -73,9 +73,9 @@ export const MinNumber: ValidationDecorator<
     validation = (value: number) => minNumber(num, value)
   }
 
-  return defineValidationDecorator(validation, {
+  return defineCatalogValidationDecorator(validation, {
     transform: defaultTransform(transform),
     message: defaultMessage,
     ...opts,
-  })
+  }, { decorator: 'MinNumber', args: [num] })
 }

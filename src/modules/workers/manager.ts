@@ -7,6 +7,7 @@ import type {
 } from 'typings/workers.ts'
 import { getWebProcessWorker } from './processor.ts'
 import { generateUUID } from 'utils/identifiers.ts'
+import { getGlobalZnx } from 'modules/helpers/zanix/namespace.ts'
 
 /**
  * Manages the execution of tasks in a Web Worker.
@@ -71,6 +72,21 @@ export class WorkerManager {
     return worker
   }
 
+  /**
+   * Logs a worker error via the global `Znx.logger` when available, falling back to
+   * `console.error` otherwise — `Znx` is only defined once `@zanix/utils`'s logger module has
+   * been imported somewhere in the process, which a `WorkerManager` consumer may never do. Without
+   * this fallback, referencing `Znx.logger` directly throws a `ReferenceError` inside these async
+   * handlers, which is swallowed silently and prevents `onFinish` from ever being called — hanging
+   * any caller awaiting the task forever.
+   */
+  #logError(message: string, error: unknown) {
+    const znx = getGlobalZnx()
+    if (znx) return znx.logger.error(message, error)
+    // deno-lint-ignore deno-zanix-plugin/no-znx-console
+    console.error(message, error)
+  }
+
   #initializeWorkers(pool: number) {
     // Initialize the worker with the current module's URL
     for (let i = 0; i < pool; i++) {
@@ -130,7 +146,7 @@ export class WorkerManager {
     // Timeout rejection
     const timeoutId = setTimeout(() => {
       const { taskName, metaUrl, messageId } = taskData
-      Znx.logger.error(
+      this.#logError(
         `Worker execution timed out after ${timeout}ms for task "${taskName}"`,
         {
           meta: { taskName, timeout, module: metaUrl, messageId },
@@ -163,7 +179,7 @@ export class WorkerManager {
       clearTimeout(timeoutId)
       const data = e.data
       if (data.error && verbose) {
-        Znx.logger.error('An error ocurred in worker execution', data.error)
+        this.#logError('An error ocurred in worker execution', data.error)
       }
 
       if (!data.messageId) return
@@ -189,7 +205,7 @@ export class WorkerManager {
     worker.onerror = (e) => {
       const error = e.error || e
       if (verbose) {
-        Znx.logger.error('An error ocurred in worker execution', error)
+        this.#logError('An error ocurred in worker execution', error)
       }
       onFinish?.({ error, response: null })
 

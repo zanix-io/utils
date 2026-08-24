@@ -6,6 +6,57 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to
 [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [3.0.2] - 2026-08-23
+
+### Fixed
+
+- **`WorkerManager` no longer hangs forever when the global `Znx` logger isn't installed**
+  (`workers`) — `invokeTask` referenced `Znx.logger.error(...)` directly in its timeout,
+  `onmessage`, and `onerror` handlers, but `Znx` is only defined once something has imported
+  `modules/logger/mod.ts` somewhere in the process. A `WorkerManager` consumer who never does that
+  hit a `ReferenceError` thrown inside those async handlers, silently swallowed before `onFinish`
+  could ever run — leaving any caller awaiting the task's promise stuck forever with no visible
+  error. These call sites now go through `getGlobalZnx()?.logger.error(...)`, falling back to
+  `console.error` when no logger has been installed, so the error is always reported and
+  `onFinish` always runs ([#7](https://github.com/zanix-io/utils/issues/7)).
+- **Importing `@zanix/utils` (or `workers`/`logger`/`helpers`) no longer suppresses unhandled
+  promise rejections process-wide** (`workers`) — `modules/workers/processor.ts` statically
+  pulled in Worker-only runtime code (`self.onerror`, an `unhandledrejection` listener calling
+  `preventDefault()`) as a side effect of import, meant to run only inside a spawned Worker's own
+  isolated realm but actually running in whichever realm imported the module — including a host
+  process's main thread, where it silently swallowed every unhandled rejection instead of letting
+  Deno crash as expected. That runtime code now lives in a new `worker-entry.ts`, loaded only as a
+  spawned Worker's own entry module and never statically imported by the host; `processor.ts`
+  keeps just the side-effect-free `getWebProcessWorker` spawner
+  ([#10](https://github.com/zanix-io/utils/issues/10)).
+- **`classMetadata` now tags all ~22 catalog validation decorators with `meta.decorator`, not just
+  6** (`validator`) — `ValidateNested`, `Match`, `IsUrl`, `IsNumberString`, `IsEmail`,
+  `IsBooleanString`, `IsObjectID`, `Length`, `IsUUID`, `MinDate`, `MaxDate`, `IsPhone`, `IsDate`,
+  `MinNumber`, `ArrayLength`, and `MaxNumber` registered with `decorator: undefined`,
+  indistinguishable from a genuinely custom decorator to a downstream consumer (e.g. an OpenAPI
+  generator) trying to map a field back to its decorator. Each now supplies its own
+  `meta: { decorator: 'X', args: [...] }` through a new internal-only
+  `defineCatalogValidationDecorator` — identical to the public `defineValidationDecorator` but
+  with `meta` required, so a future catalog decorator that omits it fails `deno check`/`deno
+  publish` at compile time instead of silently producing an untagged entry. The public
+  `defineValidationDecorator` (and the `Validation()` custom-decorator helper) keep `meta`
+  optional — that remains the escape hatch for consumer-authored custom decorators
+  ([#11](https://github.com/zanix-io/utils/issues/11)).
+- **`classMetadata` now reports every decorator stacked on a field, not just the last one
+  registered** (`validator`) — `registerClassField` plain-overwrote a field's entry on each
+  decorator registration, so a field carrying two or more decorators (e.g. `@IsString()
+  @Length({ min: 1, max: 100 })`, or `@IsEmail() @Length({ max: 255 })`) only ever reported the
+  last one applied, silently dropping every earlier decorator from a downstream consumer's view
+  (e.g. an OpenAPI generator). `RTOFieldMetadata` gains a new `decorators` array — every decorator
+  in the stack, in registration order — populated only when a field has more than one; a
+  single-decorator field never carries it. `decorator`/`args` keep reflecting only the
+  last-registered decorator, unchanged, so an existing consumer reading just those two fields
+  keeps working identically. `each`/`optional`/`expose` are now OR-merged across a stacked field's
+  decorators instead of overwritten, matching their real runtime behavior: `classValidation`
+  treats a value as optional, or exposes it, the moment any decorator in the stack says so.
+
 ## [3.0.1] - 2026-08-22
 
 ### Added

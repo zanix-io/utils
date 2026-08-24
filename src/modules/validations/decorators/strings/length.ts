@@ -1,6 +1,6 @@
 import type { ValidationDecorator, ValidationDecoratorDefinition } from 'typings/validations.ts'
 
-import { defineValidationDecorator } from 'modules/validations/base/definitions/decorators.ts'
+import { defineCatalogValidationDecorator } from 'modules/validations/base/definitions/decorators.ts'
 
 /**
  * Validate if has valid length
@@ -72,8 +72,8 @@ export const Length: ValidationDecorator<{ min?: number; max?: number }> = funct
     validation = (value: string) => stringLength(value, min, max)
   }
 
-  return defineValidationDecorator(validation, {
+  return defineCatalogValidationDecorator(validation, {
     message: defaultMessage,
     ...options,
-  })
+  }, { decorator: 'Length', args: [{ min, max }] })
 }

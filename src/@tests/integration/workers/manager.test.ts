@@ -354,6 +354,63 @@ Deno.test('WorkerManager handles worker.onerror', async () => {
   loggerSpy.restore()
 })
 
+Deno.test(
+  'WorkerManager: falls back to console.error and still calls onFinish when Znx logger is not installed',
+  async () => {
+    // Reproduces https://github.com/zanix-io/utils/issues/7: without the global `Znx` (only
+    // installed once something imports `modules/logger/mod.ts`), referencing `Znx.logger`
+    // directly throws a `ReferenceError` inside `worker.onerror` — before `onFinish` is ever
+    // called — which hangs any caller awaiting the task forever instead of surfacing the error.
+    let onmessage: ((e: any) => void) | undefined
+    let onerror: ((e: any) => boolean | void) | undefined
+
+    const fakeWorker = {
+      postMessage() {
+        onerror?.({ error: new Error('boom without logger') })
+      },
+      terminate() {},
+      set onmessage(cb) {
+        onmessage = cb
+      },
+      get onmessage() {
+        return onmessage
+      },
+      set onerror(cb) {
+        onerror = cb
+      },
+      get onerror() {
+        return onerror
+      },
+    }
+
+    const originalZnx = (globalThis as any).Znx
+    delete (globalThis as any).Znx
+
+    const errorStub = stub(console, 'error')
+
+    try {
+      const wm = new WorkerManager({}, () => ({
+        worker: fakeWorker as unknown as Worker,
+        status: 'free',
+      }))
+
+      const result: any = await new Promise((resolve) => {
+        wm.task(add, {
+          metaUrl: import.meta.url,
+          onFinish: resolve,
+        }).invoke(1, 2)
+      })
+
+      assertEquals(result.response, null)
+      assertEquals(result.error.message, 'boom without logger')
+      assertSpyCalls(errorStub, 1)
+    } finally {
+      errorStub.restore()
+      ;(globalThis as any).Znx = originalZnx
+    }
+  },
+)
+
 Deno.test('manual worker close', () => {
   const wm = new WorkerManager()
   wm.close() // verify close
