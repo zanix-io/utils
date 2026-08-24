@@ -21,7 +21,7 @@ import { serializeMultipleErrors } from 'modules/errors/serialize.ts'
 import { createRedactor } from 'modules/errors/redact.ts'
 import { baseFormatter } from 'modules/logger/defaults/formatter.ts'
 import { setGlobalZnx } from 'modules/helpers/zanix/namespace.ts'
-import { baseSaveData, saveDataGeneralFunction } from './defaults/storage/main.ts'
+import { baseSaveData, saveDataFetcherFunction } from './defaults/storage/main.ts'
 import { showMessage } from './base.ts'
 
 /**
@@ -60,7 +60,7 @@ export function registerFileSaveFactory(factory: FileSaveFactory): void {
 
 /**
  * Builds a browser-safe `Logger` — `storage.save` MUST be a real function (the `fetcher` given
- * here, wrapped via `saveDataGeneralFunction`), never the `SaveDataFile` config-object shape
+ * here, wrapped via `saveDataFetcherFunction`), never the `SaveDataFile` config-object shape
  * `LoggerFileOptions` also accepts (this file never has a `FileSaveFactory` registered in a
  * browser — see {@linkcode registerFileSaveFactory}'s own doc). This is what actually keeps a
  * browser client bundle (`@zanix/space`'s own client barrel, for one) from ever reaching
@@ -74,7 +74,7 @@ export function registerFileSaveFactory(factory: FileSaveFactory): void {
 export function createClientLogger(
   fetcher: <T extends BaseFormattedLog = DefaultFormattedLog>(fmtLog: T) => void | Promise<void>,
 ): Logger {
-  return new Logger<DefaultResponse>({ storage: { save: saveDataGeneralFunction(fetcher) } })
+  return new Logger<DefaultResponse>({ storage: { save: saveDataFetcherFunction(fetcher) } })
 }
 
 /**

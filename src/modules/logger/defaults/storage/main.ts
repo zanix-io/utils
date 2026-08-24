@@ -11,7 +11,7 @@ import { createRedactor } from 'modules/errors/redact.ts'
 
 // `saveDataFileFunction` (file-based storage, `WorkerManager`-backed) deliberately does NOT live
 // in this file — see `./default.ts`'s own doc for why. This file (and `baseSaveData`/
-// `saveDataGeneralFunction` below) must stay reachable from a browser client bundle
+// `saveDataFetcherFunction` below) must stay reachable from a browser client bundle
 // (`main.ts`'s own `createClientLogger`) without ever touching `Deno.readTextFile`/`WorkerManager`,
 // even indirectly, even behind a dynamic `import()` — confirmed empirically that a dynamic import
 // present ANYWHERE in this file's own source, even inside a function nothing calls, still makes
@@ -27,7 +27,7 @@ import { createRedactor } from 'modules/errors/redact.ts'
  * app's own backend endpoint (e.g. `@zanix/space`'s `/api/log`), which relays it into the
  * server's own `Logger` via `Logger#ingest`.
  */
-export function saveDataGeneralFunction(
+export function saveDataFetcherFunction(
   fetcher: <T extends BaseFormattedLog = DefaultFormattedLog>(fmtLog: T) => void | Promise<void>,
 ): SaveDataFunction<DefaultResponse> {
   return (context) => {
