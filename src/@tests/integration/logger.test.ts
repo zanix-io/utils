@@ -448,12 +448,21 @@ Deno.test(
 )
 
 Deno.test(
-  'createClientLogger: never assigns itself as the global logger — disableGlobalAssign is ' +
-    'always true',
+  'createClientLogger: never assigns itself as the global logger by default — ' +
+    'disableGlobalAssign defaults to true',
   () => {
     const before = self.logger
     createClientLogger(() => {})
-    assertEquals(self.logger, before, 'globalThis.logger must be untouched by createClientLogger')
+    assertEquals(self.logger, before, 'globalThis.logger must be untouched by default')
+  },
+)
+
+Deno.test(
+  'createClientLogger: disableGlobalAssign: false opts back into claiming the global logger, ' +
+    'e.g. for a window.logger-style debugging convenience',
+  () => {
+    const instance = createClientLogger(() => {}, { disableGlobalAssign: false })
+    assertEquals(self.logger, instance, 'globalThis.logger must be this instance when opted in')
   },
 )
 

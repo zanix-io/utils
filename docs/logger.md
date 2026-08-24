@@ -257,6 +257,15 @@ const logger = createClientLogger((fmtLog) =>
 logger.warn('Something worth a look, from the browser')
 ```
 
+By default, the returned instance never claims `globalThis.logger`/`Znx.logger` in the
+browser — every real consumer imports it directly (see `@zanix/space`'s own shared
+`client-logger.ts` module for the pattern). Pass a second argument to opt back in, e.g.
+for a `window.logger`-style debugging convenience in a dev build:
+
+```ts
+const logger = createClientLogger(fetcher, { disableGlobalAssign: false })
+```
+
 `createClientLogger`'s `fetcher` receives one already-formatted log entry per
 call as a typed object (`BaseFormattedLog`, `DefaultFormattedLog` by
 default) — never `JSON.stringify`'d on its behalf, so the fetcher decides

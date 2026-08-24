@@ -19,11 +19,15 @@ and this project adheres to
 
 ### Changed
 
-- **`createClientLogger` now always builds with `disableGlobalAssign: true`** (`logger`) — a
-  browser client instance has no real reason to own `globalThis.logger`/`Znx.logger` in its own
-  (browser) realm, since every real consumer imports it directly. Not a fix for a cross-realm
-  collision risk (a browser tab's `globalThis` and a server process's `globalThis` were never the
-  same object to begin with) — purely removes an unused global assignment.
+- **`createClientLogger` now defaults to `disableGlobalAssign: true`, overridable via a new
+  second `options` parameter** (`logger`) — a browser client instance has no real reason to own
+  `globalThis.logger`/`Znx.logger` in its own (browser) realm by default, since every real
+  consumer imports it directly. Not a fix for a cross-realm collision risk (a browser tab's
+  `globalThis` and a server process's `globalThis` were never the same object to begin with) —
+  purely removes an unused global assignment by default. Pass
+  `createClientLogger(fetcher, { disableGlobalAssign: false })` to opt back in — e.g. for a
+  `window.logger`-style debugging convenience in a dev build — instead of wiring the global
+  assignment by hand.
 
 ## [3.1.1] - 2026-08-24
 

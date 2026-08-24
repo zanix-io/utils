@@ -67,22 +67,31 @@ export function registerFileSaveFactory(factory: FileSaveFactory): void {
  * `defaults/storage/default.ts`'s `WorkerManager`/`Deno.readTextFile` — not a separate class, not
  * a separate entrypoint, just never calling anything that imports that file.
  *
- * Always builds with `disableGlobalAssign: true` — a browser client instance has no reason to own
- * `globalThis.logger`/`Znx.logger` in its own (browser) realm, since every real consumer imports
- * it directly rather than reaching for a global. This isn't what keeps it from clobbering a
- * server's own default `Logger` instance (a browser tab's `globalThis` and a server process's
- * `globalThis` are already different realms entirely, so that was never at risk) — it's purely
- * about not leaving an unused global assigned in the browser for no reason.
+ * Defaults to `disableGlobalAssign: true` — a browser client instance has no reason to own
+ * `globalThis.logger`/`Znx.logger` in its own (browser) realm by default, since every real
+ * consumer imports it directly rather than reaching for a global. This isn't what keeps it from
+ * clobbering a server's own default `Logger` instance (a browser tab's `globalThis` and a server
+ * process's `globalThis` are already different realms entirely, so that was never at risk) — it's
+ * purely about not leaving an unused global assigned in the browser for no reason. Pass
+ * `disableGlobalAssign: false` to opt back in — e.g. for a `window.logger`-style debugging
+ * convenience in a dev build — rather than wiring the global assignment by hand.
  * @param fetcher - Receives one already-formatted log entry per call — never `JSON.stringify`'d
  * on its behalf, so it decides whether/how to serialize it — and sends it somewhere, typically a
  * `fetch()` to this app's own backend endpoint (e.g. `@zanix/space`'s `/api/log`), which relays
  * it into the server's own `Logger` via `Logger#ingest`.
+ * @param options - Just `disableGlobalAssign` — a plain, standalone shape rather than
+ * `Pick<LoggerFunctionOptions<...>, 'disableGlobalAssign'>`, deliberately: everything else about
+ * the underlying `Logger` (storage, formatting) is fixed by this function's own contract, so no
+ * other `LoggerFunctionOptions` field belongs here, and reusing that type would pull its own
+ * unrelated `storage`/`redact` fields into this signature for no reason.
  */
 export function createClientLogger(
   fetcher: <T extends BaseFormattedLog = DefaultFormattedLog>(fmtLog: T) => void | Promise<void>,
+  options: { disableGlobalAssign?: boolean } = {},
 ): Logger {
+  const { disableGlobalAssign = true } = options
   return new Logger<DefaultResponse>({
-    disableGlobalAssign: true,
+    disableGlobalAssign,
     storage: { save: saveDataFetcherFunction(fetcher) },
   })
 }
