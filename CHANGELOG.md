@@ -28,6 +28,15 @@ and this project adheres to
   `createClientLogger(fetcher, { disableGlobalAssign: false })` to opt back in — e.g. for a
   `window.logger`-style debugging convenience in a dev build — instead of wiring the global
   assignment by hand.
+- **`Logger#ingest` gains a new `origin` parameter, defaulting to `'client'`** (`logger`) —
+  `ingest(type, origin, ...data)`; `origin` is appended onto the persisted log's own data as
+  `{ origin }`, so a stored/queried log can be told apart from one this instance logged locally
+  itself. Defaults to `'client'` since `ingest`'s only real use is relaying an entry a browser
+  client's own `createClientLogger` instance already logged — pass an explicit value for a
+  non-browser origin relaying through the same endpoint (another service, a mobile app, ...).
+  This is a signature change to a method introduced only hours earlier in this same unreleased
+  cycle, with no real external consumer yet — existing callers (e.g. `@zanix/space`'s own
+  `/api/log` handler) are updated in the same change.
 
 ## [3.1.1] - 2026-08-24
 

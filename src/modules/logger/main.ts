@@ -164,11 +164,21 @@ export class Logger<Return extends unknown = DefaultResponse> {
    * event as if it were a genuine local one on THIS process's own console. Not part of the
    * everyday debug/info/warn/error/high API; a relay endpoint's own use only.
    * @param type - The severity the remote origin itself logged at.
+   * @param origin - Where the relayed entry actually came from — appended onto the persisted
+   * log's own data as `{ origin }`, so a stored/queried log can be told apart from one this
+   * instance logged locally itself. Defaults to `'client'`: `ingest`'s only real use is relaying
+   * an entry a BROWSER client's own `createClientLogger` instance already logged (see this
+   * method's own doc above) — pass an explicit value for a non-browser origin relaying through
+   * the same endpoint (another service, a mobile app, ...).
    * @param data - The remote origin's own raw, unformatted log data — this instance's own
    * `redact`/`formatter` still run on it here, exactly as they would for a local call.
    */
-  public ingest(type: LoggerMethods, ...data: LoggerData): Return | undefined {
-    return this.#log(type, false, ...data)
+  public ingest(
+    type: LoggerMethods,
+    origin: string = 'client',
+    ...data: LoggerData
+  ): Return | undefined {
+    return this.#log(type, false, ...data, { origin } as never)
   }
 
   /**

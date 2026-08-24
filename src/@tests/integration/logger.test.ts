@@ -496,7 +496,7 @@ Deno.test(
 Deno.test(
   "Logger#ingest persists a raw payload through this instance's own save function, never noSave",
   async () => {
-    const persisted: unknown[] = []
+    const persisted: DefaultFormattedLog[] = []
     const logger = new Logger({
       disableGlobalAssign: true,
       storage: {
@@ -507,12 +507,52 @@ Deno.test(
       },
     })
 
-    const returned = await logger.ingest('warn', 'relayed from a browser client', {
+    const returned = await logger.ingest('warn', 'client', 'relayed from a browser client', {
       source: 'client',
     })
 
     assertEquals(returned, 'saved')
     assertEquals(persisted.length, 1)
+  },
+)
+
+Deno.test(
+  "Logger#ingest defaults origin to 'client' when omitted, appended onto the persisted data",
+  async () => {
+    const persisted: DefaultFormattedLog[] = []
+    const logger = new Logger({
+      disableGlobalAssign: true,
+      storage: {
+        save: (context) => {
+          persisted.push(context.getFmtLog())
+          return Promise.resolve()
+        },
+      },
+    })
+
+    await logger.ingest('warn', undefined, 'relayed with no explicit origin')
+
+    assertEquals(persisted[0]?.data.at(-1), { origin: 'client' })
+  },
+)
+
+Deno.test(
+  'Logger#ingest accepts an explicit non-default origin, e.g. for a non-browser relay caller',
+  async () => {
+    const persisted: DefaultFormattedLog[] = []
+    const logger = new Logger({
+      disableGlobalAssign: true,
+      storage: {
+        save: (context) => {
+          persisted.push(context.getFmtLog())
+          return Promise.resolve()
+        },
+      },
+    })
+
+    await logger.ingest('warn', 'mobile-app', 'relayed from a mobile client')
+
+    assertEquals(persisted[0]?.data.at(-1), { origin: 'mobile-app' })
   },
 )
 
@@ -526,7 +566,7 @@ Deno.test(
       storage: { save: () => Promise.resolve('saved') },
     })
 
-    await logger.ingest('warn', 'relayed warning, must never print locally')
+    await logger.ingest('warn', 'client', 'relayed warning, must never print locally')
 
     assertEquals(warn.calls.length, warnCallsBefore)
   },

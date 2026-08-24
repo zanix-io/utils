@@ -280,9 +280,17 @@ import logger from 'jsr:@zanix/utils@[version]/logger'
 // `level`, not `type` — the field `DefaultFormattedLog` (what `fetcher` above actually received
 // and serialized) itself uses for severity. `ingest`'s own parameter is called `type`, but that's
 // just its own local name — pass whatever field the formatted log itself carries positionally.
-const { level, ...data } = await request.json()
-logger.ingest(level, data.message, data)
+const { level, origin, ...data } = await request.json()
+logger.ingest(level, origin, data.message, data)
 ```
+
+`ingest`'s second parameter, `origin`, defaults to `'client'` when omitted —
+`ingest`'s only real use is relaying an entry a BROWSER client's own
+`createClientLogger` instance already logged, so that's the sensible default;
+pass an explicit value for a non-browser origin relaying through the same
+endpoint (another service, a mobile app, ...). It's appended onto the
+persisted log's own data as `{ origin }`, so a stored/queried log can be told
+apart from one this instance logged locally itself.
 
 `ingest` redacts and persists the raw data given exactly as `warn`/`error`/etc.
 would — never `noSave` — so a relayed browser log persists through whichever
