@@ -3,8 +3,8 @@
 The `helpers` module groups together the everyday utilities used by the Zanix
 ecosystem and by any Deno project that wants a bit of scaffolding for free:
 reading and writing the `deno.json(c)` config, resolving project paths, the
-`Znx` global namespace, date/URL helpers, concurrency primitives, and template
-interpolation.
+`Znx` global namespace, date/URL helpers, concurrency primitives, template
+interpolation, and lazy resolution of a conditional/optional dependency.
 
 Import everything from the `helpers` entrypoint:
 
@@ -334,6 +334,65 @@ const plan = planCodeSync(staticEntries, existing)
 // plan.toOrphan === [{ _id: 'a2' }]              -- 'removed' has no matching code entry
 // plan.toResync === []                            -- 'welcome' was edited manually, left alone
 // plan.toSeed   === [{ key: 'farewell', value: 'Bye {{name}}' }]
+```
+
+## Lazy dependency resolution
+
+Lazy resolution for a genuinely CONDITIONAL/OPTIONAL dependency — a package a
+caller only needs some of the time (one queue/database/auth backend among
+several available), not a hard dependency merely dressed up as a dynamic
+`import()` for style. `lazyFunction`/`lazyClass`/`lazyValue` all defer
+`import(specifier)` until the wrapper they return is actually invoked, never
+at import time — a module that only ever builds the wrapper (never calls it)
+never touches the target module at all.
+
+This is the runtime half of the ecosystem's lazy-dependency convention: under
+Deno's `nodeModulesDir: "auto"`, a project materializes (`npm install`-style)
+every `npm:` package declared in its own `deno.json` `imports` map, regardless
+of whether reachable code actually imports it — a bare alias declared there
+is, on its own, already enough to trigger that materialization. `specifier`
+passed to any of these three helpers must therefore be a fully-qualified
+`jsr:`/`npm:` string, resolved OUTSIDE the caller's own `imports` map (never a
+bare alias) — confirmed empirically against a real, controlled build, not
+theoretical.
+
+**Gotcha**: a real `import type` from the SAME package is not automatically
+safe from the same materialization either — if the package's own value-level
+exports pull in real `npm:` dependencies, resolving that type still needs the
+package's own module graph, which `nodeModulesDir: "auto"` installs just to
+resolve the type, even though no VALUE from the package is ever imported.
+These three helpers only address the value/runtime side of the problem; the
+only real fix for the type-level case is a narrow subpath exposing just the
+types actually needed, kept free of the package's own npm-backed value
+exports.
+
+| Symbol         | Signature                                                                                                             | Description                                                                                                                                                                                                                                  |
+| -------------- | --------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `lazyFunction` | `<Fn>(specifier: string, exportName: string) => (...args: Parameters<Fn>) => Promise<Awaited<ReturnType<Fn>>>`        | Returns a wrapper that resolves `exportName` from `specifier` and calls it, only on first (and every) invocation.                                                                                                                            |
+| `lazyClass`    | `<Cls>(specifier: string, exportName: string) => (...args: ConstructorParameters<Cls>) => Promise<InstanceType<Cls>>` | Returns an async FACTORY (not the class itself — you can't lazily `new` something only available after an `await`) that resolves `exportName` as a class from `specifier` and constructs an instance of it, only on first (and every) call.  |
+| `lazyValue`    | `<T>(specifier: string, exportName: string) => () => Promise<T>`                                                      | Returns a thunk that resolves the plain value/constant `exportName` from `specifier`. Deno's own module cache deduplicates repeated `import()` calls to the same specifier, so calling the thunk repeatedly is always cheap after the first. |
+
+```typescript
+import { lazyClass, lazyFunction, lazyValue } from 'jsr:@zanix/utils@[version]/helpers'
+
+// A function from an optional npm dependency — `some-mailer` is only ever imported
+// the first time `sendEmail` is actually called, never merely by defining it.
+const sendEmail = lazyFunction<typeof import('npm:some-mailer').send>(
+  'npm:some-mailer@2.0.0',
+  'send',
+)
+await sendEmail({ to: 'user@example.com' })
+
+// A class — returns an async factory, not the class itself.
+const createConnection = lazyClass<typeof import('npm:some-driver').Connection>(
+  'npm:some-driver@1.4.0',
+  'Connection',
+)
+const connection = await createConnection({ url: 'mongodb://localhost' })
+
+// A plain value/constant.
+const getDefaultRegion = lazyValue<string>('npm:some-config-pkg@1.0.0', 'DEFAULT_REGION')
+await getDefaultRegion() // e.g. 'us-east-1'
 ```
 
 ## Misc
