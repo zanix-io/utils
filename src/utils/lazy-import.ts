@@ -13,10 +13,10 @@
  * declared in its own `deno.json` `imports` map, regardless of whether reachable code actually
  * imports it — a bare alias declared there is, on its own, already enough to trigger that
  * materialization. `specifier` here must therefore be a fully-qualified `jsr:`/`npm:` string,
- * resolved OUTSIDE the caller's own `imports` map (never a bare alias) — confirmed empirically
- * against a real, controlled build, not theoretical. See `@zanix/app`'s own
- * `modules/runtime/lazy-specifiers.ts` for a real, in-production example of a package keeping its
- * conditional dependencies' specifiers out of `imports` for exactly this reason.
+ * resolved OUTSIDE the caller's own `imports` map (never a bare alias) — this is real, observable
+ * Deno behavior, not a theoretical edge case. See `@zanix/app`'s own centralized lazy-specifiers
+ * module (`src/modules/lazy/specifiers.ts`) for a real, in-production example of a package keeping
+ * its conditional dependencies' specifiers out of `imports` for exactly this reason.
  *
  * A real `import type` from the SAME package is not automatically safe from the same
  * materialization either: if the package's own value-level exports pull in real `npm:`

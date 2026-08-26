@@ -15,7 +15,8 @@
     "jsr:@std/path@0.224": "0.224.0",
     "jsr:@std/path@^1.0.8": "1.1.6",
     "jsr:@std/path@^1.1.5": "1.1.6",
-    "jsr:@std/testing@1.0.9": "1.0.9"
+    "jsr:@std/testing@1.0.9": "1.0.9",
+    "jsr:@zanix/utils@3": "3.1.1"
   },
   "jsr": {
     "@std/assert@0.224.0": {
@@ -83,6 +84,12 @@
         "jsr:@std/fs@^1.0.9",
         "jsr:@std/internal@^1.0.5",
         "jsr:@std/path@^1.0.8"
+      ]
+    },
+    "@zanix/utils@3.1.1": {
+      "integrity": "64c49e51d1d0a7e755c00463b8e02744d74b02d32d7819fb2eb617151459430f",
+      "dependencies": [
+        "jsr:@std/path@0.224"
       ]
     }
   },

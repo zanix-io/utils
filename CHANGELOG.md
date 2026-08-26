@@ -6,7 +6,34 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to
 [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [3.2.0] - 2026-08-25
+## [4.0.0] - 2026-08-25
+
+### Removed
+
+- **BREAKING: the root `.` entrypoint is gone — `@zanix/utils` no longer has a bare import at
+  all.** It used to re-export `testing`, `helpers`, `workers`, `errors`, `validator`, and the
+  `constants`/`regex` default exports all at once, so a bare `import ... from '@zanix/utils'` for
+  just one of them dragged in every other module regardless of need — the same over-broad-barrel
+  shape found elsewhere in the ecosystem (`@zanix/app/runtime`,
+  `@zanix/asyncmq`'s `mod.ts`). `/logger` already never re-exported from root; every other module
+  now follows that same precedent. `mod.ts` itself is deleted, and `"."` is gone from
+  `deno.jsonc`'s own `exports` map — every module is reachable only via its own dedicated
+  subpath, which already existed for all of them. No deprecation window: a full audit of all 12
+  Zanix ecosystem repos (admin, app, asyncmq, auth, cli, console, core, datamaster,
+  notifications, server, space, space-ui) confirms zero bare `@zanix/utils` imports anywhere,
+  so there is no known consumer to protect with a grace period — and a JSDoc
+  `@deprecated` tag on a re-export wouldn't have worked as a real signal anyway (TypeScript
+  resolves it against the original declaration, not the re-exporting barrel).
+
+  | Was (root)                                                                                 | Now                      |
+  | ------------------------------------------------------------------------------------------ | ------------------------ |
+  | testing helpers (`mockWrap`, ...)                                                          | `@zanix/utils/testing`   |
+  | helpers (`getConfigDir`, `interpolate`, ttl/sync, encryption/masking, `lazyFunction`/etc.) | `@zanix/utils/helpers`   |
+  | workers (`WorkerManager`, ...)                                                             | `@zanix/utils/workers`   |
+  | errors (`HttpError`, `serializeError`, ...)                                                | `@zanix/utils/errors`    |
+  | validator (`BaseRTO`, `classValidation`, decorators)                                       | `@zanix/utils/validator` |
+  | `constants` default export                                                                 | `@zanix/utils/constants` |
+  | `regex` default export                                                                     | `@zanix/utils/regex`     |
 
 ### Added
 

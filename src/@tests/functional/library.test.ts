@@ -1,25 +1,6 @@
 import type * as types from '@zanix/utils/types'
 
 import { assertExists } from '@std/assert/assert-exists'
-import { assert } from '@std/assert'
-
-Deno.test('test library main module', async () => {
-  const utils = await import(`jsr:@zanix/utils`)
-
-  assert(utils.constants['default' as never] === undefined)
-  assertExists(utils.constants)
-  assert(utils.regex['default' as never] === undefined)
-  assertExists(utils.regex)
-  assertExists(utils.validator)
-  assertExists(utils.HttpError)
-  assertExists(utils.WorkerManager)
-  // Some utils
-  assertExists(utils.getTemporaryFolder)
-  assertExists(utils.fileExists)
-  assertExists(utils.getRootDir)
-
-  assert(!utils['logger' as never])
-})
 
 Deno.test('test library constants module', async () => {
   const constants = await import(`jsr:@zanix/utils/constants`)

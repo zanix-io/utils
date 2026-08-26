@@ -1,6 +1,6 @@
 {
   "name": "@zanix/utils",
-  "version": "3.2.0",
+  "version": "4.0.0",
   "license": "MIT",
   // Stays "auto", not "manual"/"none" — tried "manual" as a hygiene guard (this repo has zero real
   // `npm:` package dependencies, confirmed via `deno.lock` carrying no `npm:` entries at all), but
@@ -21,7 +21,6 @@
     "types": ["./src/typings/index.d.ts"]
   },
   "exports": {
-    ".": "./mod.ts",
     "./linter/deno-fmt-plugin": "./src/modules/linter/plugins/format/mod.ts",
     "./linter/deno-std-plugin": "./src/modules/linter/plugins/standard/mod.ts",
     "./linter/deno-test-plugin": "./src/modules/linter/plugins/test/mod.ts",
@@ -64,7 +63,7 @@
       // because the vscode-deno language server doesn't load lint plugins from a local relative
       // path — even after an LSP restart. `deno lint`/`deno publish` work fine with the local path,
       // but editor diagnostics need the resolved jsr specifier.
-      "jsr:@zanix/utils@^3.0.0/linter/deno-zanix-plugin"
+      "jsr:@zanix/utils@^4.0.0/linter/deno-zanix-plugin"
     ],
     "report": "pretty"
   },
