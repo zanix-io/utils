@@ -1,0 +1,17 @@
+// deno-coverage-ignore-file
+
+// Behavior fixture for `lazy-import.test.ts`'s `lazyClass` coverage — see
+// `lazy-function-target.ts` for the shared reasoning (globalThis side-effect marker, checked via
+// plain property read; always given an absolute `file:` URL; never statically imported anywhere
+// else in this package).
+const globalScope = globalThis as Record<string, unknown>
+globalScope.__lazyClassFixtureImportCount =
+  ((globalScope.__lazyClassFixtureImportCount as number | undefined) ?? 0) + 1
+
+export class Greeter {
+  constructor(public name: string) {}
+
+  public greet(): string {
+    return `hello ${this.name}`
+  }
+}

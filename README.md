@@ -47,10 +47,11 @@ To install **Zanix Utils** in your project, use [Deno](https://deno.com/) with
 the following imports:
 
 ```ts
-import * as utils from 'jsr:@zanix/utils@[version]'
+// No bare `@zanix/utils` entrypoint — import the specific module a consumer actually needs.
+import { getConfigDir } from 'jsr:@zanix/utils@[version]/helpers'
 ```
 
-You can also import specific plugins or utilities as needed:
+Import specific plugins or utilities as needed:
 
 ```ts
 // Zanix linter plugin
@@ -160,7 +161,7 @@ const user = await classValidation(UserRTO, {
 Other helpers, such as template interpolation, are also available:
 
 ```typescript
-import { interpolate } from 'jsr:@zanix/utils@[version]'
+import { interpolate } from 'jsr:@zanix/utils@[version]/helpers'
 
 interpolate('Bearer {{token}}', { token: 'abc123' }) // 'Bearer abc123'
 ```

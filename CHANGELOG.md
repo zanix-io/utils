@@ -6,6 +6,72 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to
 [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [4.0.0] - 2026-08-25
+
+### Removed
+
+- **BREAKING: the root `.` entrypoint is gone — `@zanix/utils` no longer has a bare import at
+  all.** It used to re-export `testing`, `helpers`, `workers`, `errors`, `validator`, and the
+  `constants`/`regex` default exports all at once, so a bare `import ... from '@zanix/utils'` for
+  just one of them dragged in every other module regardless of need — the same over-broad-barrel
+  shape found elsewhere in the ecosystem (`@zanix/app/runtime`,
+  `@zanix/asyncmq`'s `mod.ts`). `/logger` already never re-exported from root; every other module
+  now follows that same precedent. `mod.ts` itself is deleted, and `"."` is gone from
+  `deno.jsonc`'s own `exports` map — every module is reachable only via its own dedicated
+  subpath, which already existed for all of them. No deprecation window: a full audit of all 12
+  Zanix ecosystem repos (admin, app, asyncmq, auth, cli, console, core, datamaster,
+  notifications, server, space, space-ui) confirms zero bare `@zanix/utils` imports anywhere,
+  so there is no known consumer to protect with a grace period — and a JSDoc
+  `@deprecated` tag on a re-export wouldn't have worked as a real signal anyway (TypeScript
+  resolves it against the original declaration, not the re-exporting barrel).
+
+  | Was (root)                                                                                 | Now                      |
+  | ------------------------------------------------------------------------------------------ | ------------------------ |
+  | testing helpers (`mockWrap`, ...)                                                          | `@zanix/utils/testing`   |
+  | helpers (`getConfigDir`, `interpolate`, ttl/sync, encryption/masking, `lazyFunction`/etc.) | `@zanix/utils/helpers`   |
+  | workers (`WorkerManager`, ...)                                                             | `@zanix/utils/workers`   |
+  | errors (`HttpError`, `serializeError`, ...)                                                | `@zanix/utils/errors`    |
+  | validator (`BaseRTO`, `classValidation`, decorators)                                       | `@zanix/utils/validator` |
+  | `constants` default export                                                                 | `@zanix/utils/constants` |
+  | `regex` default export                                                                     | `@zanix/utils/regex`     |
+
+### Added
+
+- **`lazyFunction`/`lazyClass`/`lazyValue` — lazy resolution for a genuinely conditional/optional
+  dependency** (`helpers`) — the runtime half of the ecosystem's lazy-dependency convention. Each
+  helper defers `import(specifier)` until the wrapper it returns is actually invoked, never at
+  import time: `lazyFunction` resolves and calls a real exported function, `lazyClass` resolves a
+  real exported class and returns an async FACTORY (never `new`-able directly until resolved),
+  and `lazyValue` resolves a plain exported value/constant via a thunk, relying on Deno's own
+  module cache (not a caching layer of its own) to dedupe repeated calls. `specifier` must be a
+  fully-qualified `jsr:`/`npm:` string kept OUTSIDE the caller's own `deno.json` `imports` map —
+  confirmed empirically, via a real, controlled `deno check`/`node_modules` repro, that under
+  `nodeModulesDir: "auto"` a bare alias declared in `imports` alone (regardless of whether
+  reachable code ever imports it) is enough to trigger `npm install`-style materialization of
+  every npm dependency the aliased package pulls in; passing the specifier straight to these
+  helpers instead sidesteps that. Real, `deno run`-subprocess-backed integration coverage confirms
+  both halves of the contract against an actual `npm:` package under a real
+  `nodeModulesDir: "auto"` project: building a wrapper alone never touches `node_modules`, and
+  invoking it does, on demand.
+
+### Fixed
+
+- **`deno-fmt-plugin`'s `line-width` rule missed a real, common false-positive shape** (`linter`) —
+  a line whose only real excess is a long descriptive STRING (a `Deno.test('a long name', fn)`
+  call, a log message) used to still get reported, because the rule's old string exception
+  required the ENTIRE line to go nearly empty once every string was stripped out; boilerplate
+  around the string (`Deno.test(`, a trailing comma, `async () => {`) survived that strip and kept
+  the line just over the old threshold, even though the string was the sole real cause of the
+  overflow. Every string literal's content is now swapped for a short, fixed placeholder BEFORE a
+  line's width is measured (not stripped to nothing), so the check now genuinely measures whether
+  the surrounding CODE fits the budget on its own. Confirmed real and not just a `Deno.test`
+  special case: this is not redundant with `deno fmt`, since the shared pre-commit hook runs
+  `deno fmt` immediately before `deno lint` in the same pass — this rule can only ever see a line
+  whose length `fmt` itself declines to touch (a string literal, a comment), never one it could
+  have safely wrapped instead (already confirmed `fmt` correctly wraps a long call/member-chain on
+  its own). A genuinely long line of real CODE, with no string dominating it, still gets reported
+  exactly as before.
+
 ## [3.1.2] - 2026-08-24
 
 ### Fixed

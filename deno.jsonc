@@ -1,7 +1,19 @@
 {
   "name": "@zanix/utils",
-  "version": "3.1.2",
+  "version": "4.0.0",
   "license": "MIT",
+  // Stays "auto", not "manual"/"none" — tried "manual" as a hygiene guard (this repo has zero real
+  // `npm:` package dependencies, confirmed via `deno.lock` carrying no `npm:` entries at all), but
+  // reverted: `deno check`/`deno test` broke outright under "manual" — `src/utils/cron.ts`'s real
+  // `import { setImmediate } from 'node:timers'` needs `@types/node` resolvable to type-check
+  // (a `node:` built-in specifier is a real, legitimate Deno Node-compat import, not an `npm:`
+  // package, but its TYPE declarations still come from `@types/node` under node_modules), and
+  // "auto" is what silently keeps that satisfied today. Adopting "manual" would require also
+  // explicitly declaring `@types/node` and committing to `deno install` as a real process change —
+  // out of scope for this pass. `nodeModulesDir` only governs THIS repo's own root/workspace
+  // resolution either way — Deno's own docs confirm it never affects a downstream consumer's
+  // separate `node_modules`, so this was never a fix for the over-materialization behavior
+  // `lazy-import.ts` exists to let CONSUMERS avoid (that always lives on the consumer's own side).
   "nodeModulesDir": "auto",
   "compilerOptions": {
     "strict": true,
@@ -9,7 +21,6 @@
     "types": ["./src/typings/index.d.ts"]
   },
   "exports": {
-    ".": "./mod.ts",
     "./linter/deno-fmt-plugin": "./src/modules/linter/plugins/format/mod.ts",
     "./linter/deno-std-plugin": "./src/modules/linter/plugins/standard/mod.ts",
     "./linter/deno-test-plugin": "./src/modules/linter/plugins/test/mod.ts",
@@ -52,7 +63,7 @@
       // because the vscode-deno language server doesn't load lint plugins from a local relative
       // path — even after an LSP restart. `deno lint`/`deno publish` work fine with the local path,
       // but editor diagnostics need the resolved jsr specifier.
-      "jsr:@zanix/utils@^3.0.0/linter/deno-zanix-plugin"
+      "jsr:@zanix/utils@^4.0.0/linter/deno-zanix-plugin"
     ],
     "report": "pretty"
   },
