@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to
 [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [4.0.1] - 2026-08-26
+
+### Fixed
+
+- **`readModuleConfig` no longer reports a permission denial as a generic "config file not
+  found"** (`helpers`) — its `file:` branch walks up ancestor directories looking for the config
+  file, and each candidate is now stat'd directly instead of through `fileExists`, which reports
+  every failure (a genuinely missing file and a denied `--allow-read` grant alike) as a plain
+  `false`. A `Deno.errors.NotCapable`/`PermissionDenied` now propagates as itself the moment it
+  occurs; only a real `Deno.errors.NotFound` lets the walk continue to the parent directory, and
+  only reaching the filesystem root with nothing found still raises the generic `NotFound`.
+  `fileExists` itself is unchanged — its existing callers all only ever needed a boolean.
+
 ## [4.0.0] - 2026-08-25
 
 ### Removed
