@@ -1,10 +1,51 @@
 import type { ConfigFile } from 'typings/config.ts'
 import type { ZanixGlobal } from 'typings/zanix.ts'
 
-import { readConfig } from 'modules/helpers/config.ts'
-
 /** Shape of the global `Znx` namespace. */
 export type Zanix = ZanixGlobal['Znx']
+
+/**
+ * Resolves the current project's real `deno.json(c)` (`readConfig()`, from
+ * `modules/helpers/config.ts`) — defaults to a stub that always throws, deliberately: the one real
+ * call site below ({@linkcode setGlobalZnx}'s own lazy `config` getter) already wraps this in a
+ * `try`/`catch` that silently falls back to `{}` (the same tolerance a genuinely missing/unreadable
+ * config file already requires), so an unregistered reader degrades exactly the same way a
+ * config-read failure always does.
+ *
+ * This indirection — a module-private variable plus a registration function, instead of this file
+ * importing `readConfig` from `modules/helpers/config.ts` directly — exists for the same reason
+ * `modules/logger/base.ts`'s own `registerConfigNameReader` does (see its own doc): `readConfig`
+ * reaches `@std/path`, and this file sits in `createClientLogger`'s own module graph
+ * (`modules/logger/main.ts` imports {@linkcode setGlobalZnx} from here, unconditionally, for every
+ * `Logger` instance it constructs — the browser-safe one included). A bundler resolving that graph
+ * can only resolve `@std/path` to a remote `https://jsr.io/...` URL, never a local file, and cannot
+ * bundle that — regardless of whether `readConfig()` is ever actually CALLED (it's already lazy,
+ * deferred to the getter below; the eager problem is the static IMPORT, not the call).
+ *
+ * Registered from two places, not one — unlike `logger/base.ts`'s own single-barrel precedent —
+ * because this file has two independent real consumers with two independent public entrypoints:
+ * `modules/helpers/mod.ts` (`@zanix/utils/helpers`, used standalone, with no logger involved at
+ * all) and `modules/logger/mod.ts` (`@zanix/logger`, the server barrel). Each registers the same
+ * real `readConfig` as its own import-time side effect; whichever loads first wins, and either one
+ * alone is enough to keep every (server) consumer's `Znx.config` working — see
+ * `registerConfigReader`'s own doc for both call sites.
+ */
+let configReader: () => ConfigFile = () => {
+  throw new Error('[Zanix]: config reader not registered')
+}
+
+/**
+ * Registers the real `readConfig` as this file's config reader — called once (idempotently; a
+ * second call from the other real barrel is harmless) as a module-load side effect, by BOTH
+ * `modules/helpers/mod.ts` and `modules/logger/mod.ts` (the only two files allowed to import
+ * `modules/helpers/config.ts`'s `readConfig` on this file's behalf). See {@linkcode configReader}'s
+ * own doc for the full reasoning.
+ * @param reader - `readConfig` itself (from `modules/helpers/config.ts`), imported only by the two
+ * real barrels above.
+ */
+export function registerConfigReader(reader: () => ConfigFile): void {
+  configReader = reader
+}
 
 /**
  * Adds a value to the global `Znx` namespace, making it available globally.
@@ -37,7 +78,7 @@ export function setGlobalZnx(data: Partial<Zanix>) {
       get(): ConfigFile['zanix'] {
         let zanix: ConfigFile['zanix']
         try {
-          zanix = readConfig().zanix // resolved lazily, on first real access
+          zanix = configReader().zanix // resolved lazily, on first real access
         } catch { /** ignore error */ }
         const resolved = { ...zanix, ...configOverride }
         // Self-materializes into a plain, writable property after this first real read — `Znx.config`

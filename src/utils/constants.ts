@@ -24,9 +24,14 @@ export const MAIN_MODULE = 'mod.ts'
  * - `'use comet'` — marks a file as a `@zanix/space` "Comet": `cometPlugin` (`@zanix/space/vite`)
  *   forces it into its own build output chunk for selective hydration. See `@zanix/space`'s own
  *   `defineComet` for the full convention.
+ * - `'server-only'` — marks a file as one that must never reach a `@zanix/space` Comet's client
+ *   bundle: `cometPlugin` fails the build with the offending import chain if a Comet's own module
+ *   graph ever reaches one. See `@zanix/space`'s own `server-only-directive.ts` for the full
+ *   convention.
  */
 export const ZNX_FLAGS = [
   'use comet',
+  'server-only',
 ]
 
 /**

@@ -238,9 +238,11 @@ Deno.test('General encryption and decryption should works correctly', async () =
 Deno.test('RSA sign should works correctly', async () => {
   const message = 'Este es un mensaje importante'
 
-  const { privateKey, publicKey } = await generateRSAKeys({
-    algorithm: 'RSA-PSS',
-  })
+  // No `algorithm` override — a plain default-generated ('RSA-OAEP') keypair round-trips through
+  // signRSA/verifyRSA just as well as one generated for 'RSA-PSS' would, since both always
+  // re-import the exported PKCS8/SPKI PEM under their own fixed 'RSASSA-PKCS1-v1_5' regardless of
+  // which algorithm keyword `generateRSAKeys()` was called with (see its own doc).
+  const { privateKey, publicKey } = await generateRSAKeys()
 
   const signedData = await signRSA(message, privateKey)
   const verifiedData = await verifyRSA(message, signedData, publicKey)
@@ -253,6 +255,50 @@ Deno.test('RSA sign should works correctly', async () => {
   assert(verifiedData)
   assert(!unverifiedData)
 })
+
+Deno.test(
+  'RSA sign produces a real RSASSA-PKCS1-v1_5 signature (RFC 7518 §3.3 "RS256"), verifiable by a completely independent implementation (OpenSSL) — not RSA-PSS mislabeled as RS256',
+  async () => {
+    // Verifies signRSA's raw output against OpenSSL directly (`dgst -sha256 -verify`, plain
+    // PKCS1v1.5 — no `-sigopt rsa_padding_mode:pss`), a completely independent implementation from
+    // this package's own crypto.subtle-based verifyRSA. This package's own verifyRSA alone can't
+    // catch a signer/verifier pair that agree with each other on a scheme (e.g. RSA-PSS)
+    // different from what a JWT header built on top actually claims (`@zanix/auth`'s createJWT
+    // always labels it `alg: "RS256"`, i.e. plain RSASSA-PKCS1-v1_5 per RFC 7518 §3.3) — only an
+    // independent, spec-compliant RS256 verifier (PyJWT, jose, jsonwebtoken, openssl itself) can.
+    const message = 'Este es un mensaje importante'
+    const { privateKey, publicKey } = await generateRSAKeys()
+
+    const signature = await signRSA(message, privateKey)
+
+    const tmpDir = await Deno.makeTempDir()
+    const pubKeyPath = `${tmpDir}/pub.pem`
+    const sigPath = `${tmpDir}/sig.bin`
+    const messagePath = `${tmpDir}/message.bin`
+
+    try {
+      await Deno.writeTextFile(pubKeyPath, publicKey)
+      await Deno.writeFile(sigPath, signature)
+      await Deno.writeTextFile(messagePath, message)
+
+      const { code, stderr } = await new Deno.Command('openssl', {
+        args: [
+          'dgst',
+          '-sha256',
+          '-verify',
+          pubKeyPath,
+          '-signature',
+          sigPath,
+          messagePath,
+        ],
+      }).output()
+
+      assertEquals(code, 0, `openssl verification failed: ${new TextDecoder().decode(stderr)}`)
+    } finally {
+      await Deno.remove(tmpDir, { recursive: true })
+    }
+  },
+)
 
 Deno.test('generate HMAC Signature with SHA-256', async () => {
   const data = 'header.payload'

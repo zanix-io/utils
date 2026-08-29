@@ -22,17 +22,22 @@ export type ValidRSAModulusLength = 1024 | 2048 | 3072 | 4096
 /** Options accepted when generating or using RSA keys. */
 export type ValidRSAKeysOptions<T extends HashAlgorithm> = {
   /**
-   * The encryption or signing RSA algorithm.
-   * Using 'RSA-OAEP' algorithm for encryption and 'RSA-PSS' for signing.
+   * The encryption or signing RSA algorithm, used to select `generateRSAKeys()`'s WebCrypto
+   * `keyUsages` at generation time ('RSA-OAEP' → `['encrypt', 'decrypt']`, anything else →
+   * `['sign', 'verify']`). `signRSA`/`verifyRSA` always re-import the exported PKCS8/SPKI PEM
+   * under their own fixed 'RSASSA-PKCS1-v1_5' (real "RS256" per RFC 7518 §3.3) regardless of which
+   * of these was used at generation time — plain RSA PKCS8/SPKI export carries no
+   * algorithm-specific key material, so any value here produces a keypair `signRSA`/`verifyRSA`
+   * can use.
    * Defaults to 'RSA-OAEP'
    */
-  algorithm?: 'RSA-OAEP' | 'RSA-PSS'
+  algorithm?: 'RSA-OAEP' | 'RSA-PSS' | 'RSASSA-PKCS1-v1_5'
   /**
    * The encryption or signing RSA algorithm hash. Defaults to 'SHA-256'
    */
   hash?: T
   /**
-   *   The public key módulo 𝑛 size. Defaults to 2048.
+   *   The public key modulus (n) size. Defaults to 2048.
    */
   modulusLength?: 'SHA-512' extends T ? Exclude<ValidRSAModulusLength, 1024>
     : ValidRSAModulusLength

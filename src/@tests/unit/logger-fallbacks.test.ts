@@ -1,8 +1,24 @@
 import { assert, assertEquals, assertFalse } from '@std/assert'
 import { stub } from '@std/testing/mock'
-import { baseHeaderLog, buildHeaderLog } from 'modules/logger/base.ts'
+import * as colors from '@std/fmt/colors'
+import {
+  baseHeaderLog,
+  buildHeaderLog,
+  registerColorFormatter,
+  registerConfigNameReader,
+} from 'modules/logger/base.ts'
+import { readConfig } from 'modules/helpers/config.ts'
 import { baseFormatter } from 'modules/logger/defaults/formatter.ts'
 import { getTemporaryFolder } from 'modules/helpers/paths.ts'
+
+// `base.ts` itself never imports `@std/fmt/colors`/`readConfig` directly — only
+// `modules/logger/mod.ts` wires the real implementations in, as an import-time side effect (see
+// `registerColorFormatter`'s own doc in `base.ts` for why). This file exercises `base.ts` directly,
+// bypassing `mod.ts` entirely, so it registers the same real implementations itself here, to keep
+// testing genuine ANSI/config behavior below rather than the browser-safe no-op fallback that
+// applies only when nothing has registered a real formatter/reader yet.
+registerColorFormatter(colors)
+registerConfigNameReader(() => readConfig().name)
 
 // `readConfig` memoizes its result by resolved config path, module-wide — by the time this test
 // runs, some earlier-loaded module has already primed that cache with this project's own real

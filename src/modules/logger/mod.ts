@@ -7,9 +7,13 @@
  * \_____/ \__,_||_| |_||_|/_/\_\
  */
 
+import * as colors from '@std/fmt/colors'
 import { Logger as LoggerMainClass, registerFileSaveFactory } from 'modules/logger/main.ts'
+import { registerColorFormatter, registerConfigNameReader } from 'modules/logger/base.ts'
+import { registerConfigReader } from 'modules/helpers/zanix/namespace.ts'
 import { registerLogSink } from 'modules/errors/main.ts'
 import { saveDataFileFunction } from 'modules/logger/defaults/storage/default.ts'
+import { readConfig } from 'modules/helpers/config.ts'
 import type {
   BaseFormattedLog,
   BaseMethods,
@@ -31,6 +35,24 @@ import type { TaskCallback, TaskCallbackResponse } from 'typings/workers.ts'
 // this up automatically from here on — see `registerFileSaveFactory`'s own doc (`main.ts`) for
 // the full reasoning, and why `main.ts` itself never imports this directly.
 registerFileSaveFactory(saveDataFileFunction)
+
+// Registers the real ANSI color formatter and the real config-name reader — the only place in
+// this module allowed to import `@std/fmt/colors`/`modules/helpers/config.ts`. Every `Logger`
+// constructed by any real consumer picks these up automatically from here on, the exact same way
+// `registerFileSaveFactory` above does — see `base.ts`'s own `registerColorFormatter`/
+// `registerConfigNameReader` docs for the full reasoning (a bundler resolving `createClientLogger`'s
+// own module graph, which never loads this file, can only resolve either specifier to a remote
+// `https://jsr.io/...` URL, never a local file, and cannot bundle that).
+registerColorFormatter(colors)
+registerConfigNameReader(() => readConfig().name)
+
+// Registers the real `readConfig` as `modules/helpers/zanix/namespace.ts`'s own config reader too
+// — `Logger`'s constructor (`main.ts`) calls `setGlobalZnx`, which lazily reads through this same
+// reader for `Znx.config`, for every `Logger` it builds (the browser-safe one included). Idempotent
+// alongside `modules/helpers/mod.ts`'s own identical registration (`@zanix/utils/helpers`'s own
+// barrel) — whichever of the two real barrels loads first wins, and either alone is enough; see
+// `registerConfigReader`'s own doc (`namespace.ts`) for why this needs registering from both.
+registerConfigReader(readConfig)
 
 /** Re-exported so a server-side caller can opt into file-based storage explicitly (e.g.
  * `new Logger({ storage: { save: saveDataFileFunction({ folder: 'custom' }) } })`) without

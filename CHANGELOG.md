@@ -6,6 +6,54 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to
 [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [4.1.0] - 2026-08-28
+
+### Added
+
+- **`'server-only'` — a new `ZNX_FLAGS` directive-prologue flag** (`utils`) — marks a file as one
+  that must never reach a `@zanix/space` Comet's client bundle; `cometPlugin` (`@zanix/space/vite`)
+  fails the build with the offending import chain if a Comet's own module graph ever reaches one.
+  `use-znx-flags` (`deno-zanix-plugin`) accepts it as a known flag the same way it already accepts
+  `'use comet'`. See `@zanix/space`'s own `server-only-directive.ts` for the full convention.
+
+### Fixed
+
+- **`signRSA`/`verifyRSA` signed and verified with `RSA-PSS`, not the `RSASSA-PKCS1-v1_5` that
+  "RS256"/"RS384"/"RS512" actually mean** (`helpers`) — RFC 7518 §3.3 defines those JWA algorithm
+  names as plain PKCS#1 v1.5 padding, a different, JWA-distinct scheme from RSA-PSS (identified as
+  "PS256"/etc, RFC 7518 §3.5). `@zanix/auth`'s JWT signing (`createJWT`/`createServiceAssertion`)
+  labels its header `alg: "RS256"` while the actual signature underneath was RSA-PSS; every
+  Deno-to-Deno flow in the ecosystem verified fine because this package's own `verifyRSA` made the
+  same substitution on both ends, self-consistently, but any spec-compliant external RS256 verifier
+  (PyJWT, `jose`, `jsonwebtoken`, `openssl`) rejects an RSA-PSS signature presented as RS256
+  outright. `signRSA`/`verifyRSA` now sign and verify with `RSASSA-PKCS1-v1_5` directly.
+  `generateRSAKeys` is unaffected by this change (plain PKCS8/SPKI key export carries no
+  algorithm-specific material, so a keypair generated with any `algorithm` value still works with
+  `signRSA`/`verifyRSA`); `ValidRSAKeysOptions['algorithm']` gains `'RSASSA-PKCS1-v1_5'` as an
+  explicit accepted value alongside the existing `'RSA-OAEP'`/`'RSA-PSS'`.
+
+- **`@zanix/logger/client`'s browser bundle still broke, now on `@std/fmt/colors`/`@std/path`, even
+  after 3.1.0's `WorkerManager` fix** (`logger`) — `modules/logger/base.ts` (used by BOTH the
+  server `Logger` and `createClientLogger`) had a static, unconditional `import * as colors from
+  '@std/fmt/colors'`, and reached `@std/path` transitively through `readConfig`
+  (`modules/helpers/config.ts`) from two independent call sites: `base.ts`'s own header-formatting
+  logic, and `modules/helpers/zanix/namespace.ts`'s `setGlobalZnx` (called by every `Logger`
+  constructor, the browser-safe one included). A Deno-standard-library specifier like these two can
+  only ever resolve to a remote `https://jsr.io/...` URL, never a local file — something a browser
+  bundler (Vite/esbuild) cannot bundle, regardless of whether the import is actually reached at
+  runtime. The existing `isBrowser` branch in `buildHeaderLog` already avoided ANSI-coloring output
+  in a browser (fixed in 2.6.1) — that was never the problem; the eager, unconditional IMPORT was.
+  Both leaks are fixed the same way `WorkerManager` was in 3.1.0: registration-based indirection
+  (`registerColorFormatter`/`registerConfigNameReader` in `base.ts`, `registerConfigReader` in
+  `namespace.ts`) wired up as an import-time side effect only by the real server barrels
+  (`modules/logger/mod.ts`, `modules/helpers/mod.ts`) — never by `createClientLogger`'s own
+  `@zanix/logger/client` entrypoint. Confirmed via `deno info`'s own module graph that neither
+  specifier is reachable from `@zanix/logger/client` through a real (runtime) import edge anymore,
+  only ever a type-only one a bundler transpiling TypeScript elides before resolving anything.
+  Every existing consumer of the server `Logger` (`@zanix/utils/logger`) and of
+  `@zanix/utils/helpers` keeps identical real ANSI-colored output and real config-file reading,
+  with no code changes required on their part.
+
 ## [4.0.1] - 2026-08-26
 
 ### Fixed
