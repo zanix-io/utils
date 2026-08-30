@@ -3,6 +3,12 @@ import { join } from '@std/path'
 /**
  * Helper function to check if a file exists
  *
+ * Returns `false` for any `Deno.statSync` failure, not only a genuinely missing file — a
+ * permission denial (`Deno.errors.NotCapable`/`PermissionDenied` from a missing `--allow-read`
+ * grant) is indistinguishable from "does not exist" here. A caller that needs to react
+ * differently to a permission error (e.g. propagate it instead of treating the path as absent)
+ * must stat the path directly rather than relying on this function's boolean result.
+ *
  * This function requires the following permissions:
  * `allow-read`.
  *

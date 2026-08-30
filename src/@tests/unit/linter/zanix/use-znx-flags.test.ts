@@ -42,6 +42,22 @@ Deno.test('use-znx-flags plugin should accept a known flag as the first statemen
 })
 
 Deno.test(
+  "use-znx-flags plugin should accept 'server-only' as a known flag too",
+  () => {
+    const diagnostics = Deno.lint.runPlugin(
+      zanixPlugin,
+      fileName,
+      `'server-only'\nexport function loadState() {}`,
+    )
+
+    assertEquals(
+      diagnostics.filter((d) => d.id === 'deno-zanix-plugin/use-znx-flags'),
+      [],
+    )
+  },
+)
+
+Deno.test(
   'use-znx-flags plugin should only validate a flag-shaped literal at the very first statement',
   () => {
     // A string literal that isn't the file's first statement is just a plain expression, not a

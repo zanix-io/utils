@@ -161,7 +161,7 @@ exports below.
 | `CONFIG_FILE`       | `'deno.json'`                      | Name of the configuration file used for the Deno project.                                                                                                                   |
 | `DISTRIBUTION_FILE` | `'app.mjs'`                        | Default distribution file name used for compilations.                                                                                                                       |
 | `MAIN_MODULE`       | `'mod.ts'`                         | Default main module file name.                                                                                                                                              |
-| `ZNX_FLAGS`         | `['use comet']`                    | Zanix directive-prologue flags — the flag names the linter's `use-znx-flags` rule accepts as a file's first statement. See [Linter plugins](./linter.md#deno-zanix-plugin). |
+| `ZNX_FLAGS`         | `['use comet', 'server-only']`     | Zanix directive-prologue flags — the flag names the linter's `use-znx-flags` rule accepts as a file's first statement. See [Linter plugins](./linter.md#deno-zanix-plugin). |
 | `ZANIX_LOGO`        | ASCII-art string of the ZANIX logo | Text representation of the ZANIX logo, wrapped in zero-width space characters, intended for display in console output or logs.                                              |
 
 ## Regular expressions

@@ -49,11 +49,14 @@ async function exportRSAKey(key: CryptoKey, type: 'spki' | 'pkcs8') {
 
 /**
  * A function to generate RSA Keys.
- * Using 'RSA-OAEP' algorithm for encryption and 'RSA-PSS' for signing
+ * `algorithm` defaults to 'RSA-OAEP' and only selects the generated key's WebCrypto `keyUsages`
+ * ('RSA-OAEP' → encrypt/decrypt, anything else → sign/verify) — `signRSA`/`verifyRSA` always sign
+ * and verify under their own fixed 'RSASSA-PKCS1-v1_5', regardless of which algorithm generated
+ * the keypair (see {@link ValidRSAKeysOptions.algorithm}'s own doc for why).
  *
  * @param {ValidRSAKeysOptions} options
  *      - `hash`: The encryption RSA algorithm hash. Defaults to 'SHA-256'
- *      - `modulusLength`: The public key módulo 𝑛 size. Defaults to 2048.
+ *      - `modulusLength`: The public key modulus (n) size. Defaults to 2048.
  *
  * @returns {Promise<{ privateKey: string, publicKey: string }>} - Private and public RSA keys
  */
@@ -145,7 +148,12 @@ export function decryptRSA<T extends string | string[]>(
 /**
  * Signs a message using an RSA private key.
  *
- * Uses the `RSA-PSS` algorithm to create a digital signature of the given message.
+ * Uses the `RSASSA-PKCS1-v1_5` algorithm to create a digital signature of the given message —
+ * this is what "RS256"/"RS384"/"RS512" mean per the JWA spec (RFC 7518 §3.3): plain PKCS#1 v1.5
+ * padding, not RSA-PSS (a different, JWA-distinct scheme identified as "PS256"/etc, RFC 7518
+ * §3.5). This function backs `@zanix/auth`'s JWT `RS256` signing (`createJWT`/
+ * `createServiceAssertion`) — the signature must verify under any spec-compliant RS256 verifier
+ * (e.g. PyJWT, jose, jsonwebtoken), not just this package's own `verifyRSA`.
  * This signature can be verified later using the corresponding public key.
  *
  * @param {string | string[]} message - The text to be encrypted.
@@ -166,10 +174,10 @@ export async function signRSA(
   hash: Exclude<HashAlgorithm, 'SHA-1'> = 'SHA-256',
 ): Promise<Uint8Array<ArrayBuffer>> {
   const encoded = stringToUint8Array(message)
-  const algorithm = 'RSA-PSS'
+  const algorithm = 'RSASSA-PKCS1-v1_5'
   const key = await importRSAKey(privateKey, 'private', { algorithm, hash })
   const signature = await crypto.subtle.sign(
-    { name: algorithm, saltLength: 32 },
+    { name: algorithm },
     key,
     encoded,
   )
@@ -180,8 +188,9 @@ export async function signRSA(
 /**
  * Verifies an RSA signature using the corresponding public key.
  *
- * Uses the `RSA-PSS` algorithm to check if the given signature is valid
- * for the provided message and public key.
+ * Uses the `RSASSA-PKCS1-v1_5` algorithm (real "RS256"/etc per RFC 7518 §3.3 — see {@link signRSA}'s
+ * doc for why this isn't RSA-PSS) to check if the given signature is valid for the provided
+ * message and public key.
  *
  * @param {string} message - The original message that was signed.
  * @param {string} signature - The encoded signature to verify.
@@ -199,10 +208,10 @@ export async function verifyRSA(
   hash: Exclude<HashAlgorithm, 'SHA-1'> = 'SHA-256',
 ): Promise<boolean> {
   const encoded = stringToUint8Array(message)
-  const algorithm = 'RSA-PSS'
+  const algorithm = 'RSASSA-PKCS1-v1_5'
   const key = await importRSAKey(publicKey, 'public', { algorithm, hash })
   return crypto.subtle.verify(
-    { name: algorithm, saltLength: 32 },
+    { name: algorithm },
     key,
     signature,
     encoded,

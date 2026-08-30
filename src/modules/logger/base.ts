@@ -1,9 +1,16 @@
 import type { LoggerMethods } from 'typings/logger.ts'
 
-import * as colors from '@std/fmt/colors'
 import { getLocalTime } from 'utils/dates.ts'
 import { capitalize } from 'utils/encoders.ts'
-import { readConfig } from 'modules/helpers/config.ts'
+
+// `typeof import(...)` is a pure type query — erased entirely at emit time, so it never becomes a
+// real `import` statement a bundler has to resolve. That distinction matters here specifically:
+// see {@linkcode registerColorFormatter}'s own doc for why a real, static import of
+// `@std/fmt/colors` in this file is incompatible with `createClientLogger`'s browser bundle, even
+// though the color-formatting call site itself is already runtime-conditional (`buildHeaderLog`'s
+// own `isBrowser` branch) — an eager IMPORT is the problem a bundler can't work around, not an
+// eager USE.
+type ColorsModule = typeof import('@std/fmt/colors')
 
 type ChalkColors = 'blue' | 'green' | 'red' | 'magenta' | 'yellow' | 'white'
 
@@ -37,6 +44,65 @@ const cssColorByChalkColor: Record<ChalkColors, string> = {
 }
 
 /**
+ * Fallback used only when {@linkcode registerColorFormatter} was never called — i.e. this file's
+ * own terminal branch (`typeof Deno !== 'undefined'` in {@linkcode baseHeaderLog}) is reached
+ * without `modules/logger/mod.ts` having run first. That only happens via `createClientLogger`
+ * (`@zanix/logger/client`'s own entrypoint, `main.ts`) invoked directly under Deno rather than a
+ * real browser — every genuine SERVER `Logger` always loads `mod.ts` first (the same guarantee
+ * `registerFileSaveFactory`'s own doc relies on), so this fallback never applies there. Passes
+ * every string through unchanged instead of throwing, so a header still prints — just without ANSI
+ * color — rather than losing the whole log line over an unregistered formatter.
+ */
+const identityColorFormatter: ColorsModule = new Proxy({} as ColorsModule, {
+  get: () => (str: string) => str,
+})
+
+let colorFormatter: ColorsModule = identityColorFormatter
+
+/**
+ * Registers the real `@std/fmt/colors` module as this file's color formatter — called once, as a
+ * module-load side effect, by `modules/logger/mod.ts` (the only file allowed to import
+ * `@std/fmt/colors` directly). This is what lets `base.ts` keep its existing real ANSI-colored
+ * output for every server consumer without ITSELF ever statically importing `@std/fmt/colors` —
+ * mirrors `main.ts`'s own `registerFileSaveFactory`/`fileSaveFactory` indirection exactly, for the
+ * exact same reason: a bundler resolving `createClientLogger`'s own module graph (which reaches
+ * this file through `main.ts`'s `showMessage` import) can only resolve a Deno-standard-library
+ * specifier like `@std/fmt/colors` to a remote `https://jsr.io/...` URL, never a local file — and
+ * cannot bundle that, regardless of whether the import is actually reachable at runtime (confirmed
+ * empirically, the same way `registerFileSaveFactory`'s own doc already confirmed it for a dynamic
+ * `import()` of `WorkerManager`).
+ * @param formatter - `@std/fmt/colors` itself, imported only by `mod.ts`.
+ */
+export function registerColorFormatter(formatter: ColorsModule): void {
+  colorFormatter = formatter
+}
+
+/**
+ * Resolves the current project's own `name` (from its `deno.json(c)`) for the header's `appName`
+ * suffix — e.g. `ZNX-INFO [@my-app]:`. Defaults to a stub that always throws, deliberately: both
+ * call sites below already wrap this in a `try`/`catch` that falls back to an empty `appName` (the
+ * same tolerance a genuinely missing/unreadable config file already requires), so an unregistered
+ * reader degrades exactly the same way a config-read failure always does, without needing its own
+ * separate `if (!configNameReader)` branch.
+ */
+let configNameReader: () => string | undefined = () => {
+  throw new Error('[Logger]: config name reader not registered')
+}
+
+/**
+ * Registers the real config-name reader — called once, as a module-load side effect, by
+ * `modules/logger/mod.ts` (the only file allowed to import `modules/helpers/config.ts`'s
+ * `readConfig`, which itself reaches `@std/path`). Same indirection, same reasoning, and the same
+ * precedent as {@linkcode registerColorFormatter} just above — this file must never statically
+ * import `modules/helpers/config.ts` either, or `createClientLogger`'s own browser bundle fails
+ * the exact same way over `@std/path` instead of `@std/fmt/colors`.
+ * @param reader - Returns `readConfig().name`, wired up by `mod.ts`.
+ */
+export function registerConfigNameReader(reader: () => string | undefined): void {
+  configNameReader = reader
+}
+
+/**
  * Builds the formatted header `console[method]` receives as its own leading argument(s) — a
  * single ANSI-colored string in Deno/a terminal (`@std/fmt/colors`, unchanged from before), or a
  * `['%c...', cssString]` pair in a browser. A browser console doesn't interpret ANSI escape codes
@@ -61,7 +127,7 @@ export function buildHeaderLog(
   if (isBrowser) {
     let appName = ''
     try {
-      appName = ` [${readConfig().name}]`
+      appName = ` [${configNameReader()}]`
     } catch { /** ignore error */ }
 
     return [
@@ -72,19 +138,19 @@ export function buildHeaderLog(
 
   let appName
   try {
-    appName = colors[color](`[${readConfig().name}]`)
+    appName = colorFormatter[color](`[${configNameReader()}]`)
     appName = ` ${appName}`
   } catch {
     appName = ''
   }
 
-  const typeFn = colors[
+  const typeFn = colorFormatter[
     `bg${capitalize(color)}` as never
   ] as (str: string) => string
 
   return [
-    colors.bold(
-      `${icon} ${colors.gray(getLocalTime())} | ${typeFn(` ZNX-${text} `)}${appName}:`,
+    colorFormatter.bold(
+      `${icon} ${colorFormatter.gray(getLocalTime())} | ${typeFn(` ZNX-${text} `)}${appName}:`,
     ),
   ]
 }
