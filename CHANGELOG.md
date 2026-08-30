@@ -54,10 +54,6 @@ and this project adheres to
   `@zanix/utils/helpers` keeps identical real ANSI-colored output and real config-file reading,
   with no code changes required on their part.
 
-## [4.0.1] - 2026-08-26
-
-### Fixed
-
 - **`readModuleConfig` no longer reports a permission denial as a generic "config file not
   found"** (`helpers`) — its `file:` branch walks up ancestor directories looking for the config
   file, and each candidate is now stat'd directly instead of through `fileExists`, which reports
