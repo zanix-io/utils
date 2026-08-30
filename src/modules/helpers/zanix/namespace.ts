@@ -12,23 +12,23 @@ export type Zanix = ZanixGlobal['Znx']
  * config file already requires), so an unregistered reader degrades exactly the same way a
  * config-read failure always does.
  *
- * This indirection — a module-private variable plus a registration function, instead of this file
- * importing `readConfig` from `modules/helpers/config.ts` directly — exists for the same reason
- * `modules/logger/base.ts`'s own `registerConfigNameReader` does (see its own doc): `readConfig`
- * reaches `@std/path`, and this file sits in `createClientLogger`'s own module graph
- * (`modules/logger/main.ts` imports {@linkcode setGlobalZnx} from here, unconditionally, for every
- * `Logger` instance it constructs — the browser-safe one included). A bundler resolving that graph
- * can only resolve `@std/path` to a remote `https://jsr.io/...` URL, never a local file, and cannot
- * bundle that — regardless of whether `readConfig()` is ever actually CALLED (it's already lazy,
- * deferred to the getter below; the eager problem is the static IMPORT, not the call).
+ * This indirection — a module-private variable plus a registration function, instead of a direct
+ * import of `readConfig` from `modules/helpers/config.ts` — follows the same precedent as
+ * `modules/logger/base.ts`'s `registerConfigNameReader`: `readConfig` reaches `@std/path`, and this
+ * file sits in `createClientLogger`'s module graph (`modules/logger/main.ts` imports
+ * {@linkcode setGlobalZnx} from here, unconditionally, for every `Logger` instance it constructs —
+ * the browser-safe one included). A bundler resolving that graph can only resolve `@std/path` to a
+ * remote `https://jsr.io/...` URL, never a local file, and cannot bundle that — regardless of
+ * whether `readConfig()` is ever actually called (it's already lazy, deferred to the getter below;
+ * the eager problem is the static import, not the call).
  *
- * Registered from two places, not one — unlike `logger/base.ts`'s own single-barrel precedent —
- * because this file has two independent real consumers with two independent public entrypoints:
+ * Registered from two places, not one — unlike `logger/base.ts`'s single-barrel precedent — because
+ * this file has two independent real consumers with two independent public entrypoints:
  * `modules/helpers/mod.ts` (`@zanix/utils/helpers`, used standalone, with no logger involved at
- * all) and `modules/logger/mod.ts` (`@zanix/logger`, the server barrel). Each registers the same
- * real `readConfig` as its own import-time side effect; whichever loads first wins, and either one
- * alone is enough to keep every (server) consumer's `Znx.config` working — see
- * `registerConfigReader`'s own doc for both call sites.
+ * all) and `modules/logger/mod.ts` (`@zanix/logger`, the server barrel). Both register the same real
+ * `readConfig`, each as its own module-load side effect; whichever loads first wins, and either one
+ * alone keeps every server consumer's `Znx.config` working. See {@linkcode registerConfigReader}
+ * for exactly where each registration happens.
  */
 let configReader: () => ConfigFile = () => {
   throw new Error('[Zanix]: config reader not registered')
