@@ -1,6 +1,6 @@
 {
   "name": "@zanix/utils",
-  "version": "4.1.0",
+  "version": "4.1.1",
   "license": "MIT",
   // Stays "auto", not "manual"/"none" — tried "manual" as a hygiene guard (this repo has zero real
   // `npm:` package dependencies, confirmed via `deno.lock` carrying no `npm:` entries at all), but
