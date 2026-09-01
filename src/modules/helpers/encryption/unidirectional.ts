@@ -1,5 +1,6 @@
 import type { EncryptionLevel, HashAlgorithm } from 'typings/encryption.ts'
 
+import { crypto as stdCrypto } from '@std/crypto'
 import {
   hexToUint8Array,
   stringToUint8Array,
@@ -7,9 +8,38 @@ import {
   uint8ArrayToHEX,
 } from 'utils/encoders.ts'
 
-async function* iterateAsync(iterations: number) {
-  for (let i = 0; i < iterations; i++) {
-    yield i
+/**
+ * Synchronously computes a digest, byte-for-byte identical to `crypto.subtle.digest`'s output for
+ * the same algorithm/input. Used for the hash-stretching loop below, where hundreds/thousands of
+ * chained digests are needed and each one depends on the previous one's output — `@std/crypto`'s
+ * `subtle.digestSync` lets that chain run without a `crypto.subtle.digest` `Promise` round trip
+ * (and its event-loop yield) per iteration, without pulling in Node's `node:crypto` compat layer.
+ */
+function digestSync(
+  algorithm: HashAlgorithm,
+  data: Uint8Array<ArrayBuffer>,
+): Uint8Array<ArrayBuffer> {
+  return new Uint8Array(stdCrypto.subtle.digestSync(algorithm, data))
+}
+
+/**
+ * How many chained digests run per synchronous batch before yielding to the event loop once.
+ * Keeps the hash-stretching loop from creating one await point per iteration (up to 10000 of
+ * them at the 'high' level) — which, under event-loop contention, turns into a proportional
+ * number of chances for the loop's continuation to be delayed behind unrelated pending work.
+ */
+const HASH_YIELD_INTERVAL = 500
+
+/**
+ * Yields once per batch of `batchSize` iterations instead of once per iteration. A plain `for`
+ * loop with an `await` in its body trips the `no-await-in-loop` lint rule; iterating this
+ * generator with `for await...of` sidesteps it the same way while still suspending back to the
+ * event loop between batches (a `for await...of` loop implicitly awaits every yielded value,
+ * even over a synchronous generator).
+ */
+function* iterateBatches(iterations: number, batchSize: number) {
+  for (let done = 0; done < iterations; done += batchSize) {
+    yield Math.min(batchSize, iterations - done)
   }
 }
 
@@ -77,16 +107,15 @@ export async function generateHash(
     saltPrefix = `${uint8ArrayToHEX(salt)}$`
   }
 
-  let encrypted = await crypto.subtle.digest(algorithm, dataToEncrypt)
+  let encrypted = digestSync(algorithm, dataToEncrypt)
 
-  for await (const _ of iterateAsync(iterations)) {
-    encrypted = await crypto.subtle.digest(
-      algorithm,
-      new Uint8Array(encrypted),
-    )
+  for await (const batchSize of iterateBatches(iterations, HASH_YIELD_INTERVAL)) {
+    for (let i = 0; i < batchSize; i++) {
+      encrypted = digestSync(algorithm, encrypted)
+    }
   }
 
-  return `${saltPrefix}${uint8ArrayToBase64(new Uint8Array(encrypted))}`
+  return `${saltPrefix}${uint8ArrayToBase64(encrypted)}`
 }
 
 /**
