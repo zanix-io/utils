@@ -16,10 +16,10 @@ and this project adheres to
   unrelated pending work, so total latency scaled with iteration count rather than actual CPU
   cost; a single `validateHash` call could degrade from ~100ms to several minutes while other
   concurrent requests stayed fast. The chain now runs synchronously in batches of 500 via
-  `node:crypto`'s `createHash` (byte-for-byte identical output to `crypto.subtle.digest` for
-  SHA-1/256/384/512), yielding to the event loop once per batch instead of once per digest.
-  Existing hashes remain valid — verified byte-for-byte compatible with the previous
-  implementation across every encryption level.
+  `@std/crypto`'s `subtle.digestSync` (byte-for-byte identical output to `crypto.subtle.digest`
+  for SHA-1/256/384/512, yielding to the event loop
+  once per batch instead of once per digest. Existing hashes remain valid — verified
+  byte-for-byte compatible with the previous implementation across every encryption level.
 
 ## [4.1.0] - 2026-08-28
 

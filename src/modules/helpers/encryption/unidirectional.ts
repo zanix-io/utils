@@ -1,6 +1,6 @@
 import type { EncryptionLevel, HashAlgorithm } from 'typings/encryption.ts'
 
-import { createHash } from 'node:crypto'
+import { crypto as stdCrypto } from '@std/crypto'
 import {
   hexToUint8Array,
   stringToUint8Array,
@@ -8,23 +8,18 @@ import {
   uint8ArrayToHEX,
 } from 'utils/encoders.ts'
 
-/** Maps the public `HashAlgorithm` names to Node's `crypto.createHash` algorithm identifiers. */
-const nodeHashAlgorithm: Record<HashAlgorithm, string> = {
-  'SHA-1': 'sha1',
-  'SHA-256': 'sha256',
-  'SHA-384': 'sha384',
-  'SHA-512': 'sha512',
-}
-
 /**
  * Synchronously computes a digest, byte-for-byte identical to `crypto.subtle.digest`'s output for
  * the same algorithm/input. Used for the hash-stretching loop below, where hundreds/thousands of
- * chained digests are needed and each one depends on the previous one's output — `node:crypto`'s
- * synchronous `createHash` lets that chain run without a `crypto.subtle.digest` `Promise` round
- * trip (and its event-loop yield) per iteration.
+ * chained digests are needed and each one depends on the previous one's output — `@std/crypto`'s
+ * `subtle.digestSync` lets that chain run without a `crypto.subtle.digest` `Promise` round trip
+ * (and its event-loop yield) per iteration, without pulling in Node's `node:crypto` compat layer.
  */
-function digestSync(algorithm: HashAlgorithm, data: Uint8Array): Uint8Array {
-  return new Uint8Array(createHash(nodeHashAlgorithm[algorithm]).update(data).digest())
+function digestSync(
+  algorithm: HashAlgorithm,
+  data: Uint8Array<ArrayBuffer>,
+): Uint8Array<ArrayBuffer> {
+  return new Uint8Array(stdCrypto.subtle.digestSync(algorithm, data))
 }
 
 /**
