@@ -6,6 +6,21 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to
 [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- **`generateHash`/`validateHash`'s hash-stretching loop chained up to 10000 individually-awaited
+  `crypto.subtle.digest()` calls, one event-loop yield per iteration** (`helpers`) — under
+  main-thread contention, each yield is a chance for the loop's continuation to queue behind
+  unrelated pending work, so total latency scaled with iteration count rather than actual CPU
+  cost; a single `validateHash` call could degrade from ~100ms to several minutes while other
+  concurrent requests stayed fast. The chain now runs synchronously in batches of 500 via
+  `node:crypto`'s `createHash` (byte-for-byte identical output to `crypto.subtle.digest` for
+  SHA-1/256/384/512), yielding to the event loop once per batch instead of once per digest.
+  Existing hashes remain valid — verified byte-for-byte compatible with the previous
+  implementation across every encryption level.
+
 ## [4.1.0] - 2026-08-28
 
 ### Added
