@@ -233,7 +233,7 @@ Deno.lint.runPlugin(zanixPlugin, 'test.ts', `'otherFlag'`)
 // [{
 //   id: 'deno-zanix-plugin/use-znx-flags',
 //   message: '❌ The flag "otherFlag" is invalid.',
-//   hint: 'Review available flags:\n use comet',
+//   hint: 'Review available flags:\n use comet, server-only',
 //   range: [0, 11],
 //   fix: []
 // }]
