@@ -101,9 +101,12 @@ framework to share config/logger state process-wide.
 > supporting functions) were moved to `@zanix/cli` — every real consumer of that
 > code was `cli` itself, never a transversal utility anyone else depended on.
 > See `@zanix/cli`'s own `engineering.md` §5/§7 for the full reasoning. The
-> `Zanix*SrcTree`/`ZanixFolderTree`/`ZanixLibraries`/etc. **types** describing
-> that folder-tree shape are still exported from `@zanix/utils/types` (see
-> [Types reference](./types.md)) — only the runtime implementation moved.
+> `Zanix*SrcTree`/`ZanixFolderTree`/etc. folder-tree-modeling **types** are now
+> `@deprecated` (see [Types reference](./types.md)) — each is kept as a plain,
+> generic stand-in only so an existing `import type` doesn't break, and will be
+> removed in a future major release. `ZanixLibraries`/`ZanixProjects`/
+> `ZanixGlobal` are unaffected, since those are genuinely shared vocabulary,
+> not scaffold-tree modeling.
 
 | Symbol         | Signature                      | Description                                                                                                                                                                                                                                                                                                                                                    |
 | -------------- | ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

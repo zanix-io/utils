@@ -23,6 +23,11 @@ export interface ConfigFile {
     jsxImportSource?: string
     strict: boolean
     noImplicitAny: boolean
+    /** Ambient `.d.ts` files to load globally, regardless of whether anything in the project's
+     * own module graph imports them — e.g. `["./src/typings/index.d.ts"]` for a scaffolded
+     * `declare global { ... }` file. Without this, `deno check`/`deno test` only pick up a global
+     * type when some statically-reachable file happens to import the module that declares it. */
+    types?: string[]
   }
   /** Import map used to resolve bare specifiers. */
   imports?: Record<string, string>

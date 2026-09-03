@@ -6,6 +6,39 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to
 [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [4.2.0] - 2026-09-02
+
+### Added
+
+- **`types?: string[]` on `ConfigFile['compilerOptions']`** (`types`) — the shape of Deno's own
+  `compilerOptions.types` config key, previously missing from this type even though `@zanix/utils`
+  itself already relies on the real key (`deno.json`'s own `compilerOptions.types:
+  ["./src/typings/index.d.ts"]`, wiring the `Znx` ambient global every internal module reads from).
+  Lets `@zanix/cli` type-safely wire the same key into its own generated `deno.json`s.
+- **`SENSITIVE_KEY_PATTERN` now redacts `X-Znx-Oauth-State`** (`errors`) — the anti-CSRF cookie
+  `@zanix/auth`'s new `oauthStateIssueGuard`/`oauthStateVerifyGuard` round-trips through an OAuth2
+  authorization redirect and its callback. Matched by exact equality, the same way `X-Znx-App-Token`
+  and `X-Znx-Captcha-Token` already are — this cookie's name is a fixed constant, not a customizable
+  option, so there's no equivalent risk of a renamed cookie escaping coverage the way `X-Znx-Csrf`'s
+  own containment match guards against.
+
+### Deprecated
+
+- **The scaffold-tree-modeling types (`ZanixBaseFolder`/`ZanixBaseFolderProps`/
+  `ZanixFolderGenericTree`/`ZanixFolderTree`/`ZanixLibrarySrcTree`/`ZanixLocalContentProps`/
+  `ZanixProjectsFull`/`ZanixServerSrcTree`/`ZanixSpaceSrcTree`/`ZanixSrcTree`/`ZanixSrcTreeMap`/
+  `ZanixTemplates`/`ZanixTemplatesRecord`) are `@deprecated`** — their real, current shapes moved to
+  `@zanix/cli`'s own `src/typings/tree.ts`, which was always their only real consumer across the
+  whole ecosystem (confirmed by a full grep of every other `@zanix/*` package: zero hits). Finishes
+  a migration the _implementation_ side of (`getZanixPaths`/`ZanixTree`/`getServerSrcTree`, etc.)
+  already made in an earlier release — see [Helpers](./docs/helpers.md#zanix-namespace). Each type
+  stays exported from `@zanix/types` — so an existing `import type` doesn't break — but is now a
+  plain, generic stand-in rather than the real scaffold shape, and will be removed in a future major
+  release; get the real types from `@zanix/cli`'s own `src/typings/tree.ts` going forward (not
+  published as a standalone import — `@zanix/cli` is a CLI tool, not a library other packages depend
+  on). `ZanixProjects` itself is unaffected — it stays exported, unchanged: it's genuinely shared
+  vocabulary (`ZanixGlobal['Znx']['config'].project`), not scaffold-tree modeling.
+
 ## [4.1.1] - 2026-09-01
 
 ### Fixed

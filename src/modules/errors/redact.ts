@@ -47,9 +47,16 @@ import type { RedactOptions } from 'typings/errors.ts'
  * Matched by exact equality, not containment: unlike `cookieName`/`headerName`, this field's name
  * isn't a configurable option on `csrfGuard` — there's nothing a consumer could customize away
  * from it.
+ *
+ * `x-znx-oauth-state` covers `@zanix/auth`'s `oauthStateIssueGuard`/`oauthStateVerifyGuard` cookie
+ * — a short-lived, randomly generated anti-CSRF value carried through an OAuth2 authorization
+ * redirect and its callback, exactly the kind of value this pattern already redacts for every other
+ * session/token cookie. Matched by exact equality, not containment: unlike `csrfGuard`'s own cookie
+ * name, this one is a fixed constant with no customizable option, so there's no equivalent risk of
+ * a renamed cookie silently escaping coverage.
  */
 const SENSITIVE_KEY_PATTERN =
-  /^((?:x-znx-)?authorization|cookie|set-cookie|password|passwd|pwd|(?:new|confirm|old|current)[-_]?password|(?:x-znx-app-)?token|(?:x-znx-)?captcha[-_]?token|x-znx-[\w-]*csrf[\w-]*|_csrf|secret|api[-_]?key|refresh[-_]?token|access[-_]?token|client[-_]?secret|private[-_]?key|session(?:[-_]?id)?|credentials?|otp[-_]?code|otp[-_]?target|credit[-_]?card(?:[-_]?number)?|card[-_]?number|ssn|cvv|cvc|pin[-_]?code|security[-_]?pin|bank[-_]?account(?:[-_]?number)?)$/i
+  /^((?:x-znx-)?authorization|cookie|set-cookie|password|passwd|pwd|(?:new|confirm|old|current)[-_]?password|(?:x-znx-app-)?token|(?:x-znx-)?captcha[-_]?token|x-znx-oauth-state|x-znx-[\w-]*csrf[\w-]*|_csrf|secret|api[-_]?key|refresh[-_]?token|access[-_]?token|client[-_]?secret|private[-_]?key|session(?:[-_]?id)?|credentials?|otp[-_]?code|otp[-_]?target|credit[-_]?card(?:[-_]?number)?|card[-_]?number|ssn|cvv|cvc|pin[-_]?code|security[-_]?pin|bank[-_]?account(?:[-_]?number)?)$/i
 
 /**
  * The built-in credential-key pattern — the effective pattern whenever nothing has overridden the

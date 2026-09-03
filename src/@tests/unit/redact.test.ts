@@ -113,6 +113,28 @@ Deno.test('redactSensitiveData redacts captcha-token variants like x-znx-app-tok
   })
 })
 
+Deno.test('redactSensitiveData redacts X-Znx-Oauth-State, exact match only', () => {
+  // Regression guard for @zanix/auth's oauthStateIssueGuard/oauthStateVerifyGuard: the cookie
+  // carries a random anti-CSRF value round-tripped through an OAuth2 provider's own redirect —
+  // the same class of value this pattern already redacts for every other session/token cookie.
+  // Unlike `X-Znx-Csrf`, this cookie name is a fixed constant with no customizable option, so
+  // exact equality (not containment) is enough to cover every real use of it.
+  const input = {
+    'X-Znx-Oauth-State': 'a-random-state-value',
+    'x-znx-oauth-state': 'a-random-state-value',
+    // Doesn't match — exact equality only, same as every other non-containment entry.
+    oauthState: 'kept as-is',
+    'X-Znx-Oauth-State-Extra': 'kept as-is',
+  }
+
+  assertEquals(redactSensitiveData(input), {
+    'X-Znx-Oauth-State': '[REDACTED]',
+    'x-znx-oauth-state': '[REDACTED]',
+    oauthState: 'kept as-is',
+    'X-Znx-Oauth-State-Extra': 'kept as-is',
+  })
+})
+
 Deno.test(
   'redactSensitiveData redacts any X-Znx--prefixed key containing "csrf", by containment not ' +
     'exact match — the one entry in this pattern matched this way, deliberately',

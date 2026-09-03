@@ -1,65 +1,7 @@
-// deno-lint-ignore-file ban-types
 import type { Logger } from 'modules/logger/main.ts'
 
 /** The default `Logger` instance shape exposed via `Znx.logger`. */
 export type DefaultLogger = typeof Logger['prototype']
-
-/** Maps each Zanix project type to its `src` subfolder shape. */
-export type ZanixSrcTreeMap = {
-  server: { server: ZanixServerSrcTree }
-  space: { space: ZanixSpaceSrcTree }
-  library: { modules: ZanixLibrarySrcTree }
-  'space-server': { space: ZanixSpaceSrcTree; server: ZanixServerSrcTree }
-  all: {
-    modules: ZanixLibrarySrcTree
-    space: ZanixSpaceSrcTree
-    server: ZanixServerSrcTree
-  }
-}
-
-/** Resolves the `src` subfolder shape for a given Zanix project type. */
-export type ZanixSrcTree<T extends ZanixProjectsFull> = T extends keyof ZanixSrcTreeMap
-  ? ZanixSrcTreeMap[T]
-  : {}
-
-/** A record of generated template files, grouped by template category. */
-export type ZanixTemplatesRecord = Record<
-  ZanixTemplates,
-  {
-    PATH: string
-    NAME: string
-    content(local: ZanixLocalContentProps): Promise<string>
-  }[]
->
-
-/** The base fields present on every Zanix folder-tree node. */
-export type ZanixBaseFolderProps<S> = {
-  readonly FOLDER: string
-  readonly NAME: string
-  templates: ZanixTemplatesRecord
-  subfolders: S
-}
-
-/** The recursive folder-tree shape shared by all Zanix folder structures. */
-export type ZanixBaseFolder<
-  S extends Record<string, Partial<ZanixBaseFolder>> | undefined = undefined,
-  O extends 'noTemplates' | undefined = undefined,
-> = Omit<
-  ZanixBaseFolderProps<S>,
-  O extends 'noTemplates' ? S extends undefined ? 'subfolders' | 'templates'
-    : 'templates'
-    : S extends undefined ? 'subfolders'
-    : never
->
-
-/** Context passed to a template's `content` resolver function. */
-export type ZanixLocalContentProps = { metaUrl: string; relativePath?: string }
-
-/** `ZanixProjects` plus the `'all'` and `undefined` (common structure) cases. */
-export type ZanixProjectsFull = ZanixProjects | 'all' | undefined
-
-/** Zanix Templates for Automated File Generation */
-export type ZanixTemplates = 'base'
 
 /**
  * The Zanix project types supported by the framework.
@@ -72,64 +14,121 @@ export type ZanixProjects =
   | 'app'
 
 /**
- * Represents a generic folder structure used to model a file system where each folder
- * can contain other subfolders (recursively) and files
+ * `ZanixProjects` plus the `'all'` and `undefined` (common-structure) cases.
+ * @deprecated The real scaffold-tree modeling this supported moved to `@zanix/cli`'s own
+ * `src/typings/tree.ts`, which was always its only real consumer. Kept here, simplified to this
+ * plain union, only so an existing `import type { ZanixProjectsFull }` doesn't break; get the real
+ * type from `@zanix/cli` going forward. Will be removed in a future major release.
  */
-export type ZanixFolderGenericTree = Partial<
-  ZanixBaseFolder<
-    Record<string, Partial<ZanixBaseFolder>>
-  >
->
-
-/** Zanix Server Folder structure */
-export type ZanixServerSrcTree = ZanixBaseFolder<{
-  connectors: ZanixBaseFolder
-  handlers: ZanixBaseFolder<{ rtos: ZanixBaseFolder }>
-  interactors: ZanixBaseFolder
-  jobs: ZanixBaseFolder
-  repositories: ZanixBaseFolder<{ seeders: ZanixBaseFolder }>
-}, 'noTemplates'>
-
-/** Zanix Library Folder structure */
-export type ZanixLibrarySrcTree = ZanixBaseFolder<undefined>
+export type ZanixProjectsFull = ZanixProjects | 'all' | undefined
 
 /**
- * Zanix Space Folder structure — a `@zanix/space` frontend app's real, implemented conventions:
- * file-based page routing rooted at `routes/` (`page.tsx`/`layout.tsx`/`loading.tsx`/`error.tsx`,
- * nested per segment) and `comets/` for selective-hydration client components. Not the
- * `Components/Layout/Pages/resources` shape this type previously had under the name
- * `ZanixAppSrcTree` — that shape was never reconciled against `@zanix/space`'s actual
- * implementation and didn't match it; this replaces it rather than aliasing it.
- * @experimental
+ * Zanix templates available for automated file generation.
+ * @deprecated Superseded by `@zanix/cli`'s own `src/typings/tree.ts`. Kept here, widened to a
+ * plain `string`, only so an existing `import type { ZanixTemplates }` doesn't break. Will be
+ * removed in a future major release.
  */
-export type ZanixSpaceSrcTree = ZanixBaseFolder<{
-  routes: ZanixBaseFolder
-  comets: ZanixBaseFolder
-}, 'noTemplates'>
+export type ZanixTemplates = string
 
-/** Zanix general folders */
+/**
+ * Context passed to a template's `content` resolver function.
+ * @deprecated Superseded by `@zanix/cli`'s own `src/typings/tree.ts`. Kept here, widened to a
+ * generic record, only so an existing `import type { ZanixLocalContentProps }` doesn't break. Will
+ * be removed in a future major release.
+ */
+// deno-lint-ignore no-explicit-any
+export type ZanixLocalContentProps = Record<string, any>
+
+/**
+ * A record of generated template files, grouped by template category.
+ * @deprecated Superseded by `@zanix/cli`'s own `src/typings/tree.ts`. Kept here, widened to a
+ * generic record, only so an existing `import type { ZanixTemplatesRecord }` doesn't break. Will be
+ * removed in a future major release.
+ */
+// deno-lint-ignore no-explicit-any
+export type ZanixTemplatesRecord = Record<string, any>
+
+/**
+ * The base fields present on every Zanix folder-tree node.
+ * @deprecated Superseded by `@zanix/cli`'s own `src/typings/tree.ts`. Kept here, simplified to a
+ * generic shape, only so an existing `import type { ZanixBaseFolderProps }` doesn't break. Will be
+ * removed in a future major release.
+ */
+export type ZanixBaseFolderProps<S = unknown> = {
+  readonly FOLDER: string
+  readonly NAME: string
+  templates?: ZanixTemplatesRecord
+  subfolders?: S
+}
+
+/**
+ * The recursive folder-tree shape shared by all Zanix folder structures.
+ * @deprecated Superseded by `@zanix/cli`'s own `src/typings/tree.ts`. Kept here, simplified to a
+ * plain generic (no longer the real `noTemplates`/required-`subfolders` conditional logic), only so
+ * an existing `import type { ZanixBaseFolder }` doesn't break. Will be removed in a future major
+ * release.
+ */
+export type ZanixBaseFolder<S = Record<string, unknown>> = Partial<ZanixBaseFolderProps<S>>
+
+/**
+ * A generic folder structure modeling a file system where each folder can recursively contain
+ * subfolders and files.
+ * @deprecated Superseded by `@zanix/cli`'s own `src/typings/tree.ts`. Will be removed in a future
+ * major release.
+ */
+export type ZanixFolderGenericTree = ZanixBaseFolder<Record<string, ZanixBaseFolder>>
+
+/**
+ * Zanix Server folder structure.
+ * @deprecated Superseded by `@zanix/cli`'s own `src/typings/tree.ts`, which models the real,
+ * current server folder shape. This alias is kept only for import compatibility and no longer
+ * reflects the actual scaffold. Will be removed in a future major release.
+ */
+export type ZanixServerSrcTree = ZanixFolderGenericTree
+
+/**
+ * Zanix Library folder structure.
+ * @deprecated Superseded by `@zanix/cli`'s own `src/typings/tree.ts`. This alias is kept only for
+ * import compatibility and no longer reflects the actual scaffold. Will be removed in a future
+ * major release.
+ */
+export type ZanixLibrarySrcTree = ZanixFolderGenericTree
+
+/**
+ * Zanix Space folder structure.
+ * @deprecated Superseded by `@zanix/cli`'s own `src/typings/tree.ts`, which models the real,
+ * current space folder shape (`routes/`, `comets/`). This alias is kept only for import
+ * compatibility and no longer reflects the actual scaffold. Will be removed in a future major
+ * release.
+ */
+export type ZanixSpaceSrcTree = ZanixFolderGenericTree
+
+/**
+ * Maps each Zanix project type to its `src` subfolder shape.
+ * @deprecated Superseded by `@zanix/cli`'s own `src/typings/tree.ts`. Kept here, widened to a
+ * generic record, only so an existing `import type { ZanixSrcTreeMap }` doesn't break. Will be
+ * removed in a future major release.
+ */
+// deno-lint-ignore no-explicit-any
+export type ZanixSrcTreeMap = Record<string, any>
+
+/**
+ * Resolves the `src` subfolder shape for a given Zanix project type.
+ * @deprecated Superseded by `@zanix/cli`'s own `src/typings/tree.ts`. Will be removed in a future
+ * major release.
+ */
+export type ZanixSrcTree<T extends ZanixProjectsFull = undefined> = T extends keyof ZanixSrcTreeMap
+  ? ZanixSrcTreeMap[T]
+  : ZanixFolderGenericTree
+
+/**
+ * The complete Zanix project folder tree (root-level), parameterized by project type.
+ * @deprecated Superseded by `@zanix/cli`'s own `src/typings/tree.ts`. Kept here, simplified to a
+ * plain generic tree, only so an existing `import type { ZanixFolderTree }` doesn't break. Will be
+ * removed in a future major release.
+ */
 export type ZanixFolderTree<T extends ZanixProjectsFull = undefined> = ZanixBaseFolder<
-  {
-    '.dist': ZanixBaseFolder<undefined, 'noTemplates'>
-    docs: ZanixBaseFolder
-    src: ZanixBaseFolder<
-      ZanixSrcTree<T> & {
-        '@tests': ZanixBaseFolder<{
-          functional: ZanixBaseFolder
-          integration: ZanixBaseFolder
-          unit: ZanixBaseFolder
-        }, 'noTemplates'>
-        shared: ZanixBaseFolder<
-          T extends 'library' | undefined ? {}
-            : { middlewares: ZanixBaseFolder },
-          'noTemplates'
-        >
-        typings: ZanixBaseFolder
-        utils: ZanixBaseFolder
-      },
-      'noTemplates'
-    >
-  }
+  Record<string, ZanixBaseFolder> & ZanixSrcTree<T>
 >
 
 /**
