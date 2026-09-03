@@ -214,6 +214,14 @@ Deno.test('Symmetric AES encryption and decryption should works correctly', asyn
   assertNotEquals(encryptedData8, decryptedData8)
   assertNotEquals(encryptedData8[0], encryptedData8[1])
   assertEquals([message, message + ' second'], decryptedData8)
+
+  // Non-ASCII plaintext (accents, emoji) must round-trip via UTF-8, not Latin-1
+  const nonAsciiMessage = '¡Feliz Navidad! Café 🎄🎁'
+  const encryptedNonAscii = await encryptAES(nonAsciiMessage, key7)
+  const decryptedNonAscii = await decryptAES(encryptedNonAscii, key7)
+
+  assert(nonAsciiMessage !== encryptedNonAscii)
+  assertEquals(nonAsciiMessage, decryptedNonAscii)
 })
 
 Deno.test('General encryption and decryption should works correctly', async () => {

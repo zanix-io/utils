@@ -6,6 +6,7 @@ import {
   stringToUint8Array,
   uint8ArrayToBase64,
   uint8ArrayToHEX,
+  uint8ArrayToString,
 } from 'utils/encoders.ts'
 import { baseEncrypt } from './base.ts'
 
@@ -148,6 +149,6 @@ export function decryptAES<T extends string | string[]>(
       base64ToUint8Array(base64Ciphertext),
     )
 
-    return atob(uint8ArrayToBase64(new Uint8Array(decrypted)))
+    return uint8ArrayToString(new Uint8Array(decrypted))
   }) as Promise<T>
 }

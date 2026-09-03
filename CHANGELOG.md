@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to
 [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [4.2.1] - 2026-09-03
+
+### Fixed
+
+- **`decryptAES` corrupted any non-ASCII plaintext** (`encryption`) — it decoded the decrypted
+  bytes with `atob()`, which yields a Latin-1 "binary string" (one JS char per byte), not UTF-8.
+  Any multi-byte sequence (accents, emoji) came back mangled (`'café'` → `'cafÃ©'`, `'🎁'` → `'ð'`)
+  while pure-ASCII plaintext round-tripped fine, masking the bug. `encryptAES` already encoded with
+  `TextEncoder` (real UTF-8); only the decrypt side used the wrong decoding. Now uses
+  `uint8ArrayToString` (`TextDecoder('utf-8')`) instead, matching the encrypt side.
+
 ## [4.2.0] - 2026-09-02
 
 ### Added
