@@ -6,6 +6,7 @@ import { getConfigDir } from './paths.ts'
 import { isFileUrl } from 'utils/urls.ts'
 import regex from 'utils/regex.ts'
 import { stripComments } from 'utils/encoders.ts'
+import { assertDenoRuntime } from 'utils/runtime.ts'
 
 let configFile: ConfigFile | null = null
 let currentConfigPath: string | null = null
@@ -22,6 +23,7 @@ let currentConfigPath: string | null = null
  * @category helpers
  */
 export function readConfig(configPath?: string | null): ConfigFile {
+  assertDenoRuntime('readConfig')
   const configDir = configPath || getConfigDir()
 
   if (configFile && currentConfigPath === configDir) return configFile
@@ -123,6 +125,10 @@ export async function readModuleConfig(
   const configFile = `${CONFIG_FILE}${isJsonc ? 'c' : ''}`
 
   if (isFileUrl(metaUrl)) {
+    // Only THIS branch touches `Deno.*` — the `else` branch below (a plain `fetch` against a
+    // remote JSR URL) needs no Deno runtime at all, so the guard stays scoped here rather than at
+    // the top of the whole function, which would wrongly block that genuinely browser-safe path.
+    assertDenoRuntime('readModuleConfig')
     configContent = await Deno.readTextFile(
       findLocalConfigPath(metaUrl, configFile),
     )
@@ -154,6 +160,7 @@ export async function saveConfig(
   config: ConfigFile,
   path?: string | null,
 ): Promise<void> {
+  assertDenoRuntime('saveConfig')
   configFile = null // reset saved config file data
   const configDir = path || getConfigDir()
   const formattedContent = JSON.stringify(config, null, 2)

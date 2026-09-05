@@ -3,7 +3,7 @@
 // Supports: *, ranges (a-b), lists (a,b,c), steps (*/n), a-b/n
 // -----------------------------------------------------------------------------
 
-import logger from 'modules/logger/mod.ts'
+import logger from 'modules/logger/internal.ts'
 
 function parseField(field: string, min: number, max: number): Set<number> {
   const values = new Set<number>()

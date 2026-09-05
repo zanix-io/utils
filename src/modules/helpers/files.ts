@@ -1,4 +1,5 @@
 import { join } from '@std/path'
+import { assertDenoRuntime } from 'utils/runtime.ts'
 
 /**
  * Helper function to check if a file exists
@@ -16,6 +17,12 @@ import { join } from '@std/path'
  * @category helpers
  */
 export function fileExists(path: string): boolean {
+  // Deliberately no `assertDenoRuntime` guard here — a bare `Deno.statSync` reference already
+  // throws a `ReferenceError` outside a real Deno runtime (e.g. a browser/Comet bundle), which
+  // this `catch` already treats the exact same way it treats a permission-denial failure: as
+  // "can't confirm it exists," not a hard crash. Adding a throwing guard would only change the
+  // OUTCOME (throw instead of `false`) for this one specific cause among several this function
+  // already collapses into the same boolean contract — not worth the inconsistency.
   try {
     return Deno.statSync(path).isFile
   } catch {
@@ -33,6 +40,7 @@ export function fileExists(path: string): boolean {
  * @category helpers
  */
 export function folderExists(path: string): boolean {
+  // Same deliberate omission as `fileExists` above — see its own comment.
   try {
     return Deno.statSync(path).isDirectory
   } catch {
@@ -54,6 +62,7 @@ export function collectFiles(
   extensions: string[],
   callback: (path: string, content: string) => void,
 ) {
+  assertDenoRuntime('collectFiles')
   const extSet = new Set(extensions) // lookup in O(1)
 
   const stack = Array.isArray(root) ? [...root] : [root] // manual stack for tail-call optimization

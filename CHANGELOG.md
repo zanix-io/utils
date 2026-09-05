@@ -6,6 +6,39 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to
 [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [4.4.0] - 2026-09-05
+
+### Added
+
+- **`isDenoRuntime`/`assertDenoRuntime`** (`helpers`) — a Deno-only helper (filesystem, working
+  directory, environment variables) that runs outside a real Deno runtime (e.g. a browser/Comet
+  bundle actually CALLING it, not merely importing it) used to fail with a bare, unexplained
+  `ReferenceError: Deno is not defined`. `getRootDir`/`getTemporaryFolder`/`collectFiles`
+  (`helpers/paths.ts`/`files.ts`), `readConfig`/`readModuleConfig`/`saveConfig`
+  (`helpers/config.ts`), and `interpolateEnv` (`utils/templates.ts`) now call
+  `assertDenoRuntime(fnName)` as their first line, turning that crash into a clear message naming
+  which helper needed a Deno runtime. `fileExists`/`folderExists` are deliberately left as-is —
+  their existing `catch` already treats a missing `Deno` global the same way it already treats a
+  permission-denial failure (return `false`), so a throwing guard there would only change the
+  outcome for one cause among several this function already collapses into the same boolean
+  contract, for no real benefit.
+
+### Fixed
+
+- **`cron.ts`/`masking/hard.ts` dragged the full `logger`/`WorkerManager` chain into every
+  `@zanix/utils/helpers` consumer** — both imported the complete `modules/logger/mod.ts` barrel
+  just to log a couple of validation-diagnostic messages. `mod.ts`'s own top-level
+  `registerFileSaveFactory(saveDataFileFunction)` call unconditionally wires in
+  `defaults/storage/default.ts`'s `WorkerManager`-backed file save path, so importing ANY single
+  helper from `@zanix/utils/helpers`'s barrel transitively reached a real `new Worker(new
+  URL(...))` call — one a browser bundler (e.g. `@zanix/space`'s Comet build pipeline) can't
+  resolve, failing with `[UNRESOLVED_ENTRY] Cannot resolve entry module ...worker-entry.ts` with no
+  indication that an unrelated logging call two modules away was the actual cause. Both files now
+  log through a new internal-only `modules/logger/internal.ts` — a minimal `Logger` built directly
+  from `modules/logger/main.ts` (the same browser-safe entrypoint `createClientLogger` already
+  relies on), never `mod.ts` — so neither one's own module graph reaches `WorkerManager`,
+  `@std/fmt/colors`, or `readConfig` any more.
+
 ## [4.3.0] - 2026-09-04
 
 ### Added

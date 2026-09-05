@@ -1,5 +1,5 @@
 import type { MaskingFunction } from 'typings/masking.ts'
-import logger from 'modules/logger/mod.ts'
+import logger from 'modules/logger/internal.ts'
 
 /**
  * Function to perform irreversible masking

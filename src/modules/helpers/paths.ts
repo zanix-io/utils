@@ -2,6 +2,7 @@ import { basename, fromFileUrl, join, relative, resolve, SEPARATOR } from '@std/
 import { CONFIG_FILE } from 'utils/constants.ts'
 import { fileExists } from './files.ts'
 import { isFileUrl } from 'utils/urls.ts'
+import { assertDenoRuntime } from 'utils/runtime.ts'
 import { ApplicationError } from 'modules/errors/main.ts'
 
 /**
@@ -10,6 +11,7 @@ import { ApplicationError } from 'modules/errors/main.ts'
  * @category helpers
  */
 export function getRootDir(): string {
+  assertDenoRuntime('getRootDir')
   return Deno.cwd()
 }
 
@@ -148,6 +150,7 @@ export function confinePath(rootDir: string, key: string): string {
  * @category helpers
  */
 export function getTemporaryFolder(callerUrl: string, unique?: boolean | string): string {
+  assertDenoRuntime('getTemporaryFolder')
   const temporalFolder = getPathFromCurrent(callerUrl, '__tmp__')
   Deno.mkdirSync(temporalFolder, { recursive: true })
 

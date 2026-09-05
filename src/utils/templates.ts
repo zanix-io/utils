@@ -1,5 +1,7 @@
 // deno-lint-ignore-file no-explicit-any
 
+import { assertDenoRuntime } from 'utils/runtime.ts'
+
 // Negative lookbehind excludes `{{...}}` immediately preceded by `$` — that's `${{VAR}}` syntax
 // (see `interpolateEnv` below), a separate placeholder convention this pass must leave untouched.
 const PLACEHOLDER = /(?<!\$)\{\{\s*([\w.]+)\s*\}\}/g
@@ -110,6 +112,7 @@ export const interpolate = <T>(
  */
 export const interpolateEnv = <T>(value: T): T => {
   if (typeof value === 'string') {
+    assertDenoRuntime('interpolateEnv')
     return value.replace(
       ENV_PLACEHOLDER,
       (_match, name) => String(Deno.env.get(name)),
