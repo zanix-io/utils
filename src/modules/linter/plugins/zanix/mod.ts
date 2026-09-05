@@ -11,6 +11,7 @@ import zanixFlags from './rules/zanix-flags.ts'
 import zanixLogger from './rules/zanix-logger.ts'
 import zanixImports from './rules/zanix-imports.ts'
 import zanixCookies from './rules/zanix-cookies.ts'
+import zanixComets from './rules/zanix-comets.ts'
 import formatPlugin from '../format/mod.ts'
 import standardPlugin from '../standard/mod.ts'
 import testPlugin from '../test/mod.ts'
@@ -39,6 +40,7 @@ import testPlugin from '../test/mod.ts'
  * - `zanixLogger`: A set of custom rules related to `Zanix` logger.
  * - `zanixImports`: A set of custom rules related to `Zanix` imports.
  * - `zanixCookies`: A set of custom rules related to `Zanix` framework cookie names.
+ * - `zanixComets`: A set of custom rules related to `Zanix Space` Comet components.
  * - `testPlugin`: A set of rules of `deno-test-plugin`.
  * - `standardPlugin`:  A set of rules of `deno-std-plugin`.
  * - `formatPlugin`:  A set of rules of `deno-fmt-plugin`.
@@ -55,6 +57,7 @@ const plugin: Deno.lint.Plugin = {
     ...zanixLogger,
     ...zanixImports,
     ...zanixCookies,
+    ...zanixComets,
     ...testPlugin.rules,
     ...standardPlugin.rules,
     ...formatPlugin.rules,

@@ -6,6 +6,35 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to
 [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [4.3.0] - 2026-09-04
+
+### Added
+
+- **`no-unexported-comet-component`** (`linter`) — new `deno-zanix-plugin` rule catching a
+  `@zanix/space` Comet component passed to `defineComet` that's a NAMED `function`/`const` but
+  never actually `export`ed from the same file. `defineComet` reads `Component.name` at runtime and
+  the client later does `module[exportName]` after a dynamic import, so an unexported (but still
+  named) component passes `deno check`/plain `deno lint` today with zero errors, then crashes hard
+  client-side at hydration (`Error: Element type is invalid: expected a string... but got:
+  undefined`), with no indication anywhere that a missing `export` was the cause. This is different
+  from `defineComet`'s own existing runtime check, which already throws for an ANONYMOUS component
+  — the gap this rule closes is specifically a named-but-unexported one. Auto-fixable via
+  `deno lint --fix`, which inserts `export` immediately before the matched declaration. Only flags a
+  call confirmed, in the same file, to resolve to a real `defineComet` import from
+  `@zanix/space/comet`, and only when the first argument is a plain `Identifier` resolving to a
+  top-level declaration in that same file — an inline function expression or an identifier this
+  rule can't resolve to a same-file top-level declaration is always skipped.
+
+### Fixed
+
+- **`nextCronDate` crashed at runtime in a browser bundle** (`cron`) — its search loop imported
+  `setImmediate` from `node:timers` to yield to the event loop every 10,000 iterations. A browser
+  bundler (Vite/esbuild, including `@zanix/space`'s client build pipeline) externalizes that import
+  instead of failing the build, so any Comet that transitively reached `cron.ts` through
+  `@zanix/utils/helpers`'s barrel threw `Module "node:timers" has been externalized for browser
+  compatibility` the first time the loop actually yielded. Now uses `setTimeout(resolve, 0)`, which
+  is native in Deno, Node, and every browser, and drops the `node:timers` import entirely.
+
 ## [4.2.1] - 2026-09-03
 
 ### Fixed

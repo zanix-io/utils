@@ -4,7 +4,6 @@
 // -----------------------------------------------------------------------------
 
 import logger from 'modules/logger/mod.ts'
-import { setImmediate } from 'node:timers'
 
 function parseField(field: string, min: number, max: number): Set<number> {
   const values = new Set<number>()
@@ -116,10 +115,10 @@ export async function nextCronDate(
   let guard = 0
 
   while (guard++ < MAX_ITERATIONS) {
-    // 🧠 No bloquear Node
+    // 🧠 Don't block Node
     if (guard % YIELD_EVERY === 0) {
       // deno-lint-ignore no-await-in-loop
-      await new Promise<void>((resolve) => setImmediate(resolve))
+      await new Promise<void>((resolve) => setTimeout(resolve, 0))
     }
 
     const y = date.getUTCFullYear()
