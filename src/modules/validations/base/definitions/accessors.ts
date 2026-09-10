@@ -72,11 +72,17 @@ export const defineSetter = <T extends BaseRTO = BaseRTO>(
   },
 ) => {
   return function (this: T, val: any) {
-    if (
-      !this.constructor.prototype.validate ||
-      val?.constructor?.prototype._initialized_
-    ) {
-      delete val.constructor.prototype._initialized_
+    const isInitializedInstance = val?.constructor?.prototype._initialized_
+    if (!this.constructor.prototype.validate || isInitializedInstance) {
+      // Only clear the marker when `val` actually carried one — the OTHER branch above
+      // (`!this.constructor.prototype.validate`, plain "basic instance usage" with no
+      // ClassValidator) can be true with `val` itself `null`/`undefined` (e.g. explicitly
+      // assigning `undefined` to an optional accessor), in which case there is no
+      // `val.constructor` to read at all. Reaching for it unconditionally, as this used to,
+      // threw `Cannot read properties of undefined (reading 'constructor')` for exactly that
+      // case — a real, confirmed crash on `new SomeRTO().optionalField = undefined`, not a
+      // theoretical one.
+      if (isInitializedInstance) delete val.constructor.prototype._initialized_
       return originalSetter.call(this, val) // For basic instance usage. `validate` is only `true` when using ClassValidator.
     }
 

@@ -6,6 +6,22 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to
 [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [4.4.1] - 2026-09-10
+
+### Fixed
+
+- **`BaseRTO`'s own accessor setter crashed on an explicit `undefined` assignment to an `optional`
+  field** (`base/definitions/accessors.ts`) — `new SomeRTO().someOptionalField = undefined` threw
+  `TypeError: Cannot read properties of undefined (reading 'constructor')` instead of leaving the
+  field unset. The "basic instance usage" fast path (`!this.constructor.prototype.validate`)
+  unconditionally read `val.constructor` to clear a stale `_initialized_` marker left by a
+  previous nested-`BaseRTO`-instance assignment, with no guard for `val` itself being nullish —
+  safe when a caller simply never assigns an optional accessor at all, but not when a caller
+  assigns `undefined` explicitly (e.g. a client forwarding an optional parameter straight through:
+  `body.token = token` with `token: string | undefined`). Now only clears the marker when `val`
+  actually carries one; an explicit `undefined` assignment leaves the accessor unset and the
+  instance serializes exactly as if it had never been assigned at all.
+
 ## [4.4.0] - 2026-09-05
 
 ### Added
