@@ -2,6 +2,8 @@ import { BaseRTO, classMetadata } from 'modules/validations/mod.ts'
 import { ArrayLength } from 'modules/validations/decorators/arrays/length.ts'
 import { MaxDate } from 'modules/validations/decorators/dates/max-date.ts'
 import { MinDate } from 'modules/validations/decorators/dates/min-date.ts'
+import { MinAge } from 'modules/validations/decorators/dates/min-age.ts'
+import { MaxAge } from 'modules/validations/decorators/dates/max-age.ts'
 import { IsDate } from 'modules/validations/decorators/dates/is-date.ts'
 import { ValidateNested } from 'modules/validations/decorators/nested.ts'
 import { MaxNumber } from 'modules/validations/decorators/numbers/max-number.ts'
@@ -68,6 +70,12 @@ class FullCatalogRTO extends BaseRTO {
   @MaxDate(new Date('2030-01-01'), { optional: true })
   accessor startedBefore!: Date
 
+  @MinAge(18, { optional: true })
+  accessor birthDate!: Date
+
+  @MaxAge(120, { optional: true })
+  accessor bornNoEarlierThan!: Date
+
   @IsPhone({ optional: true })
   accessor phone!: string
 
@@ -111,6 +119,12 @@ Deno.test('classMetadata - every catalog decorator identifies itself', () => {
 
   assertEquals(meta.startedBefore.decorator, 'MaxDate')
   assertEquals(meta.startedBefore.args, [new Date('2030-01-01')])
+
+  assertEquals(meta.birthDate.decorator, 'MinAge')
+  assertEquals(meta.birthDate.args, [18])
+
+  assertEquals(meta.bornNoEarlierThan.decorator, 'MaxAge')
+  assertEquals(meta.bornNoEarlierThan.args, [120])
 
   assertEquals(meta.phone.decorator, 'IsPhone')
   assertEquals(meta.when.decorator, 'IsDate')

@@ -21,6 +21,8 @@ export * from './decorators/arrays/length.ts'
 export * from './decorators/dates/is-date.ts'
 export * from './decorators/dates/max-date.ts'
 export * from './decorators/dates/min-date.ts'
+export * from './decorators/dates/min-age.ts'
+export * from './decorators/dates/max-age.ts'
 
 export * from './decorators/numbers/is-number.ts'
 export * from './decorators/numbers/max-number.ts'

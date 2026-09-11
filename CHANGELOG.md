@@ -6,6 +6,27 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to
 [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [4.5.0] - 2026-09-11
+
+### Added
+
+- **`MaxAge`** (`validator`, `modules/validations/decorators/dates/max-age.ts`) — the symmetric
+  counterpart to `MinAge`: validates that a `Date` field is not far enough in the past to
+  represent an age OLDER than the given number of years (e.g. `@MaxAge(120)` on a `birthDate`
+  field, rejecting an implausible date of birth). Same shape as `MinAge`/`MaxDate`/`MinDate` (array
+  variant, catalog metadata, `DefaultTransformValidationOpts`), with its threshold likewise derived
+  from `years` and recomputed from `new Date()` on every validation call instead of a fixed `Date`
+  captured once. Plain `maxAge`/`maxAgeArray` functions are also exported for use outside a
+  `BaseRTO`.
+
+- **`MinAge`** (`validator`, `modules/validations/decorators/dates/min-age.ts`) — validates that
+  a `Date` field is far enough in the past to represent an age of at least the given number of
+  years (e.g. `@MinAge(18)` on a `birthDate` field). Same shape as `MaxDate`/`MinDate` (array
+  variant, catalog metadata, `DefaultTransformValidationOpts`), but its threshold is derived from
+  `years` and recomputed from `new Date()` on every validation call instead of a fixed `Date`
+  captured once — it never drifts, however long the process stays up. Plain `minAge`/`minAgeArray`
+  functions are also exported for use outside a `BaseRTO`.
+
 ## [4.4.1] - 2026-09-10
 
 ### Fixed
