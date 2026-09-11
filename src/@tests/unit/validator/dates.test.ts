@@ -4,6 +4,7 @@ import { minAge, minAgeArray } from 'modules/validations/decorators/dates/min-ag
 import { maxAge, maxAgeArray } from 'modules/validations/decorators/dates/max-age.ts'
 import { isDate, isDateArray } from 'modules/validations/decorators/dates/is-date.ts'
 import { assertEquals } from '@std/assert'
+import { FakeTime } from '@std/testing/time'
 
 Deno.test('Validates max date', () => {
   assertEquals(maxDate(new Date('2023-01-01'), new Date('2020-01-01')), true)
@@ -62,7 +63,17 @@ Deno.test('Validates min date', () => {
   )
 })
 
+// `MinAge`/`MaxAge` deliberately recompute their threshold from `new Date()` on every single call
+// (see both decorators' own doc — it's what keeps an age check from ever going stale). That design
+// makes a real, once-observed-in-CI flake possible here: `today` is captured once, but `minAge`/
+// `minAgeArray` below each independently call `new Date()` again a few instructions later — with no
+// `FakeTime`, a boundary fixture built to land EXACTLY on the threshold can drift to the wrong side
+// of it purely from the real wall-clock milliseconds elapsed between building the fixture and the
+// decorator's own later `new Date()` call, with no code defect involved. `FakeTime` freezes `Date`
+// for the whole test, so every `new Date()` call — the fixture's and the decorator's — observes the
+// identical instant, making the exact-boundary case deterministic instead of a real timing race.
 Deno.test('Validates min age', () => {
+  using _time = new FakeTime(new Date('2024-06-15T12:00:00Z'))
   const today = new Date()
 
   const exactly18 = new Date(today)
@@ -85,7 +96,10 @@ Deno.test('Validates min age', () => {
   assertEquals(minAgeArray(18, [exactly18, oneDayShortOf18]), false)
 })
 
+// Same real timing-race reasoning as `Validates min age` above — `FakeTime` freezes `Date` so
+// `maxAgeArray`'s own later `new Date()` call can't drift past the fixture's exact boundary.
 Deno.test('Validates max age', () => {
+  using _time = new FakeTime(new Date('2024-06-15T12:00:00Z'))
   const today = new Date()
 
   const exactly120 = new Date(today)
