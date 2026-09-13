@@ -77,6 +77,7 @@ export function defineValidationDecorator<T extends BaseRTO = BaseRTO>(
         validation,
         originalSetter: customSetter,
         transform,
+        optional: opts.optional,
       }),
       init: defineInit(opts, { messageResult, property }),
     }

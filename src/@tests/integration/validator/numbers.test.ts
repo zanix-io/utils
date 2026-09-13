@@ -212,4 +212,19 @@ Deno.test('Number validations RTO', async () => {
   })
 
   assertEquals(resp7.numbersDefault, [4, 3, 5])
+
+  // Escenario 8 — a plain HTML `<form>`'s own real shape for an untouched OPTIONAL number
+  // field: submitted as an empty string, never an absent key. Same real, confirmed bug class
+  // `dates.test.ts`'s own "escenario 5" guards, for `IsNumber` instead of `IsDate`/`MaxDate`/
+  // `MinDate` — `''` must validate as absent, never as "not a valid number". A genuinely
+  // invalid, non-empty string for this same optional field (`numberA: '3d'`) still correctly
+  // rejects, per "Escenario 4" above — this only widens what counts as absent, never what
+  // counts as valid.
+  const resp8 = await classValidation(NumbersRTO, {
+    numberValue: '4',
+    numberA: '',
+  })
+
+  assertEquals(resp8.numberValue, '4')
+  assertEquals(resp8.numberA, undefined)
 })

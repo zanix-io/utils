@@ -6,6 +6,27 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to
 [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [4.5.1] - 2026-09-12
+
+### Fixed
+
+- **An `{ optional: true }` field with its own `transform` rejected a plain HTML `<form>`'s empty-
+  string shape for "nothing entered here"** (`base/definitions/accessors.ts`'s `defineSetter`) —
+  a native `<form>` always submits every named field, including an untouched optional one, as an
+  empty string, never an absent key. `optionalProperties[property]` was only ever set from
+  `defineInit`'s check against the RAW pre-transform payload value, so an empty string (`'' !==
+  undefined`) was never recognized as "optional and absent" there; the setter then ran the field's
+  own `transform` on it and validated the transformed result, which failed for any transform that
+  doesn't itself collapse `''` to `undefined` (confirmed live: `IsDate`'s `optional` field rejected
+  an empty-string `importantDate` as "not a valid Date object", even though the same field
+  submitted as a genuinely absent key validated fine). `defineSetter` now also threads `optional`
+  through from the decorator, and treats a raw value of exactly `''` on an optional field as
+  absent — checked against the RAW value only, never a bare falsy check, so a real `0`/`false` on
+  an optional number/boolean field still validates normally. `defineInit` itself is unchanged: an
+  earlier attempt to fix this by threading the transformed value into `defineInit` instead caused
+  `IsNumber` to silently accept a genuinely invalid non-empty string like `'3d'` (also `NaN` under
+  `Number(...)`), caught by this package's own pre-existing test suite before landing.
+
 ## [4.5.0] - 2026-09-11
 
 ### Added
