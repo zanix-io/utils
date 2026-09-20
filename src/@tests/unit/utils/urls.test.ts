@@ -1,6 +1,7 @@
 import {
   getProcessedParams,
   interpolateUrl,
+  parsePositiveInteger,
   sanitizeUrl,
   searchParamsPropertyDescriptor,
   toSearchParams,
@@ -294,4 +295,44 @@ Deno.test('sanitizeUrl passes a non-string value through unchanged', () => {
   assertEquals(sanitizeUrl(null), null)
   const obj = { href: 'x' }
   assertStrictEquals(sanitizeUrl(obj), obj)
+})
+
+Deno.test('parsePositiveInteger - plain decimal digits from 1 upward parse to a number', () => {
+  assertEquals(parsePositiveInteger('1'), 1)
+  assertEquals(parsePositiveInteger('2'), 2)
+  assertEquals(parsePositiveInteger('42'), 42)
+  assertEquals(parsePositiveInteger('007'), 7)
+  assertEquals(parsePositiveInteger(String(Number.MAX_SAFE_INTEGER)), Number.MAX_SAFE_INTEGER)
+})
+
+Deno.test('parsePositiveInteger - an absent value returns the fallback', () => {
+  assertEquals(parsePositiveInteger(null), 1)
+  assertEquals(parsePositiveInteger(undefined), 1)
+  assertEquals(parsePositiveInteger(null, 20), 20)
+  assertEquals(parsePositiveInteger(new URLSearchParams('a=1').get('page')), 1)
+})
+
+Deno.test('parsePositiveInteger - zero, negative and fractional numbers return the fallback', () => {
+  for (const value of ['0', '00', '-1', '-0', '1.5', '2.0', '.5']) {
+    assertEquals(parsePositiveInteger(value), 1, value)
+    assertEquals(parsePositiveInteger(value, 20), 20, value)
+  }
+})
+
+Deno.test('parsePositiveInteger - signs, spaces, other notations and text return the fallback', () => {
+  for (
+    const value of ['', ' ', ' 5', '5 ', '+5', '1e3', '0x10', '0b1', '1_000', 'abc', '5px', 'NaN']
+  ) {
+    assertEquals(parsePositiveInteger(value), 1, JSON.stringify(value))
+  }
+})
+
+Deno.test('parsePositiveInteger - a number too large to be a safe integer returns the fallback', () => {
+  assertEquals(parsePositiveInteger('9007199254740992'), 1)
+  assertEquals(parsePositiveInteger('9'.repeat(400), 7), 7)
+})
+
+Deno.test('parsePositiveInteger - the fallback is returned as given, even when it is not itself valid', () => {
+  assertEquals(parsePositiveInteger('abc', 0), 0)
+  assertEquals(parsePositiveInteger('abc', 10), 10)
 })

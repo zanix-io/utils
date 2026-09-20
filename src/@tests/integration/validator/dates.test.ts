@@ -193,10 +193,7 @@ Deno.test('Min and Max Dates validations RTO', async () => {
   )
 
   // escenario 5 — a plain HTML `<form>`'s own real shape for an untouched OPTIONAL date field:
-  // submitted as an empty string, never an absent key. Real, confirmed bug this guards against —
-  // `@presenza/web`'s own `/connections/new/manual` page rejected exactly this shape live
-  // (`importantDate: ''` on an `{ optional: true }` field), even though the identical field
-  // submitted as a genuinely absent key validated fine.
+  // submitted as an empty string, never an absent key.
   const dates7 = await classValidation(DatesRTO, {
     date2: '2019-01-01',
     date3: '2018-01-01',

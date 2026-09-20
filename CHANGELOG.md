@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to
 [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [4.5.2] - 2026-09-20
+
+### Added
+
+- **`parsePositiveInteger(value, fallback = 1)`** (`utils/urls.ts`, exported from `helpers`) reads a
+  query-string value such as `searchParams.get('page')` as a positive whole number and returns
+  `fallback` for anything else: an absent value, an empty string, `0`, a negative or fractional
+  number, spaces or a sign around the digits, exponent or hexadecimal notation, non-numeric text,
+  and a number too large to be a safe integer. It never throws. It reads the value that
+  `toSearchParams` writes back into a URL.
+
 ## [4.5.1] - 2026-09-12
 
 ### Fixed

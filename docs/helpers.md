@@ -139,6 +139,7 @@ getGlobalZnx() // { config: {}, logger: {} }
 | `sanitizeUrl`                    | `<T>(value: T): T \| ''`                                              | Neutralizes a value about to be used as a navigable `href`/`src`: returns `''` for a `javascript:`/`vbscript:`/non-image-`data:` scheme (including one obfuscated with an embedded tab/CR/LF or leading control char), otherwise returns `value` unchanged.                                                                                       |
 | `getProcessedParams`             | `(searchParams: URLSearchParams): object`                             | Converts `URLSearchParams` into a plain object: simple keys map to a single value, repeated keys map to an array, and bracket-style keys (`keyA[subKeyA]=a`) map to nested objects.                                                                                                                                                               |
 | `toSearchParams`                 | `(params: Record<string, unknown>): URLSearchParams`                  | Builds a `URLSearchParams` from a plain object — the reverse of `getProcessedParams`, using the same conventions so the two round-trip. Arrays become duplicate keys, nested objects use bracket notation, `null`/`undefined` values are skipped.                                                                                                 |
+| `parsePositiveInteger`           | `(value: string \| null \| undefined, fallback = 1): number`          | Reads a query-string value as a positive whole number (a page number or a page size), or returns `fallback` for anything else: an absent value, an empty string, `0`, a negative or fractional number, spaces, a sign, exponent or hexadecimal notation, non-numeric text, or a number too large to be a safe integer. Never throws.              |
 | `searchParamsPropertyDescriptor` | `(searchParams: URLSearchParams): PropertyDescriptor & ThisType<any>` | Builds a lazily-computed `get`/`set` property descriptor backed by `getProcessedParams`, for use with `Object.defineProperty` on a class or object that wraps `URLSearchParams`.                                                                                                                                                                  |
 | `interpolateUrl`                 | `(url: string, record: Record<string, unknown>): string`              | Interpolates `{{field}}`/`{{nested.path}}` placeholders in a URL template (see [Templates & interpolation](#templates--interpolation)). The path portion is interpolated as plain text; each query segment whose value is exactly one placeholder is expanded via `toSearchParams` (arrays/nested objects included) instead of being stringified. |
 
@@ -184,6 +185,16 @@ getProcessedParams(new URLSearchParams('keyA[subKeyA]=a&keyA[subKeyB]=b'))
 // toSearchParams is the reverse direction, using the same conventions
 toSearchParams({ keyA: 'a', keyB: ['x', 'y'] }).toString() // 'keyA=a&keyB=x&keyB=y'
 toSearchParams({ keyA: { subKeyA: 'a' } }).toString() // 'keyA%5BsubKeyA%5D=a'
+```
+
+```typescript
+import { parsePositiveInteger } from 'jsr:@zanix/utils@[version]/helpers'
+
+const searchParams = new URL('https://x.com/list?page=3&limit=-5').searchParams
+
+parsePositiveInteger(searchParams.get('page')) // 3
+parsePositiveInteger(searchParams.get('limit'), 20) // 20, a negative number is not a count
+parsePositiveInteger(searchParams.get('missing')) // 1, an absent parameter
 ```
 
 ```typescript

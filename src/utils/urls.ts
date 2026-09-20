@@ -208,6 +208,40 @@ export const toSearchParams = (
 }
 
 /**
+ * Reads a query-string value as a positive whole number — the shape of a page number or a page
+ * size — or returns `fallback` when the value is anything else.
+ *
+ * Only plain decimal digits qualify. `null`/`undefined` (an absent parameter), an empty string,
+ * `0`, a negative or fractional number, a value with spaces or a sign, exponent or hexadecimal
+ * notation (`1e3`, `0x10`), non-numeric text, and a number too large to be a safe integer all
+ * return `fallback`. It never throws, so a malformed count in a URL never fails the request.
+ *
+ * @param {string | null | undefined} value - The raw value, typically `searchParams.get(name)`.
+ * @param {number} [fallback=1] - Returned as given when `value` is not a positive whole number.
+ * @returns {number} The parsed number, or `fallback`.
+ *
+ * @example
+ * ```ts
+ * const searchParams = new URL('https://x.com/list?page=3&limit=-5').searchParams
+ *
+ * parsePositiveInteger(searchParams.get('page')) // 3
+ * parsePositiveInteger(searchParams.get('limit'), 20) // 20, a negative number is not a count
+ * parsePositiveInteger(searchParams.get('missing')) // 1, an absent parameter
+ * ```
+ *
+ * @category helpers
+ */
+export const parsePositiveInteger = (
+  value: string | null | undefined,
+  fallback = 1,
+): number => {
+  if (value === null || value === undefined || !/^[0-9]+$/.test(value)) return fallback
+
+  const parsed = Number(value)
+  return Number.isSafeInteger(parsed) && parsed >= 1 ? parsed : fallback
+}
+
+/**
  * Interpolates `{{field}}`/`{{nested.path}}` placeholders (see {@link interpolate}) in a URL
  * template against `record`.
  *
