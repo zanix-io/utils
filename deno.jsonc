@@ -1,6 +1,6 @@
 {
   "name": "@zanix/utils",
-  "version": "4.5.2",
+  "version": "4.6.0",
   "license": "MIT",
   // Stays "auto", not "manual"/"none" — tried "manual" as a hygiene guard (this repo has zero real
   // `npm:` package dependencies, confirmed via `deno.lock` carrying no `npm:` entries at all), but
@@ -27,6 +27,7 @@
     "./linter/deno-zanix-plugin": "./src/modules/linter/plugins/zanix/mod.ts",
     "./constants": "./src/modules/constants/mod.ts",
     "./helpers": "./src/modules/helpers/mod.ts",
+    "./urls": "./src/utils/urls.ts",
     "./validator": "./src/modules/validations/mod.ts",
     "./logger": "./src/modules/logger/mod.ts",
     "./logger/client": "./src/modules/logger/main.ts",

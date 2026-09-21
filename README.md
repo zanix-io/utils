@@ -78,6 +78,9 @@ import zanixLogger, { Logger } from 'jsr:@zanix/utils@[version]/logger'
 // Helpers
 import * as zanixHelpers from 'jsr:@zanix/utils@[version]/helpers'
 
+// URL and query-string helpers only, for code that runs in a browser
+import { parsePositiveInteger, toSearchParams } from 'jsr:@zanix/utils@[version]/urls'
+
 // Testing utilities
 import * as zanixTesting from 'jsr:@zanix/utils@[version]/testing'
 

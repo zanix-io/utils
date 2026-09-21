@@ -187,8 +187,15 @@ toSearchParams({ keyA: 'a', keyB: ['x', 'y'] }).toString() // 'keyA=a&keyB=x&key
 toSearchParams({ keyA: { subKeyA: 'a' } }).toString() // 'keyA%5BsubKeyA%5D=a'
 ```
 
+The `helpers` entry also exports file, path and runtime helpers that only exist on a server, so a
+browser bundle that imports from it pulls those modules in. The `urls` entry exports only the pure
+URL helpers (`verifyUrl`, `isFileUrl`, `sanitizeUrl`, `getProcessedParams`, `toSearchParams`,
+`parsePositiveInteger`, `searchParamsPropertyDescriptor`), imports nothing beyond the regular
+expressions module and never touches `Deno`, so browser code imports them from `urls` instead.
+`interpolateUrl` needs the template engine and stays in `helpers`.
+
 ```typescript
-import { parsePositiveInteger } from 'jsr:@zanix/utils@[version]/helpers'
+import { parsePositiveInteger } from 'jsr:@zanix/utils@[version]/urls'
 
 const searchParams = new URL('https://x.com/list?page=3&limit=-5').searchParams
 

@@ -6,6 +6,23 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to
 [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [4.6.0] - 2026-09-20
+
+### Added
+
+- **A `./urls` entry (`@zanix/utils/urls`) with the pure URL helpers** — `verifyUrl`, `isFileUrl`,
+  `sanitizeUrl`, `getProcessedParams`, `toSearchParams`, `parsePositiveInteger` and
+  `searchParamsPropertyDescriptor`. The `helpers` entry also exports file, path and runtime helpers
+  that only exist on a server, so importing a URL helper from it in browser code pulls those modules
+  into the bundle; `urls` imports only `utils/regex.ts` and never touches `Deno`.
+  `src/@tests/unit/utils/urls-browser-safe.test.ts` checks that import closure at the source.
+
+### Changed
+
+- `interpolateUrl` lives in `utils/templates.ts`, next to the other interpolation functions, so
+  `utils/urls.ts` no longer imports the template engine. It is still exported from `helpers`, and its
+  behavior is unchanged.
+
 ## [4.5.2] - 2026-09-20
 
 ### Added

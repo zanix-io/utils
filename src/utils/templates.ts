@@ -1,6 +1,7 @@
 // deno-lint-ignore-file no-explicit-any
 
 import { assertDenoRuntime } from 'utils/runtime.ts'
+import { toSearchParams } from 'utils/urls.ts'
 
 // Negative lookbehind excludes `{{...}}` immediately preceded by `$` — that's `${{VAR}}` syntax
 // (see `interpolateEnv` below), a separate placeholder convention this pass must leave untouched.
@@ -130,4 +131,59 @@ export const interpolateEnv = <T>(value: T): T => {
   }
 
   return value
+}
+
+/**
+ * Interpolates `{{field}}`/`{{nested.path}}` placeholders (see {@link interpolate}) in a URL
+ * template against `record`.
+ *
+ * The path portion (before `?`) is interpolated like any other string. Each query-string segment
+ * (`key=value`) is handled individually: if `value` is exactly one `{{field}}` placeholder, the
+ * resolved value is expanded via {@link toSearchParams} — arrays become repeated `key=` pairs,
+ * nested objects use bracket notation, the convention `getProcessedParams` parses back — instead
+ * of being stringified as a single comma-joined value. A segment mixing a
+ * placeholder with other text (or with no placeholder at all) is substituted as a plain string,
+ * same as any other field.
+ *
+ * @param url - The URL template, with an optional `?query=string` portion.
+ * @param record - The record to resolve placeholders against.
+ *
+ * @category helpers
+ */
+export const interpolateUrl = (
+  url: string,
+  record: Record<string, unknown>,
+): string => {
+  const separatorIndex = url.indexOf('?')
+  if (separatorIndex === -1) return interpolate(url, record)
+
+  const path = interpolate(url.slice(0, separatorIndex), record)
+  const query = url.slice(separatorIndex + 1)
+
+  const searchParams = new URLSearchParams()
+
+  for (const segment of query.split('&')) {
+    if (!segment) continue
+
+    const equalsIndex = segment.indexOf('=')
+    const rawKey = equalsIndex === -1 ? segment : segment.slice(0, equalsIndex)
+    const rawValue = equalsIndex === -1 ? '' : segment.slice(equalsIndex + 1)
+    const key = interpolate(rawKey, record)
+
+    const wholePath = matchWholePlaceholder(rawValue)
+    if (wholePath !== null) {
+      const resolved = getPath(record, wholePath)
+      for (
+        const [finalKey, finalValue] of toSearchParams({ [key]: resolved })
+      ) {
+        searchParams.append(finalKey, finalValue)
+      }
+      continue
+    }
+
+    searchParams.append(key, interpolate(rawValue, record))
+  }
+
+  const queryString = searchParams.toString()
+  return queryString ? `${path}?${queryString}` : path
 }
