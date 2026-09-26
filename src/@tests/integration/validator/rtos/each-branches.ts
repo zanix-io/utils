@@ -17,6 +17,7 @@ import {
 import { IsPhone } from 'modules/validations/decorators/strings/is-phone.ts'
 import { IsBooleanString } from 'modules/validations/decorators/strings/is-boolean-string.ts'
 import { IsBoolean } from 'modules/validations/decorators/generic/is-boolean.ts'
+import { IsObject } from 'modules/validations/decorators/generic/is-object.ts'
 import { MaxNumber } from 'modules/validations/decorators/numbers/max-number.ts'
 import { MinNumber } from 'modules/validations/decorators/numbers/min-number.ts'
 import { MaxDate } from 'modules/validations/decorators/dates/max-date.ts'
@@ -107,6 +108,12 @@ export class EachBranchesRTO extends BaseRTO {
 
   @Validation<EachBranchesRTO>(() => true, { each: true, optional: true })
   accessor customValidEach: string[] | undefined
+
+  @IsObject({ optional: true })
+  accessor plainObject: Record<string, unknown> | undefined
+
+  @IsObject({ each: true, optional: true })
+  accessor plainObjects: Record<string, unknown>[] | undefined
 
   @IsEnum(['A', 'B'], { optional: true })
   accessor enumValue: string | undefined

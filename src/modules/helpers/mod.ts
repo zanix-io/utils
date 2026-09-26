@@ -9,9 +9,9 @@
 
 /**
  * General-purpose helpers for the Zanix ecosystem: config and path resolution, file utilities,
- * date/URL/encoding/network/casing helpers, the Zanix namespace helper, cryptography (encryption
- * and masking), code-to-storage sync reconciliation (`planCodeSync`), and lazy resolution of a
- * conditional/optional dependency (`lazyFunction`/`lazyClass`/`lazyValue`).
+ * date/URL/encoding/network/casing/geo helpers, the Zanix namespace helper, cryptography
+ * (encryption and masking), code-to-storage sync reconciliation (`planCodeSync`), and lazy
+ * resolution of a conditional/optional dependency (`lazyFunction`/`lazyClass`/`lazyValue`).
  *
  * The `zanix new`/`zanix generate` project-tree scaffolding and `zanix prepare`'s GitHub/editor
  * scaffolding automation live in `@zanix/cli`, their only real consumer (verified
@@ -53,6 +53,7 @@ registerConfigReader(readConfig)
 export * from 'utils/urls.ts'
 export * from 'utils/network.ts'
 export * from 'utils/objects.ts'
+export * from 'utils/geo.ts'
 export * from 'utils/cookies.ts'
 export * from 'utils/encoders.ts'
 export * from './encryption/mod.ts'

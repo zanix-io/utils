@@ -36,6 +36,8 @@ const validData: Partial<EachBranchesRTO> = {
   minDates: [new Date('2020-01-02')],
   numberStrings: ['1', '2', '3'],
   unboundedList: [1, 2],
+  plainObject: { a: 1 },
+  plainObjects: [{ a: 1 }, { b: 2 }],
   customValid: 'x',
   customValidEach: ['x', 'y'],
 }
@@ -102,6 +104,26 @@ Deno.test('EachBranchesRTO - rejects invalid objectId value', async () => {
             constraints: ["'objectId' must be a valid ObjectID."],
             value: 'not-an-objectid',
             plainValue: 'not-an-objectid',
+          }])
+          throw err
+        }),
+    HttpError,
+    'BAD_REQUEST',
+  )
+})
+
+Deno.test('EachBranchesRTO - rejects a non-object plainObject value (array)', async () => {
+  await assertRejects(
+    () =>
+      classValidation(EachBranchesRTO, {
+        ...validData,
+        plainObject: ['not-an-object'],
+      })
+        .catch((err) => {
+          assertEquals(err.cause.properties.plainObject, [{
+            constraints: ["'plainObject' must be an object."],
+            value: ['not-an-object'],
+            plainValue: ['not-an-object'],
           }])
           throw err
         }),

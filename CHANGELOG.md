@@ -6,6 +6,26 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to
 [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [4.7.0] - 2026-09-26
+
+### Added
+
+- **`IsObject(options?)`** (`@zanix/utils/validator`, `modules/validations/decorators/generic/is-object.ts`)
+  validates that an RTO field is a plain object or class instance — not `null`, not an array —
+  without checking its shape, for a field whose keys are dynamic/unknown in advance (e.g. a
+  `Record<string, unknown>` checked deeply elsewhere by a separate domain function). Exports the
+  raw predicate `isObject(value)` and its array counterpart `isObjectArray(value)`, following the
+  same predicate/decorator-factory shape as `IsBoolean`/`IsEnum`, including `each`/`optional`
+  support via `defineValidationDecorator`.
+
+- **`haversineDistanceKm(a, b)`** (`utils/geo.ts`, exported from `helpers`) computes the
+  great-circle distance in kilometers between two `{ latitude, longitude }` points using the
+  haversine formula, so a consumer that needs a "how close are these two points" ranking signal
+  doesn't hand-roll its own copy of the formula. Pure and I/O-free: the result depends only on the
+  two points passed in, is `0` for the same point, and is symmetric (swapping `a`/`b` returns the
+  same value). Also exports `GeoCoordinate` (the shared `{ latitude, longitude }` shape) and
+  `EARTH_RADIUS_KM` (the sphere radius the formula assumes).
+
 ## [4.6.0] - 2026-09-20
 
 ### Added

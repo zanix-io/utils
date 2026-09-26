@@ -175,8 +175,8 @@ Full guides for every module live under [`docs/`](./docs):
 
 - [Validator](./docs/validator.md) — `BaseRTO`, decorators, and
   `classValidation`.
-- [Helpers](./docs/helpers.md) — config, file, date/URL, and Zanix-namespace
-  utilities.
+- [Helpers](./docs/helpers.md) — config, file, date/URL, geo, and
+  Zanix-namespace utilities.
 - [Utils](./docs/utils.md) — encoding helpers, regular expressions, and
   constants.
 - [Encryption & Masking](./docs/encryption-masking.md) — AES/RSA, HMAC, hashing,

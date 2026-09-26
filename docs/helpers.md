@@ -429,6 +429,9 @@ await getDefaultRegion() // e.g. 'us-east-1'
 | `assertContentLengthWithinLimit` | `(contentLength: string \| number \| null \| undefined, maxBytes: number): void` | Fast-rejects a request body BEFORE it is read, based solely on a claimed `Content-Length` (raw header value or already-parsed number). A missing/empty/non-numeric value never throws — pair with `readBoundedStream` for the real defense.                                                                                                                                                                                                                                                                          |
 | `readBoundedStream`              | `(stream: ReadableStream<Uint8Array>, maxBytes: number): Promise<Uint8Array>`    | Drains `stream` into one `Uint8Array`, cancelling the reader and throwing the instant the REAL running byte count exceeds `maxBytes` — the actual guard against an unbounded request body/upload exhausting memory. Framework-neutral: throws a plain `ApplicationError`, never an HTTP-specific error.                                                                                                                                                                                                              |
 | `assertZnxCookieName`            | `(name: string, sourceName: string, mustContain?: string): void`                 | Throws if `name` doesn't start with `X-Znx-` — the ecosystem-wide framework-cookie convention `@zanix/server`'s `cookiesGuard` silently enforces by dropping any non-conforming cookie from `ctx.cookies` before any guard/handler runs. Also throws if `mustContain` is given and `name` doesn't contain it (case-insensitive) — for a cookie name a fuzzy redaction/matching rule elsewhere depends on staying recognizable after customization. Meant to be called once, at construction time, never per-request. |
+| `haversineDistanceKm`            | `(a: GeoCoordinate, b: GeoCoordinate): number`                                   | Great-circle distance between two `{ latitude, longitude }` points, in kilometers, via the haversine formula. Pure and deterministic — symmetric in its two arguments, `0` for an identical point.                                                                                                                                                                                                                                                                                                                   |
+| `GeoCoordinate`                  | `type GeoCoordinate = { latitude: number; longitude: number }`                   | The coordinate shape `haversineDistanceKm` takes.                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| `EARTH_RADIUS_KM`                | `number`                                                                         | The mean Earth radius (km) `haversineDistanceKm` computes against.                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 
 ```typescript
 import { generateUUID } from 'jsr:@zanix/utils@[version]/helpers'
@@ -489,6 +492,17 @@ const bytes = await readBoundedStream(req.body!, maxBytes) // Uint8Array — e.g
 
 // Or, decoded to text on top, for a JSON/form body:
 const text = new TextDecoder().decode(bytes)
+```
+
+```typescript
+import { haversineDistanceKm } from 'jsr:@zanix/utils@[version]/helpers'
+
+const mexicoCity = { latitude: 19.4326, longitude: -99.1332 }
+const newYorkCity = { latitude: 40.7128, longitude: -74.006 }
+
+haversineDistanceKm(mexicoCity, mexicoCity) // 0
+haversineDistanceKm(mexicoCity, newYorkCity) // ~3364 (km)
+haversineDistanceKm(newYorkCity, mexicoCity) // same result — symmetric
 ```
 
 ## Testing utilities

@@ -11,6 +11,7 @@ import { MinNumber } from 'modules/validations/decorators/numbers/min-number.ts'
 import { IsBooleanString } from 'modules/validations/decorators/strings/is-boolean-string.ts'
 import { IsEmail } from 'modules/validations/decorators/strings/is-email.ts'
 import { IsNumberString } from 'modules/validations/decorators/strings/is-number-string.ts'
+import { IsObject } from 'modules/validations/decorators/generic/is-object.ts'
 import { IsObjectID } from 'modules/validations/decorators/strings/is-object-id.ts'
 import { IsPhone } from 'modules/validations/decorators/strings/is-phone.ts'
 import { IsString } from 'modules/validations/decorators/strings/is-string.ts'
@@ -57,6 +58,9 @@ class FullCatalogRTO extends BaseRTO {
 
   @IsObjectID({ optional: true })
   accessor recordId!: string
+
+  @IsObject({ optional: true })
+  accessor settings!: Record<string, unknown>
 
   @Length({ min: 2, max: 10 }, { optional: true })
   accessor nickname!: string
@@ -108,6 +112,9 @@ Deno.test('classMetadata - every catalog decorator identifies itself', () => {
   assertEquals(meta.email.decorator, 'IsEmail')
   assertEquals(meta.flag.decorator, 'IsBooleanString')
   assertEquals(meta.recordId.decorator, 'IsObjectID')
+
+  assertEquals(meta.settings.decorator, 'IsObject')
+  assertEquals(meta.settings.args, [])
 
   assertEquals(meta.nickname.decorator, 'Length')
   assertEquals(meta.nickname.args, [{ min: 2, max: 10 }])
