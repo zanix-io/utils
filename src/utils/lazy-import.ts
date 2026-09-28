@@ -27,6 +27,16 @@
  * value exports — these three helpers only address the value/runtime side of the problem, not
  * that separate type-level one.
  *
+ * Exposed both through `@zanix/utils/helpers` (the general barrel) and, narrower, through
+ * `@zanix/utils/helpers/lazy` — this file has no imports of its own, so either subpath is equally
+ * safe, but the general barrel also re-exports server-only modules with real side effects at
+ * import time (`encryption/unidirectional.ts`'s own top-level `@std/crypto` import compiles a
+ * WASM binary the moment the module loads, regardless of whether any caller ever calls a hash
+ * function). A CLIENT-reachable caller — a browser-hydrated Comet lazy-loading an `npm:` SDK being
+ * the real, confirmed case this subpath closes — needs the narrow one: a strict CSP with no
+ * `wasm-unsafe-eval` (the common, safer default) throws a real `CompileError` the moment that
+ * WASM compile is attempted, breaking hydration for whatever else shared that module graph.
+ *
  * @module
  */
 

@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to
 [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [4.7.1] - 2026-09-28
+
+### Added
+
+- **`@zanix/utils/helpers/lazy`** — a new, narrow subpath exposing only `lazyFunction`/
+  `lazyClass`/`lazyValue` (`src/utils/lazy-import.ts`), free of everything else the general
+  `@zanix/utils/helpers` barrel re-exports. Real, confirmed gap this closes (Track H E2E, 28 sep
+  2026): a browser-hydrated Comet lazy-loading an `npm:` SDK via `lazyFunction` had no way to reach
+  it without also pulling in the barrel's own `encryption/unidirectional.ts`, whose top-level
+  `@std/crypto` import compiles a WASM binary at MODULE LOAD time — under a strict CSP with no
+  `wasm-unsafe-eval`, that throws a real `CompileError` that broke hydration for the whole module
+  graph sharing that chunk, well before any hash function was ever called.
+
 ## [4.7.0] - 2026-09-26
 
 ### Added
