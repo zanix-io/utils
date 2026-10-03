@@ -102,6 +102,16 @@ export function registerConfigNameReader(reader: () => string | undefined): void
   configNameReader = reader
 }
 
+/** The name for the header's `appName` suffix, or `undefined` when the config has none or cannot
+ * be read — either way the header carries no suffix. */
+function resolveAppName(): string | undefined {
+  try {
+    return configNameReader() || undefined
+  } catch {
+    return undefined
+  }
+}
+
 /**
  * Builds the formatted header `console[method]` receives as its own leading argument(s) — a
  * single ANSI-colored string in Deno/a terminal (`@std/fmt/colors`, unchanged from before), or a
@@ -124,11 +134,10 @@ export function buildHeaderLog(
 ): [string, ...string[]] {
   const { color, icon, text } = logMethodInfo[method]
 
+  const name = resolveAppName()
+
   if (isBrowser) {
-    let appName = ''
-    try {
-      appName = ` [${configNameReader()}]`
-    } catch { /** ignore error */ }
+    const appName = name ? ` [${name}]` : ''
 
     return [
       `%c${icon} ${getLocalTime()} | ZNX-${text}${appName}:`,
@@ -136,13 +145,7 @@ export function buildHeaderLog(
     ]
   }
 
-  let appName
-  try {
-    appName = colorFormatter[color](`[${configNameReader()}]`)
-    appName = ` ${appName}`
-  } catch {
-    appName = ''
-  }
+  const appName = name ? ` ${colorFormatter[color](`[${name}]`)}` : ''
 
   const typeFn = colorFormatter[
     `bg${capitalize(color)}` as never

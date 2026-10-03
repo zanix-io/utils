@@ -39,7 +39,8 @@ in projects using the **Zanix** framework.
 - Workers utilities.
 - Http Errors.
 - Class-validator for native ECMAScript features.
-- Logger.
+- Logger, with a minimum level (`LOG_LEVEL`) and duration measurement (`logger.time`,
+  `logger.timer`).
 
 ## Installation
 
@@ -181,8 +182,8 @@ Full guides for every module live under [`docs/`](./docs):
   constants.
 - [Encryption & Masking](./docs/encryption-masking.md) — AES/RSA, HMAC, hashing,
   and masking.
-- [Logger](./docs/logger.md) — the default `Logger` and its storage/formatting
-  options.
+- [Logger](./docs/logger.md) — the default `Logger`, its minimum level, storage/formatting
+  options and duration measurement.
 - [Workers](./docs/workers.md) — `WorkerManager` and background task execution.
 - [Errors](./docs/errors.md) — `HttpError`, `ApplicationError`, and error
   serialization.

@@ -15,3 +15,7 @@
  */
 
 export * from './manager.ts'
+
+// Exported only so `WorkerManager#task`'s signature resolves for `deno doc --lint`: the function
+// and callback shapes a task is given.
+export type { TaskCallback, TaskCallbackResponse, TaskFunction } from 'typings/workers.ts'

@@ -27,6 +27,14 @@ export type ConsoleInfo<Method extends BaseMethods> = Console[ConsoleMethodFor<M
  */
 export type LoggerMethods = 'info' | 'error' | 'high' | 'warn' | 'debug' | 'success'
 
+/**
+ * The minimum level a `Logger` handles, from the least to the most severe: `'debug'`, `'info'`,
+ * `'warn'`, `'high'`, `'error'`, and `'silent'` (above every method, so nothing is handled). An
+ * entry below the level is neither printed nor persisted. `'success'` ranks with `'info'`.
+ * The default is `'debug'`: everything is handled. See `docs/logger.md`.
+ */
+export type LoggerLevel = 'debug' | 'info' | 'warn' | 'high' | 'error' | 'silent'
+
 /** The Logger data to be shown */
 export type LoggerData<Method extends LoggerMethods = 'info'> = Method extends 'success' ? string
   : [
@@ -188,6 +196,23 @@ export type BaseLoggerOptions<
    */
   disableGlobalAssign?: boolean
   /**
+   * The minimum level this logger handles: an entry below it is neither printed nor persisted
+   * (a relayed `ingest` entry included). `'silent'` handles nothing. When it is not given, the
+   * `LOG_LEVEL` environment variable is read once, when the logger is created; when that is not
+   * set either, the level is `'debug'` and everything is handled, as before. A value that is not a
+   * level is reported once and ignored. Change it later with `Logger#setLevel`.
+   *
+   * @default 'debug'
+   *
+   * @example
+   *
+   * ```ts
+   * // Only warnings and worse reach the console and the storage.
+   * new Logger({ level: 'warn' })
+   * ```
+   */
+  level?: LoggerLevel
+  /**
    * Controls redaction of sensitive-looking data (credential-shaped keys, `Headers`/`Request`
    * objects) before a log reaches the console or storage. See {@link RedactOptions}.
    *
@@ -237,3 +262,52 @@ export type LoggerFunctionOptions<Return extends unknown> = BaseLoggerOptions<
 export type LoggerOptions<Return extends unknown> =
   | LoggerFunctionOptions<Return>
   | LoggerFileOptions<Return>
+
+/** The levels a duration measurement can be logged at. `success` is left out: it has no data slot. */
+export type LoggerTimerLevel = Exclude<LoggerMethods, 'success' | 'error'>
+
+/** Options of `Logger#timer` and `Logger#time`. */
+export type LoggerTimerOptions = {
+  /**
+   * The level a measurement is logged at. Defaults to `'debug'` (printed, never persisted, so
+   * timing every call stays cheap), or to `'warn'` when {@linkcode slowThresholdMs} is set: a
+   * measurement kept only because it was slow is worth persisting. A failed measurement (see
+   * `Logger#time`) is raised to `'warn'` when this would be `'debug'` or `'info'`. `'error'` is not
+   * accepted: a measurement is not itself an error, and `logger.error` marks the error it receives
+   * as already logged, which would change how the caller's own error handling sees it.
+   */
+  level?: LoggerTimerLevel
+  /**
+   * Log only measurements that took at least this many milliseconds; faster ones are measured and
+   * dropped without printing or persisting anything. A failure is always logged, whatever it took.
+   * Ignored when it is not a finite, non-negative number.
+   */
+  slowThresholdMs?: number
+  /** Never persist this measurement, even at a level that persists (`'info'`, `'warn'`, `'high'`). */
+  noSave?: boolean
+  /**
+   * Extra fields for the log entry, redacted by key exactly like any other logged data. The fixed
+   * fields (`label`, `durationMs`, `status`, `errorName`, `errorCode`) are written last and cannot
+   * be overridden from here.
+   */
+  metadata?: Record<string, unknown>
+  /**
+   * The monotonic clock, in milliseconds. Defaults to `performance.now()`. A controllable one lets
+   * a test assert exact durations.
+   */
+  clock?: () => number
+}
+
+/** A running measurement started by `Logger#timer`. */
+export type LoggerTimer = {
+  /** Milliseconds elapsed so far, unrounded. Reading it logs nothing and does not stop the timer. */
+  elapsed(): number
+  /**
+   * Stops the timer and logs the measurement once, then returns the duration in milliseconds
+   * (rounded to two decimals). Calling it again returns the same duration and logs nothing.
+   * @param metadata - Extra fields for this entry, merged over the timer's own `metadata`.
+   */
+  stop(metadata?: Record<string, unknown>): number
+  /** Stops the timer, so `using timer = logger.timer('x')` logs when the scope ends. */
+  [Symbol.dispose](): void
+}

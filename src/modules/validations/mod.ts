@@ -51,3 +51,20 @@ export * from './base/rto.ts'
 export * from './main.ts'
 
 export { defineValidationDecorator } from './base/definitions/decorators.ts'
+
+// Exported only so the signatures of the decorators and helpers above resolve for
+// `deno doc --lint`: the options, decorator and metadata shapes they take or return. Use them to
+// type your own validation decorators.
+export type {
+  ClassFieldDecoratorMeta,
+  DefaultTransformValidationOpts,
+  RTOFieldDecoratorEntry,
+  RTOFieldMetadata,
+  ValidationConstraints,
+  ValidationDecorator,
+  ValidationDecoratorDefinition,
+  ValidationError,
+  ValidationFunction,
+  ValidationMessage,
+  ValidationOptions,
+} from 'typings/validations.ts'

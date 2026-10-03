@@ -10,8 +10,12 @@ import type {
   LoggerData,
   LoggerFileOptions,
   LoggerFunctionOptions,
+  LoggerLevel,
   LoggerMethods,
   LoggerOptions,
+  LoggerTimer,
+  LoggerTimerLevel,
+  LoggerTimerOptions,
   SaveDataFile,
   SaveDataFunction,
 } from 'typings/logger.ts'
@@ -21,8 +25,16 @@ import { serializeMultipleErrors } from 'modules/errors/serialize.ts'
 import { createRedactor } from 'modules/errors/redact.ts'
 import { baseFormatter } from 'modules/logger/defaults/formatter.ts'
 import { setGlobalZnx } from 'modules/helpers/zanix/namespace.ts'
+import { defaultClock, formatDuration, roundDuration, startTimer } from 'utils/timing.ts'
 import { baseSaveData, saveDataFetcherFunction } from './defaults/storage/main.ts'
 import { showMessage } from './base.ts'
+import {
+  DEFAULT_LOGGER_LEVEL,
+  isMethodAtLevel,
+  levelRank,
+  parseLoggerLevel,
+  resolveLoggerLevel,
+} from './level.ts'
 
 /**
  * Resolves a `SaveDataFile` config object (`LoggerFileOptions`'s own `storage.save` shape) into
@@ -79,7 +91,8 @@ export function registerFileSaveFactory(factory: FileSaveFactory): void {
  * on its behalf, so it decides whether/how to serialize it — and sends it somewhere, typically a
  * `fetch()` to this app's own backend endpoint (e.g. `@zanix/space`'s `/api/log`), which relays
  * it into the server's own `Logger` via `Logger#ingest`.
- * @param options - Just `disableGlobalAssign` — a plain, standalone shape rather than
+ * @param options - Just `disableGlobalAssign` and the minimum `level` (default `'debug'`: every
+ * entry is handled; a browser has no `LOG_LEVEL`) — a plain, standalone shape rather than
  * `Pick<LoggerFunctionOptions<...>, 'disableGlobalAssign'>`, deliberately: everything else about
  * the underlying `Logger` (storage, formatting) is fixed by this function's own contract, so no
  * other `LoggerFunctionOptions` field belongs here, and reusing that type would pull its own
@@ -87,11 +100,13 @@ export function registerFileSaveFactory(factory: FileSaveFactory): void {
  */
 export function createClientLogger(
   fetcher: <T extends BaseFormattedLog = DefaultFormattedLog>(fmtLog: T) => void | Promise<void>,
-  options: { disableGlobalAssign?: boolean } = {},
+  options: { disableGlobalAssign?: boolean; level?: LoggerLevel } = {},
 ): Logger {
-  const { disableGlobalAssign = true } = options
+  const { disableGlobalAssign = true, level = DEFAULT_LOGGER_LEVEL } = options
   return new Logger<DefaultResponse>({
     disableGlobalAssign,
+    // A browser has no environment: the level is the one given here, never `LOG_LEVEL`.
+    level,
     storage: { save: saveDataFetcherFunction(fetcher) },
   })
 }
@@ -104,6 +119,8 @@ export class Logger<Return extends unknown = DefaultResponse> {
   #formatter: Formatter = () => ({})
   #saveFuntion: SaveDataFunction = () => {}
   #redact: ReturnType<typeof createRedactor>
+  #level: LoggerLevel = DEFAULT_LOGGER_LEVEL
+  #minimumRank = levelRank(DEFAULT_LOGGER_LEVEL)
 
   /**
    * Creates a `Logger` instance with a function-based save mode.
@@ -116,7 +133,7 @@ export class Logger<Return extends unknown = DefaultResponse> {
    */
   constructor(options?: LoggerFileOptions<Return>)
   constructor(options: LoggerOptions<Return> = {}) {
-    const { storage, disableGlobalAssign, redact } = options
+    const { storage, disableGlobalAssign, redact, level } = options
     const globals: Partial<typeof Znx> = {}
 
     // Assign the logger globally before instance creation unless disabled.
@@ -131,6 +148,7 @@ export class Logger<Return extends unknown = DefaultResponse> {
     setGlobalZnx(globals)
 
     this.#redact = createRedactor(redact)
+    this.setLevel(resolveLoggerLevel(level))
 
     if (storage !== false) {
       const { save, formatter } = storage ?? {}
@@ -150,6 +168,44 @@ export class Logger<Return extends unknown = DefaultResponse> {
 
       this.#saveFuntion = baseSaveData(saveFn, explicitSave, this.#redact)
     }
+  }
+
+  /**
+   * The minimum level this logger handles: `'debug'` (everything, the default), `'info'`, `'warn'`,
+   * `'high'`, `'error'` or `'silent'` (nothing). Set by the `level` option, else by the `LOG_LEVEL`
+   * environment variable, and changed with {@linkcode setLevel}.
+   */
+  public getLevel(): LoggerLevel {
+    return this.#level
+  }
+
+  /**
+   * Changes the minimum level at run time. From the next call on, an entry below it is neither
+   * printed nor persisted, in this instance only. A value that is not a level is reported once and
+   * leaves the current level as it is.
+   * @param level - `'debug'`, `'info'`, `'warn'`, `'high'`, `'error'` or `'silent'`.
+   */
+  public setLevel(level: LoggerLevel): void {
+    const parsed = parseLoggerLevel(level, 'setLevel')
+    if (!parsed) return
+    this.#level = parsed
+    this.#minimumRank = levelRank(parsed)
+  }
+
+  /**
+   * Whether an entry of `level` is printed and persisted by this logger, so costly arguments can
+   * be built only when they will be used:
+   *
+   * ```ts
+   * if (logger.isLevelEnabled('debug')) logger.debug('state', buildExpensiveSnapshot())
+   * ```
+   *
+   * `'success'` ranks with `'info'`. Whether the entry is persisted also depends on the method
+   * (`debug` and `success` never are) and on the storage; this only answers whether it is handled.
+   * @param level - The method to ask about.
+   */
+  public isLevelEnabled(level: LoggerMethods): boolean {
+    return isMethodAtLevel(level, this.#minimumRank)
   }
 
   /**
@@ -209,6 +265,9 @@ export class Logger<Return extends unknown = DefaultResponse> {
     origin: string | undefined,
     ...data: LoggerData
   ): Return | undefined {
+    // Below the minimum level: nothing is redacted, printed or persisted.
+    if (!this.isLevelEnabled(type)) return undefined
+
     const hasNoSave = data[data.length - 1] === 'noSave'
     if (hasNoSave) data.length = data.length - 1
 
@@ -241,6 +300,10 @@ export class Logger<Return extends unknown = DefaultResponse> {
    * @param data - Values to be printed to the console.
    */
   public error(...data: LoggerData<'error'>): Return | undefined {
+    // Checked first: an error that is not handled is not marked as logged, so a logger with a lower
+    // level can still log it.
+    if (!this.isLevelEnabled('error')) return
+
     const [message, ...rest] = data
     // `redact: false` — this only needs to flatten each `Error` into a plain, serializable shape
     // and dedupe already-logged instances. `#log` redacts the result (using this instance's own
@@ -287,6 +350,220 @@ export class Logger<Return extends unknown = DefaultResponse> {
   public high(...data: LoggerData<'high'>): Return | undefined {
     return this.#log('high', true, undefined, ...data)
   }
+
+  /**
+   * Starts measuring how long something takes and returns the timer to stop it. Stopping logs one
+   * entry with the label, the duration and a status, so a log shows where time went:
+   *
+   * ```ts
+   * const timer = logger.timer('profile.load', { metadata: { userId } })
+   * const profile = await loadProfile(userId)
+   * timer.stop() // 🟣 ... profile.load took 12.3ms { userId, label, durationMs: 12.3, status: 'ok' }
+   * ```
+   *
+   * The entry's message is `<label> took <duration>` (`12.3ms`, `1.25s`) and its data carries the
+   * stable, queryable fields `label`, `durationMs` (a number of milliseconds, two decimals) and
+   * `status` (`'ok'`). It goes through the same redaction, formatting and storage as every other
+   * log, so `metadata` is redacted by key, and `label` must be a fixed string (a route pattern, an
+   * operation name), never one built from user input or a secret.
+   *
+   * By default the entry is logged at `'debug'`: printed, never persisted. Pass `level` to keep it,
+   * or `slowThresholdMs` to log only the slow ones (then at `'warn'` unless `level` says otherwise).
+   * The clock is monotonic (`performance.now()`), so it never jumps with the system time. A timer
+   * is cheap — two clock readings and a closure — and an entry below `slowThresholdMs` costs no
+   * more than that.
+   *
+   * A timer logs once: stopping it again returns the same duration. It also implements
+   * `Symbol.dispose`, so `using timer = logger.timer('x')` logs when the scope ends, including by
+   * an exception (then logged as a normal measurement; use {@linkcode time} to record the failure).
+   * Logging never throws into the measured code.
+   * @param label - A fixed name for what is measured.
+   * @param options - Level, slow threshold, persistence, extra fields and clock.
+   */
+  public timer(label: string, options: LoggerTimerOptions = {}): LoggerTimer {
+    // A timer returns the duration, so it keeps reading the clock; when the entry could never be
+    // logged (see `time`) it only skips building and logging it.
+    if (!this.#timingMayLog(options)) {
+      const elapsed = startTimer(options.clock ?? defaultClock)
+      let duration: number | undefined
+      return {
+        elapsed,
+        stop: () => duration ??= roundDuration(elapsed()),
+        [Symbol.dispose]: () => {},
+      }
+    }
+
+    const { elapsed, finish } = this.#startTimer(label, options)
+
+    return {
+      elapsed,
+      stop: (metadata) => finish(metadata),
+      [Symbol.dispose]: () => void finish(),
+    }
+  }
+
+  /**
+   * Runs `fn`, measures how long it takes and logs the measurement — {@linkcode timer} around one
+   * call. A synchronous function stays synchronous; one returning a promise gives back a promise
+   * that settles the same way, with the duration covering the whole wait. The return value is the
+   * function's own.
+   *
+   * If `fn` throws or its promise rejects, the measurement is logged with `status: 'error'` plus
+   * `errorName` (and `errorCode` when the error has a string `code`), at least at `'warn'`, and the
+   * original error is rethrown untouched: it is not wrapped, not logged here and not marked as
+   * logged, so the caller's own error handling behaves exactly as without the timing. The error's
+   * message is deliberately not recorded — it can carry data that does not belong in a timing log.
+   * Failing to log never replaces the function's own result or error.
+   *
+   * The logger's minimum level applies. When neither the entry's level nor `'warn'` (the level a
+   * failure is raised to) is enabled, `time` takes a fast path and only runs `fn`: no clock is
+   * read and no entry is built. When only the entry's own level is disabled (`LOG_LEVEL=info` and
+   * the default `'debug'` level, say), the function is still measured so that a failure can be
+   * logged at `'warn'` with its duration; a successful run is dropped before anything is built.
+   * @param label - A fixed name for what is measured.
+   * @param fn - The function to run.
+   * @param options - Level, slow threshold, persistence, extra fields and clock.
+   * @example
+   * ```ts
+   * const user = await logger.time('users.find', () => users.find(id), { slowThresholdMs: 200 })
+   * ```
+   */
+  public time<T>(label: string, fn: () => T, options: LoggerTimerOptions = {}): T {
+    // The measurement could never be logged at the current level: no clock, no closures, no
+    // metadata work, only the function itself.
+    if (!this.#timingMayLog(options)) return fn()
+
+    const { finish } = this.#startTimer(label, options)
+
+    let result: T
+    try {
+      result = fn()
+    } catch (error) {
+      finish(undefined, { error })
+      throw error
+    }
+
+    if (isThenable(result)) {
+      return result.then(
+        (value) => {
+          finish()
+          return value
+        },
+        (error: unknown) => {
+          finish(undefined, { error })
+          throw error
+        },
+      ) as T
+    }
+
+    finish()
+    return result
+  }
+
+  /**
+   * The level a measurement is logged at when it succeeds: the given one, else `'warn'` with a
+   * slow threshold, else `'debug'`.
+   */
+  #timingLevel(options: LoggerTimerOptions): LoggerTimerLevel {
+    return options.level ?? (hasSlowThreshold(options.slowThresholdMs) ? 'warn' : 'debug')
+  }
+
+  /**
+   * Whether a measurement could be logged at all at the current level: its own level is enabled,
+   * or it fails and is raised to `'warn'` (a failure never stays below it). When it cannot, the
+   * measurement is not worth starting.
+   */
+  #timingMayLog(options: LoggerTimerOptions): boolean {
+    const level = this.#timingLevel(options)
+    const failureLevel = level === 'debug' || level === 'info' ? 'warn' : level
+    return this.isLevelEnabled(level) || this.isLevelEnabled(failureLevel)
+  }
+
+  /**
+   * Starts the stopwatch behind {@linkcode timer} and {@linkcode time}: `finish` stops it, logs the
+   * entry once and returns the duration. It never throws — a failing formatter, save function or
+   * redactor must not replace the measured code's own result or error — and a promise a custom save
+   * function returns is observed, so a rejection there is not an unhandled one.
+   */
+  #startTimer(label: string, options: LoggerTimerOptions) {
+    const elapsed = startTimer(options.clock ?? defaultClock)
+    let duration: number | undefined
+
+    const finish = (extra?: Record<string, unknown>, failure?: { error: unknown }): number => {
+      if (duration !== undefined) return duration
+      const exact = elapsed()
+      duration = roundDuration(exact)
+
+      try {
+        const saved = this.#logDuration(label, duration, exact, options, extra, failure)
+        if (isThenable(saved)) saved.then(undefined, () => {})
+      } catch { /** Logging a measurement must never break the measured code. */ }
+
+      return duration
+    }
+
+    return { elapsed, finish }
+  }
+
+  /**
+   * Builds and logs one duration entry, or does nothing when it is below the slow threshold.
+   * `durationMs` is the rounded value that is stored and compared with the threshold; `exact` is
+   * the unrounded one the message is formatted from, so a value is not rounded twice.
+   */
+  #logDuration(
+    label: string,
+    durationMs: number,
+    exact: number,
+    options: LoggerTimerOptions,
+    extra: Record<string, unknown> | undefined,
+    failure: { error: unknown } | undefined,
+  ): Return | undefined {
+    const { slowThresholdMs, noSave, metadata } = options
+
+    if (!failure && hasSlowThreshold(slowThresholdMs) && durationMs < slowThresholdMs) {
+      return undefined
+    }
+
+    let level: LoggerTimerLevel = this.#timingLevel(options)
+    if (failure && (level === 'debug' || level === 'info')) level = 'warn'
+
+    // Below the minimum level the entry is dropped before it is built.
+    if (!this.isLevelEnabled(level)) return undefined
+
+    const data = {
+      ...metadata,
+      ...extra,
+      ...(failure ? describeFailure(failure.error) : {}),
+      label,
+      durationMs,
+      status: failure ? 'error' : 'ok',
+    }
+    const message = `${label} ${failure ? 'failed after' : 'took'} ${formatDuration(exact)}`
+
+    return level === 'debug' || noSave
+      ? this.#log(level, true, undefined, message, data, 'noSave')
+      : this.#log(level, true, undefined, message, data)
+  }
+}
+
+/** Whether `value` is a usable slow threshold: a finite number of milliseconds, zero or more. */
+function hasSlowThreshold(value: unknown): value is number {
+  return typeof value === 'number' && Number.isFinite(value) && value >= 0
+}
+
+/** Whether `value` is a promise (or any thenable), without assuming the `Promise` global. */
+function isThenable(value: unknown): value is PromiseLike<unknown> {
+  return typeof (value as PromiseLike<unknown> | null)?.then === 'function'
+}
+
+/**
+ * The fields recorded for a failed measurement: the error's `name` and, when it has a string
+ * `code`, that — never its `message`, `stack` or `cause`, which can hold data a timing log must not.
+ */
+function describeFailure(error: unknown): { errorName: string; errorCode?: string } {
+  const errorName = error instanceof Error ? error.name : typeof error
+  const code = (error as { code?: unknown } | null)?.code
+  return typeof code === 'string' ? { errorName, errorCode: code } : { errorName }
 }
 
 // Re-exported only so this file's own public signatures (`Logger`'s default `Return` generic,
@@ -302,9 +579,15 @@ export type {
   DefaultFormattedLog,
   DefaultResponse,
   LoggerData,
+  LoggerLevel,
   LoggerMethods,
+  LoggerTimer,
+  LoggerTimerLevel,
+  LoggerTimerOptions,
   SaveDataFile,
   SaveDataFunction,
   TaskCallback,
   TaskCallbackResponse,
 }
+
+export { DEFAULT_LOGGER_LEVEL, LOG_LEVEL_ENV, LOGGER_LEVELS } from './level.ts'

@@ -23,7 +23,11 @@ import type {
   DefaultFormattedLog,
   DefaultResponse,
   LoggerData,
+  LoggerLevel,
   LoggerMethods,
+  LoggerTimer,
+  LoggerTimerLevel,
+  LoggerTimerOptions,
   SaveDataFile,
   SaveDataFunction,
 } from 'typings/logger.ts'
@@ -59,6 +63,14 @@ registerConfigReader(readConfig)
  * reaching into this package's own internal `defaults/storage/default.ts` module directly. */
 export { saveDataFileFunction }
 
+/** The `LOG_LEVEL` environment variable, the accepted levels from least to most severe, and the
+ * level a logger has when none is set. See `docs/logger.md`. */
+export { DEFAULT_LOGGER_LEVEL, LOG_LEVEL_ENV, LOGGER_LEVELS } from 'modules/logger/level.ts'
+
+/** The class `Logger` extends. Exported only so `Logger`'s own signature resolves for
+ * `deno doc --lint`; create loggers with {@linkcode Logger}. */
+export { LoggerMainClass as LoggerBase }
+
 // Re-exported only so `saveDataFileFunction`'s own signature resolves for `deno doc --lint` —
 // the same `LoggerFileOptions`/`LoggerFunctionOptions` precedent `typings/logger.ts` already
 // documents for `BaseLoggerOptions`. Use `SaveDataFile`/`SaveDataFunction` directly for a custom
@@ -72,7 +84,11 @@ export type {
   DefaultFormattedLog,
   DefaultResponse,
   LoggerData,
+  LoggerLevel,
   LoggerMethods,
+  LoggerTimer,
+  LoggerTimerLevel,
+  LoggerTimerOptions,
   SaveDataFile,
   SaveDataFunction,
   TaskCallback,

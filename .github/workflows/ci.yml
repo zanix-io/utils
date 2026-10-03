@@ -3,20 +3,18 @@
 name: CI
 
 on:
-  # Run on push or PRs to main branch
+  # Run on push or PRs to main branch. `publish.yml` starts from this workflow's own completed run
+  # on `master` (`workflow_run`), so a push runs these checks once and publish waits for them.
   pull_request:
     branches:
       - master
   push:
     branches:
       - master
-  # Also invocable as a reusable workflow (`uses: ./.github/workflows/ci.yml`) — `publish.yml`'s
-  # own `ci` job calls into this exact workflow instead of duplicating its steps.
-  workflow_call:
 
 jobs:
   ci:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: read # Allows reading of the repository's contents.
 
@@ -36,7 +34,15 @@ jobs:
         run: deno lint
 
       - name: Check for circular-import hazards
-        run: deno run --min-dep-age=0 -A jsr:@zanix/cli check-cycles
+        run: deno run --no-config --min-dep-age=0 -A jsr:@zanix/cli check-cycles
 
       - name: Check for duplicate '@zanix/*' dependencies
-        run: deno run --min-dep-age=0 -A jsr:@zanix/cli check-duplicates
+        run: deno run --no-config --min-dep-age=0 -A jsr:@zanix/cli check-duplicates
+
+      - name: Install pre-commit
+        run: |
+          python3 -m pip install --upgrade pip
+          pip install pre-commit
+
+      - name: Run tests
+        run: deno test --allow-all

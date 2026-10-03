@@ -75,6 +75,211 @@ turns out to be such a duplicate, the whole call is skipped entirely (nothing is
 printed to the console or saved), preventing the same error from being logged
 twice.
 
+## Minimum level
+
+A logger handles every entry by default. Give it a minimum level and anything
+below it is dropped: not printed, not redacted, not persisted. The level is one
+of `'debug'`, `'info'`, `'warn'`, `'high'`, `'error'` or `'silent'`, from the least
+to the most severe.
+
+| Level      | Handles                                    | Drops                                |
+| ---------- | ------------------------------------------ | ------------------------------------ |
+| `'debug'`  | everything (the default)                   | nothing                              |
+| `'info'`   | `info`, `success`, `warn`, `high`, `error` | `debug`                              |
+| `'warn'`   | `warn`, `high`, `error`                    | `debug`, `info`, `success`           |
+| `'high'`   | `high`, `error`                            | `debug`, `info`, `success`, `warn`   |
+| `'error'`  | `error`                                    | everything else, **`high` included** |
+| `'silent'` | nothing                                    | every entry, `error` included        |
+
+`success` ranks with `info`. `high` sits between `warn` and `error`, so a
+logger set to `'error'` does not handle `high` entries: choose `'high'` to keep
+both. A level only drops entries; it never turns a method that does not persist
+(`debug`, `success`) into one that does, and persistence still follows the
+storage you configured.
+
+### Setting the level
+
+There are three ways, in this order of precedence:
+
+1. The `level` option of a `Logger`:
+
+   ```ts
+   const logger = new Logger({ level: 'warn' })
+   ```
+
+2. The `LOG_LEVEL` environment variable (exported as the constant `LOG_LEVEL_ENV`),
+   read once when a `Logger` is created without a `level`. The value is trimmed
+   and case-insensitive, and an empty or missing value is the default:
+
+   ```sh
+   LOG_LEVEL=warn deno run -A main.ts
+   ```
+
+   Reading it needs the `--allow-env` permission for `LOG_LEVEL` (or `-A`);
+   without that permission the variable is treated as not set, and nothing
+   prompts. The default `logger` instance created by importing
+   `@zanix/utils/logger` reads it at import time.
+
+3. `logger.setLevel(level)` at run time, for that instance only. `logger.getLevel()`
+   returns the current level.
+
+When nothing is set the level is `'debug'`, so a program that never configures
+a level behaves exactly as before.
+
+A value that is not a level (`LOG_LEVEL=loud`, `new Logger({ level: 'loud' })`) is
+reported once, with the accepted values, and treated as not given: the logger
+falls back to the next source and, finally, to `'debug'`. A typo therefore never
+hides logs and never stops the process. `setLevel` with such a value leaves the
+current level as it is.
+
+The browser-safe `createClientLogger` has no environment: it takes the level
+from its own option and defaults to `'debug'`.
+
+```ts
+import { createClientLogger } from 'jsr:@zanix/utils@[version]/logger/client'
+
+const logger = createClientLogger(send, { level: 'warn' })
+```
+
+### Asking before doing costly work
+
+`logger.isLevelEnabled(method)` answers whether an entry of that method would be
+handled, so an argument that is expensive to build is built only when it will be
+used:
+
+```ts
+if (logger.isLevelEnabled('debug')) logger.debug('state', buildExpensiveSnapshot())
+```
+
+It answers for the level only. Whether the entry is also persisted depends on the
+method and the storage.
+
+### Relayed entries and errors
+
+`Logger#ingest` applies the level to the severity of the relayed entry: an
+`info` entry arriving at a logger set to `'warn'` is dropped, so a browser client
+cannot make the server store what the server itself would not.
+
+`logger.error` checks the level before it serializes anything. An error dropped
+by the level is not marked as logged, so a logger with a lower level, or the
+same one after `setLevel`, still logs it later.
+
+## Measuring how long something takes
+
+A log that says an operation happened does not say where the time went. `timer`
+and `time` log a duration through the same redaction, formatting and storage as
+every other entry, so the number sits next to everything else the logger
+records:
+
+```ts
+import logger from 'jsr:@zanix/utils@[version]/logger'
+
+// Around one call. A synchronous function stays synchronous, an async one stays
+// async, and the return value is the function's own.
+const user = await logger.time('users.find', () => users.find(id))
+
+// Or hold the timer, when start and end are in different places.
+const timer = logger.timer('checkout', { metadata: { cartId } })
+await charge(cart)
+timer.stop({ items: cart.length }) // returns the duration in milliseconds
+```
+
+The console shows `checkout took 12.3ms` followed by the data, and the stored
+entry carries three stable fields in its `data`:
+
+```json
+{
+  "level": "info",
+  "message": "checkout took 12.3ms",
+  "data": [{ "cartId": "c1", "items": 3, "label": "checkout", "durationMs": 12.35, "status": "ok" }]
+}
+```
+
+- `durationMs` is a number of milliseconds with two decimals, measured with a
+  monotonic clock (`performance.now()`), so it never jumps when the system time
+  changes.
+- `label` is what you passed. Keep it a fixed name (an operation or a route
+  pattern, `GET /users/:id`), never something built from user input or a secret:
+  redaction works by key name, and a label is part of the message.
+- `status` is `'ok'`, or `'error'` when the measured function failed.
+
+### Which level, and what is persisted
+
+The default level is `'debug'`: the entry is printed and never persisted, so
+timing every call costs a console line and nothing else. Choose what to keep:
+
+| Option            | Effect                                                                                                                                     |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `level`           | `'debug'` (default), `'info'`, `'warn'` or `'high'`. `'error'` is not accepted.                                                            |
+| `slowThresholdMs` | Log only measurements that took at least this long; faster ones are dropped. Then the default level is `'warn'`, so the slow ones persist. |
+| `noSave`          | Print, but never persist, even at a level that persists.                                                                                   |
+| `metadata`        | Extra fields, redacted by key. The fixed fields cannot be overridden from here.                                                            |
+| `clock`           | A custom monotonic clock in milliseconds, for tests.                                                                                       |
+
+```ts
+// Persist only the slow ones: a query that takes 200 ms or more is a warn entry.
+await logger.time('db.query', () => db.query(sql), { slowThresholdMs: 200 })
+```
+
+The logger's [minimum level](#minimum-level) applies to measurements too. A
+measurement below `slowThresholdMs` costs two clock readings and a closure, and
+logs nothing, and one whose level is dropped is not built:
+
+- `time` takes a fast path, running only the function, when the measurement
+  could never be logged: its own level and `'warn'` (the level a failure is
+  raised to) are both below the minimum. No clock is read, no closure is
+  created and the metadata is not touched. A function under
+  `LOG_LEVEL=error` costs the same as the function alone.
+- When only the measurement's own level is dropped (`LOG_LEVEL=info` with the
+  default `'debug'` level), the function is still measured so that a failure can
+  be logged at `'warn'` with its duration. A successful run is dropped before
+  anything is built.
+- `slowThresholdMs` raises the default level to `'warn'`, so under `LOG_LEVEL=warn` a
+  slow measurement is logged and a fast one is dropped.
+- `timer` returns the duration from `stop()` and `elapsed()`, so it keeps reading
+  the clock even when nothing could be logged; it only skips building and logging
+  the entry.
+
+### Failures
+
+If the function passed to `time` throws, or its promise rejects, the
+measurement is still logged, with `status: 'error'`, the error's `errorName`
+(and `errorCode` when it has a string `code`), and a level raised to `'warn'`
+when it would have been `'debug'` or `'info'`. The original error is rethrown
+untouched:
+
+- it is not wrapped, and its identity is the same one the caller catches;
+- it is not logged here and not marked as logged, so `logger.error(error)`
+  further up the stack still prints it once, as usual;
+- its `message`, `stack` and `cause` are deliberately not recorded, because they
+  can carry data that does not belong in a timing log.
+
+A measurement is also logged when it was faster than `slowThresholdMs` if it
+failed. Logging never throws into the measured code: a custom `save` that throws
+or rejects does not change what `time` returns.
+
+### `using`
+
+A timer implements `Symbol.dispose`, so a scope can end it:
+
+```ts
+{
+  using timer = logger.timer('render')
+  await render()
+} // logs `render took ...` here, including when `render` throws
+```
+
+An exception that leaves the scope is logged as a normal measurement; use `time`
+to record the failure.
+
+### Pure helpers
+
+`@zanix/utils/helpers` exports the building blocks without any logging:
+`measure(fn)` returns `{ result, durationMs }`, `startTimer()` returns a function
+that reads the elapsed time, `formatDuration(ms)` gives `12.3ms` / `1.25s`, and
+`serverTimingHeader(entries)` builds the value of a `Server-Timing` response
+header. See [Helpers](./helpers.md#timing).
+
 ## Creating a custom Logger
 
 Instantiating `new Logger(options)` lets you fully control how (and whether)

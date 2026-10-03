@@ -6,6 +6,71 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to
 [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [4.8.0] - 2026-10-03
+
+### Added
+
+- **`Logger#timer(label, options)` and `Logger#time(label, fn, options)` measure and log a
+  duration.** A log said that an operation happened but not how long it took, so a slow request
+  could not be traced from the logs. `time` runs a function (a synchronous one stays synchronous,
+  an async one stays async) and `timer` returns a `LoggerTimer` (`elapsed()`, `stop(metadata?)`,
+  and `Symbol.dispose` for `using`). Each logs one entry through the logger's own redaction,
+  formatting and storage: the message is `<label> took 12.3ms`, and the entry's `data` carries the
+  stable fields `label`, `durationMs` (milliseconds, two decimals, from `performance.now()`) and
+  `status` (`'ok'` or `'error'`). The default level is `'debug'` (printed, never persisted);
+  `level` (`'debug'`, `'info'`, `'warn'`, `'high'`), `slowThresholdMs` (log only the slow ones,
+  then at `'warn'` and persisted), `noSave`, `metadata` (redacted by key; it cannot override the
+  fixed fields) and `clock` (for tests) tune it. When the function throws or rejects, the
+  measurement is logged with `status: 'error'`, `errorName` and, for a string `code`, `errorCode`,
+  at least at `'warn'`, and the original error is rethrown unchanged: not wrapped, not marked as
+  logged, its message not recorded. Logging a measurement never throws into the measured code. The
+  default `logger` and `createClientLogger`'s browser-safe instance both have them.
+- **`LoggerTimer`, `LoggerTimerOptions` and `LoggerTimerLevel` types**, exported from
+  `@zanix/utils/logger` and `@zanix/utils/logger/client`.
+- **Timing helpers in `@zanix/utils/helpers`** (`src/utils/timing.ts`, dependency-free):
+  `startTimer`, `measure`, `formatDuration` (`0.42ms`, `12.3ms`, `1.25s`, `2m 05s`),
+  `roundDuration`, `defaultClock`, and `serverTimingHeader`, which builds the value of a
+  `Server-Timing` response header from a list of measurements (token-safe names, quoted and
+  escaped descriptions). A server can use it to show where a request's time went in the browser's
+  devtools.
+
+- **A minimum level for the `Logger`.** The logger printed and persisted every entry, so a service
+  could not keep its logs quiet in production or silence them in a test, and the timing entries
+  above had nothing to switch off. A level (`'debug'`, `'info'`, `'warn'`, `'high'`, `'error'` or
+  `'silent'`, from the least to the most severe; `'success'` ranks with `'info'`) drops what is
+  below it: not printed, not redacted, not persisted, `Logger#ingest` entries included. It is set
+  by the `level` option, else by the `LOG_LEVEL` environment variable (exported as
+  `LOG_LEVEL_ENV`, read once when the logger is created, never prompting for a permission it does
+  not have), and changed at run time with `Logger#setLevel`; `Logger#getLevel` and
+  `Logger#isLevelEnabled(method)` read it, the latter so a costly argument is built only when it
+  will be used. The default is `'debug'`, so a program that sets nothing behaves as before. A
+  value that is not a level is reported once and ignored, never hiding logs or stopping the
+  process. `createClientLogger` takes a `level` option and never reads the environment. `logger.error`
+  checks the level before serializing, so an error it drops is not marked as logged. `time` takes a
+  fast path that only runs the function when a measurement could never be logged at the current
+  level (neither its own level nor `'warn'`, the level a failure is raised to, is enabled): no
+  clock is read and no entry is built; a measurement whose own level is dropped is still timed
+  so a failure is logged at `'warn'` with its duration. `LoggerLevel`, `LOG_LEVEL_ENV`,
+  `LOGGER_LEVELS` and `DEFAULT_LOGGER_LEVEL` are exported from `@zanix/utils/logger`
+  (`LoggerLevel` also from `@zanix/utils/types`); see `docs/logger.md`.
+- **The public type exports `deno doc --lint` needs, in every entry point.** Six entry points
+  referenced types that were not exported, so `deno doc --lint` reported 67 errors
+  (`private-type-ref`): `@zanix/utils/validator` (the decorator, options and metadata types),
+  `@zanix/utils/helpers` (`ConfigFile`, the encryption and masking option types, `ZanixGlobal` and
+  `ZanixProjects`, the `Logger` class's types), `@zanix/utils/types` (the timer types, `RedactOptions`,
+  `BaseRTO`), `@zanix/utils/errors` (`SerializeError`, `HttpErrorCodes`), `@zanix/utils/workers`
+  (`TaskFunction`, `TaskCallback`, `TaskCallbackResponse`) and `@zanix/utils/logger` (the class
+  `Logger` extends, as `LoggerBase`). They are type-only re-exports with no runtime import, so no
+  module graph changes, and every entry point now passes `deno doc --lint`.
+
+### Fixed
+
+- **The logger header printed `[undefined]` (`ZNX-INFO [undefined]:`) when the project's
+  `deno.json(c)` has no `name`.** `buildHeaderLog` interpolated the config-name reader's result
+  without checking it, so only a reader that threw fell back to a header with no app name. The
+  `[<name>]` suffix is now added only when the name is a non-empty string, in both the terminal
+  and the browser variant.
+
 ## [4.7.1] - 2026-09-28
 
 ### Added

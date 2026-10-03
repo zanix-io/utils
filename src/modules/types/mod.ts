@@ -49,8 +49,12 @@ export type {
   LoggerData,
   LoggerFileOptions,
   LoggerFunctionOptions,
+  LoggerLevel,
   LoggerMethods,
   LoggerOptions,
+  LoggerTimer,
+  LoggerTimerLevel,
+  LoggerTimerOptions,
   SaveDataFile,
   SaveDataFileOptions,
   SaveDataFunction as LoggerSaveData,
@@ -66,6 +70,7 @@ export type {
   BaseSerializeError,
   ErrorOptions,
   HttpErrorCodes as HttpErrors,
+  RedactOptions,
   SerializeError,
 } from 'typings/errors.ts'
 
@@ -88,6 +93,7 @@ export type {
   ValidationOptions,
 } from 'typings/validations.ts'
 
+export type { BaseRTO } from 'modules/validations/base/rto.ts'
 export type { EnumType } from 'modules/validations/decorators/generic/is-enum.ts'
 
 export type {

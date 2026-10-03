@@ -219,6 +219,50 @@ interpolateUrl('https://x.com?address={{address}}', {
 // 'https://x.com?address%5Bcity%5D=Bogot%C3%A1&address%5Bzip%5D=110111'
 ```
 
+## Timing
+
+Small, dependency-free helpers to measure and report durations. `logger.timer`
+and `logger.time` (see [Logger](./logger.md#measuring-how-long-something-takes))
+log a duration; these do the same measuring without logging.
+
+| Symbol               | Signature                                          | Description                                                                                                                                                          |
+| -------------------- | -------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `startTimer`         | `(clock?): () => number`                           | Starts a stopwatch; the returned function reads the milliseconds elapsed, unrounded, as often as needed.                                                             |
+| `measure`            | `<T>(fn: () => T, clock?): { result, durationMs }` | Runs `fn` and reports how long it took. A function returning a promise gives a promise of the same shape. An error propagates unchanged and no duration is reported. |
+| `formatDuration`     | `(ms: number): string`                             | `0.42ms`, `12.3ms`, `850ms`, `1.25s`, `2m 05s`. A negative or non-finite value gives `0ms`.                                                                          |
+| `roundDuration`      | `(ms: number): number`                             | Rounds to two decimals.                                                                                                                                              |
+| `serverTimingHeader` | `(entries: ServerTimingEntry[]): string`           | Builds the value of a `Server-Timing` response header. Returns `''` when no entry survives.                                                                          |
+| `defaultClock`       | `() => number`                                     | `performance.now()` where it exists, `Date.now()` otherwise.                                                                                                         |
+
+```ts
+import {
+  formatDuration,
+  measure,
+  serverTimingHeader,
+  startTimer,
+} from 'jsr:@zanix/utils@[version]/helpers'
+
+const { result: user, durationMs } = await measure(() => fetchUser(id))
+
+const elapsed = startTimer()
+await doWork()
+console.log(`took ${formatDuration(elapsed())}`)
+
+// A browser's devtools show these under the request's Timing tab.
+response.headers.set(
+  'Server-Timing',
+  serverTimingHeader([
+    { name: 'db', durationMs: 12.34 },
+    { name: 'render', durationMs: 48, description: 'page' },
+  ]), // 'db;dur=12.34, render;dur=48;desc="page"'
+)
+```
+
+`Server-Timing` is visible to whoever can see the response, so put only
+durations and fixed labels in it, never a value that came from a user or a
+secret. Characters an HTTP token does not allow in a metric name are replaced by
+`_`.
+
 ## Templates & interpolation
 
 Generic `{{field}}`/`{{nested.path}}` placeholder resolution, used internally by

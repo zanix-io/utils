@@ -59,6 +59,48 @@ export * from 'utils/encoders.ts'
 export * from './encryption/mod.ts'
 export * from './masking/mod.ts'
 export * from 'utils/ttl.ts'
+export * from 'utils/timing.ts'
 export * from 'utils/sync.ts'
 export * from 'utils/lazy-import.ts'
 export * from 'utils/runtime.ts'
+
+// Exported only so the signatures of the helpers above resolve for `deno doc --lint`: the option,
+// level and file shapes `readConfig`, `generateHash`, `generateRSAKeys`, `mask` and the like take
+// or return. Use them to type your own values.
+export type { ConfigFile } from 'typings/config.ts'
+export type {
+  AESLength,
+  EncryptionLevel,
+  HashAlgorithm,
+  ValidRSAKeysOptions,
+  ValidRSAModulusLength,
+} from 'typings/encryption.ts'
+export type {
+  MaskingAlgorithms,
+  MaskingBaseOptions,
+  MaskingOptions,
+  UnMaskingOptions,
+} from 'typings/masking.ts'
+export type { DefaultLogger, ZanixGlobal, ZanixProjects } from 'typings/zanix.ts'
+// The class `DefaultLogger` (the type of `Znx.logger`) is an instance of, under the same name the
+// `types` entrypoint and `@zanix/utils/logger` already give it. Type-only: nothing is imported.
+export type { Logger as LoggerBase } from 'modules/logger/main.ts'
+// And the types in that class's signatures, the same set `@zanix/utils/logger` exports.
+export type {
+  BaseFormattedLog,
+  BaseMethods,
+  Console as GlobalConsole,
+  ConsoleInfo,
+  ConsoleMethodFor,
+  DefaultFormattedLog,
+  DefaultResponse,
+  LoggerData,
+  LoggerLevel,
+  LoggerMethods,
+  LoggerTimer,
+  LoggerTimerLevel,
+  LoggerTimerOptions,
+  SaveDataFile,
+  SaveDataFunction,
+} from 'typings/logger.ts'
+export type { TaskCallback, TaskCallbackResponse } from 'typings/workers.ts'

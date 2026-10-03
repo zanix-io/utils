@@ -145,3 +145,37 @@ Deno.test('baseFormatter leaves non-Error extra data untouched', () => {
 
   assertEquals(result.data[0], { key: 'user:42' })
 })
+
+Deno.test('buildHeaderLog omits the app name when the config has no name, in both variants', () => {
+  registerConfigNameReader(() => undefined)
+  try {
+    for (const isBrowser of [false, true]) {
+      const [header] = buildHeaderLog('info', isBrowser)
+      assert(header.includes('ZNX-INFO'), header)
+      assertFalse(header.includes('undefined'), header)
+      // The terminal variant's own ANSI escapes contain `[`, so only the browser one is checked.
+      if (isBrowser) assertFalse(header.includes('['), header)
+    }
+  } finally {
+    registerConfigNameReader(() => readConfig().name)
+  }
+})
+
+Deno.test('buildHeaderLog omits the app name when the name is an empty string', () => {
+  registerConfigNameReader(() => '')
+  try {
+    assertFalse(buildHeaderLog('info', true)[0].includes('['))
+  } finally {
+    registerConfigNameReader(() => readConfig().name)
+  }
+})
+
+Deno.test('buildHeaderLog shows the app name in brackets when the config has one', () => {
+  registerConfigNameReader(() => '@my-app')
+  try {
+    assert(buildHeaderLog('info', true)[0].includes(' [@my-app]:'))
+    assert(buildHeaderLog('info', false)[0].includes('[@my-app]'))
+  } finally {
+    registerConfigNameReader(() => readConfig().name)
+  }
+})
