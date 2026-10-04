@@ -43,6 +43,7 @@ export * from './decorators/generic/utils.ts'
 export * from './decorators/generic/is-enum.ts'
 export * from './decorators/generic/is-boolean.ts'
 export * from './decorators/generic/is-object.ts'
+export * from './decorators/generic/required-when.ts'
 
 export * from './decorators/nested.ts'
 

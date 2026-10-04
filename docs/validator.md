@@ -434,19 +434,23 @@ length, including empty," it will simply reject every array.
 
 ## Generic / Enum / Boolean
 
-| Decorator / Function | Signature                                                                                                      | Description                                                                                                                                                                                                                  |
-| -------------------- | -------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `IsBoolean`          | `(options?: ValidationOptions) => ValidationDecoratorDefinition`                                               | Validates that the value is strictly `true` or `false`.                                                                                                                                                                      |
-| `isBoolean`          | `(value?: boolean) => boolean`                                                                                 | Raw predicate.                                                                                                                                                                                                               |
-| `isBooleanArray`     | `(value: boolean[]) => boolean`                                                                                | Raw predicate for arrays of booleans.                                                                                                                                                                                        |
-| `IsObject`           | `(options?: ValidationOptions) => ValidationDecoratorDefinition`                                               | Validates that the value is a plain object or class instance — rejects `null` and arrays explicitly, the two real `typeof` footguns. Never validates the object's own shape; pair with a separate, dedicated check for that. |
-| `isObject`           | `(value?: unknown) => boolean`                                                                                 | Raw predicate.                                                                                                                                                                                                               |
-| `isObjectArray`      | `(value: unknown[]) => boolean`                                                                                | Raw predicate for arrays of objects.                                                                                                                                                                                         |
-| `IsEnum`             | `(validations: EnumType, options?: ValidationOptions) => ValidationDecoratorDefinition`                        | Validates that the value is a member of the given enum-like object or array of literals.                                                                                                                                     |
-| `isEnum`             | `(value: unknown, enumObj: EnumType) => boolean`                                                               | Raw predicate. Accepts a TypeScript `enum` object or a plain array of allowed literal values.                                                                                                                                |
-| `isEnumArray`        | `(value: unknown[], enumObj: EnumType) => boolean`                                                             | Raw predicate for arrays; returns `false` (instead of throwing) if `value` is not an array.                                                                                                                                  |
-| `EnumType`           | `type EnumType = Record<string, unknown> \| unknown[]`                                                         | The type accepted by `IsEnum`/`isEnum`/`isEnumArray`: either an enum-like object or an array of literal values treated as an enum.                                                                                           |
-| `Expose`             | `(options?: Pick<ValidationOptions, 'message' \| 'optional' \| 'transform'>) => ValidationDecoratorDefinition` | Exposes an accessor's value from the plain payload without adding any validation logic. See below for when it's needed.                                                                                                      |
+| Decorator / Function    | Signature                                                                                                                                    | Description                                                                                                                                                                                                                                         |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `IsBoolean`             | `(options?: ValidationOptions) => ValidationDecoratorDefinition`                                                                             | Validates that the value is strictly `true` or `false`.                                                                                                                                                                                             |
+| `isBoolean`             | `(value?: boolean) => boolean`                                                                                                               | Raw predicate.                                                                                                                                                                                                                                      |
+| `isBooleanArray`        | `(value: boolean[]) => boolean`                                                                                                              | Raw predicate for arrays of booleans.                                                                                                                                                                                                               |
+| `IsObject`              | `(options?: ValidationOptions) => ValidationDecoratorDefinition`                                                                             | Validates that the value is a plain object or class instance — rejects `null` and arrays explicitly, the two real `typeof` footguns. Never validates the object's own shape; pair with a separate, dedicated check for that.                        |
+| `isObject`              | `(value?: unknown) => boolean`                                                                                                               | Raw predicate.                                                                                                                                                                                                                                      |
+| `isObjectArray`         | `(value: unknown[]) => boolean`                                                                                                              | Raw predicate for arrays of objects.                                                                                                                                                                                                                |
+| `IsEnum`                | `(validations: EnumType, options?: ValidationOptions) => ValidationDecoratorDefinition`                                                      | Validates that the value is a member of the given enum-like object or array of literals.                                                                                                                                                            |
+| `isEnum`                | `(value: unknown, enumObj: EnumType) => boolean`                                                                                             | Raw predicate. Accepts a TypeScript `enum` object or a plain array of allowed literal values.                                                                                                                                                       |
+| `isEnumArray`           | `(value: unknown[], enumObj: EnumType) => boolean`                                                                                           | Raw predicate for arrays; returns `false` (instead of throwing) if `value` is not an array.                                                                                                                                                         |
+| `EnumType`              | `type EnumType = Record<string, unknown> \| unknown[]`                                                                                       | The type accepted by `IsEnum`/`isEnum`/`isEnumArray`: either an enum-like object or an array of literal values treated as an enum.                                                                                                                  |
+| `Expose`                | `(options?: Pick<ValidationOptions, 'message' \| 'optional' \| 'transform'>) => ValidationDecoratorDefinition`                               | Exposes an accessor's value from the plain payload without adding any validation logic. See below for when it's needed.                                                                                                                             |
+| `RequiredWhen`          | `<T extends BaseRTO>(key: keyof T & string, when: RequiredWhenCondition<T>, options?: RequiredWhenOptions) => ValidationDecoratorDefinition` | Makes a string field required only when another field of the same RTO meets a condition (equals a value, is in a list, or satisfies a predicate). Always exposes the property. See [Conditionally required fields](#conditionally-required-fields). |
+| `RequiredWhenCondition` | `RequiredWhenValue \| readonly RequiredWhenValue[] \| ((instance: T) => boolean)`                                                            | The condition accepted by `RequiredWhen`.                                                                                                                                                                                                           |
+| `RequiredWhenValue`     | `string \| number \| boolean`                                                                                                                | A primitive the trigger field is compared with.                                                                                                                                                                                                     |
+| `RequiredWhenOptions`   | `Omit<ValidationOptions, 'optional'>`                                                                                                        | Options of `RequiredWhen`: `message`, `each`, `transform` (`optional` is implied by the condition, `expose` is always on).                                                                                                                          |
 
 ### Examples
 
@@ -513,6 +517,69 @@ options — you don't need to stack `@Expose()` on top of them. `IsNumber`,
 `MinNumber`, `MaxNumber`, `IsDate`, `MinDate`, `MaxDate`, `MinAge`, `MaxAge`, and
 `ValidateNested` go a step further and expose automatically (with
 transformation), so `expose` is redundant on those too.
+
+### Conditionally required fields
+
+`RequiredWhen(key, when, options?)` makes a string field mandatory only when
+another field of the same RTO meets a condition. It exists for multi-intent
+RTOs: one `Body` behind a single action with a field (`intent`) that tells what
+was submitted (`create`, `delete`, `setDefault`, ...), where some fields are
+mandatory for one intent only. No other decorator can express it: `expose: true`
+without `optional` flags a missing key whatever the intent, and `optional: true`
+skips the rule when the key is missing or `''`.
+
+```typescript
+class ShippingAddressActionRTO extends BaseRTO {
+  @IsEnum(['create', 'delete', 'setDefault'], { expose: true })
+  accessor intent!: 'create' | 'delete' | 'setDefault'
+
+  @IsString({ expose: true, optional: true })
+  accessor id: string | undefined
+
+  @RequiredWhen<ShippingAddressActionRTO>('intent', 'create', { message: 'Required' })
+  accessor line1: string | undefined
+
+  @RequiredWhen<ShippingAddressActionRTO>('intent', ['create', 'setDefault'])
+  accessor phone: string | undefined
+
+  @RequiredWhen<ShippingAddressActionRTO>('intent', (rto) => rto.intent !== 'delete')
+  accessor note: string | undefined
+}
+
+await classValidation(ShippingAddressActionRTO, { intent: 'delete', id: '7' }) // ok
+await classValidation(ShippingAddressActionRTO, { intent: 'create', line1: '  ' })
+// rejects: line1 (blank), phone (missing) and note (missing), all at once
+```
+
+Behavior:
+
+- **Condition met**: the field must be a string with at least one non-whitespace
+  character. A missing key, `''` and a blank string are refused; any other type
+  is refused too.
+- **Condition not met**: a missing key, `''` or any string is accepted (the
+  value is kept as submitted); any other type is still refused, as with
+  `optional`.
+- **All errors at once**: every failing field is reported in the same
+  `cause.properties`, like the rest of the validator. A missing or invalid
+  `intent` is reported by `intent` itself, and a value or list condition never
+  matches it, so none of those fields is flagged (a predicate decides for
+  itself).
+- **No ordering constraints**: the result does not depend on the order of the
+  keys of the plain object or on the order the accessors are declared in. The
+  trigger is read as submitted, even if it is not exposed.
+- **`when`**: a primitive (equality), a list (membership) or a predicate that
+  receives the instance under validation. Primitives are compared as strings, so
+  `2` matches both the submitted `'2'` and a value already transformed by
+  `IsNumber`. The predicate sees the fields that are exposed (`expose: true`, or
+  a decorator that transforms), as submitted or already transformed. These three
+  forms cover equality on an intent, several intents, and anything else (a
+  combination of fields) without a fourth concept.
+- **Options**: `message` replaces both the required and the type message (by
+  default `'<field>' is required.` and `'<field>' must be a valid string.`);
+  `each` requires a non-empty array of non-blank strings; `transform` runs
+  before the check and its result is exposed. The property is always exposed,
+  and `classMetadata` reports it with `optional: true`, `expose: true` and
+  `args: [key, when]`.
 
 ## Nested / Custom validation
 

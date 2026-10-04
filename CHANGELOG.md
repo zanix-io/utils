@@ -6,6 +6,35 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to
 [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [4.9.0] - 2026-10-03
+
+### Added
+
+- **`RequiredWhen(key, when, options?)` makes a string field required only when another field of
+  the RTO meets a condition.** A multi-intent RTO (one `Body` with an `intent` field that says what
+  was submitted: `create`, `delete`, ...) needs fields that are mandatory for one intent only, and
+  no decorator could express it: `expose: true` without `optional` flags a missing key whatever the
+  intent, and `optional: true` skips the rule when the key is missing or `''`. The only way out was
+  a custom `Validation` decorator on a field assigned in the RTO constructor. `RequiredWhen` runs
+  its rule for a missing key, `''` and a blank string too: when the condition holds the field must
+  be a string with a non-whitespace character, and when it does not, a missing key, `''` or any
+  string is accepted (any other type is refused). `when` is a primitive (equality, compared as
+  strings so `2` matches the submitted `'2'`), a list (membership) or a predicate that receives
+  the instance. The errors of every failing field are reported at once, a missing or invalid
+  trigger flags only the trigger, and the result does not depend on the order of the keys of the
+  plain object or of the accessors. The property is always exposed; `message`, `each` and
+  `transform` work as in the other decorators, and `classMetadata` reports it with `optional: true`
+  and `args: [key, when]`. The `RequiredWhenCondition`, `RequiredWhenValue` and
+  `RequiredWhenOptions` types are exported from `@zanix/utils/validator`.
+
+### Changed
+
+- **A field of a conditional decorator is exposed without the exposure error of a missing key.**
+  Internally, the shared accessor wiring (`defineInit`) takes a `conditional` flag, set only by
+  `RequiredWhen`, that skips the "property must be defined" error of `expose` and leaves the
+  decorator's own validation to decide. The public API and the behavior of every other decorator
+  are unchanged.
+
 ## [4.8.0] - 2026-10-03
 
 ### Added

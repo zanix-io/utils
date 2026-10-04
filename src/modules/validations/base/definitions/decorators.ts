@@ -40,6 +40,21 @@ export function defineValidationDecorator<T extends BaseRTO = BaseRTO>(
    */
   meta: ClassFieldDecoratorMeta | undefined = undefined,
 ): ValidationDecoratorDefinition {
+  return buildDecorator(validation, opts, meta, false)
+}
+
+/**
+ * Shared body of {@link defineValidationDecorator} and {@link defineCatalogValidationDecorator}.
+ * `conditional` marks a field that is required only when a condition on another field holds
+ * (`RequiredWhen`): it is exposed, a missing key is not an exposure error, and its validation
+ * function runs for the missing key.
+ */
+function buildDecorator<T extends BaseRTO = BaseRTO>(
+  validation: ValidationFunction<T>,
+  opts: ValidationOptions,
+  meta: ClassFieldDecoratorMeta | undefined,
+  conditional: boolean,
+): ValidationDecoratorDefinition {
   if (opts.transform) opts.expose = true // If 'transform' is enabled, 'expose' is set to true by default.
 
   const { each, transform: currentTransform = (val: string) => val } = opts
@@ -50,7 +65,13 @@ export function defineValidationDecorator<T extends BaseRTO = BaseRTO>(
   const decorator: ValidationDecoratorDefinition = ({ set }, context) => {
     const property = context.name.toString()
 
-    registerClassField(context, property, opts, meta)
+    // A conditionally required field is never unconditionally required: it reports `optional`.
+    registerClassField(
+      context,
+      property,
+      conditional ? { ...opts, optional: true } : opts,
+      meta,
+    )
 
     const { message = '' } = opts
 
@@ -79,7 +100,7 @@ export function defineValidationDecorator<T extends BaseRTO = BaseRTO>(
         transform,
         optional: opts.optional,
       }),
-      init: defineInit(opts, { messageResult, property }),
+      init: defineInit(opts, { messageResult, property, conditional }),
     }
   }
   return decorator
@@ -103,6 +124,8 @@ export function defineCatalogValidationDecorator<T extends BaseRTO = BaseRTO>(
   validation: ValidationFunction<T>,
   opts: ValidationOptions,
   meta: ClassFieldDecoratorMeta,
+  /** The field is required only when a condition on another field holds (`RequiredWhen`). */
+  conditional = false,
 ): ValidationDecoratorDefinition {
-  return defineValidationDecorator(validation, opts, meta)
+  return buildDecorator(validation, opts, meta, conditional)
 }

@@ -12,9 +12,15 @@ import { defineExpose } from './exposes.ts'
  */
 export const defineInit = (
   opts: ValidationOptions,
-  { messageResult, property }: {
+  { messageResult, property, conditional }: {
     messageResult: ValidationMessage
     property: string
+    /**
+     * The field is required only when a condition on another field holds (`RequiredWhen`): it is
+     * exposed like an `expose` field but a missing key is not an error of the exposure itself —
+     * the decorator's own validation function decides, and it runs for the missing key too.
+     */
+    conditional?: boolean
   },
 ) => {
   const { expose, each, optional } = opts
@@ -45,7 +51,7 @@ export const defineInit = (
         property,
         value,
         plainValue,
-        optional,
+        optional: optional || conditional,
         messageResult,
       })
     }
