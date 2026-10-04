@@ -40,6 +40,8 @@ const validData: Partial<EachBranchesRTO> = {
   plainObjects: [{ a: 1 }, { b: 2 }],
   customValid: 'x',
   customValidEach: ['x', 'y'],
+  requiredText: 'x',
+  requiredTexts: ['x', 'y'],
 }
 
 Deno.test({
@@ -130,4 +132,52 @@ Deno.test('EachBranchesRTO - rejects a non-object plainObject value (array)', as
     HttpError,
     'BAD_REQUEST',
   )
+})
+
+Deno.test('EachBranchesRTO - RequiredWhen scalar refuses a blank value when the condition holds', async () => {
+  await assertRejects(
+    () =>
+      classValidation(EachBranchesRTO, { ...validData, requiredText: '  ' }).catch((err) => {
+        assertEquals(err.cause.properties.requiredText, [{
+          constraints: ["'requiredText' is required."],
+          value: '  ',
+          plainValue: '  ',
+        }])
+        throw err
+      }),
+    HttpError,
+    'BAD_REQUEST',
+  )
+})
+
+Deno.test('EachBranchesRTO - RequiredWhen each refuses a blank entry when the condition holds', async () => {
+  await assertRejects(
+    () =>
+      classValidation(EachBranchesRTO, { ...validData, requiredTexts: ['x', ' '] }).catch(
+        (err) => {
+          assertEquals(err.cause.properties.requiredTexts, [{
+            constraints: [
+              "'requiredTexts' is required and must have at least one non-blank string.",
+            ],
+            value: ['x', ' '],
+            plainValue: ['x', ' '],
+          }])
+          throw err
+        },
+      ),
+    HttpError,
+    'BAD_REQUEST',
+  )
+})
+
+Deno.test('EachBranchesRTO - RequiredWhen accepts missing and blank values when the condition does not hold', async () => {
+  const { requiredText: _t, requiredTexts: _ts, ...rest } = validData
+  await classValidation(EachBranchesRTO, { ...rest, enumValue: 'B' })
+  const instance = await classValidation(EachBranchesRTO, {
+    ...rest,
+    enumValue: 'B',
+    requiredText: '',
+    requiredTexts: ['', 'x'],
+  })
+  assertEquals(instance.requiredTexts, ['', 'x'])
 })

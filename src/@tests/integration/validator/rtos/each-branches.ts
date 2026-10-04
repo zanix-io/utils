@@ -20,6 +20,7 @@ import { IsBoolean } from 'modules/validations/decorators/generic/is-boolean.ts'
 import { IsObject } from 'modules/validations/decorators/generic/is-object.ts'
 import { MaxNumber } from 'modules/validations/decorators/numbers/max-number.ts'
 import { MinNumber } from 'modules/validations/decorators/numbers/min-number.ts'
+import { RequiredWhen } from 'modules/validations/decorators/generic/required-when.ts'
 import { MaxDate } from 'modules/validations/decorators/dates/max-date.ts'
 import { MinDate } from 'modules/validations/decorators/dates/min-date.ts'
 
@@ -135,4 +136,10 @@ export class EachBranchesRTO extends BaseRTO {
 
   @IsNumberString({ each: true, optional: true })
   accessor numberStrings: string[] | undefined
+
+  @RequiredWhen<EachBranchesRTO>('enumValue', 'A')
+  accessor requiredText: string | undefined
+
+  @RequiredWhen<EachBranchesRTO>('enumValue', 'A', { each: true })
+  accessor requiredTexts: string[] | undefined
 }
