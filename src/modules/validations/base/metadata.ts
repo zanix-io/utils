@@ -145,15 +145,16 @@ export class ValidationsMetadata {
     else if (!keys.includes(key)) keys.push(key)
 
     delete error.value?.context
-    let currentError = Reflect.get(error.target, key) as ErrorType | undefined
-    if (currentError) {
-      this.errorPendingResolve(
-        () => this.addConstraint(error.constraints, currentError),
-        pending,
-      )
-    } else currentError = this.errorPendingResolve(() => error, pending)
+    const currentError = Reflect.get(error.target, key) as ErrorType | undefined
+    const newError = this.errorPendingResolve(() => error, pending)
 
-    Reflect.set(error.target, key, currentError)
+    // Always store a promise that resolves to the merged result: the previous error may have
+    // resolved to `undefined` (e.g. an async outer decorator that passed) while this one fails.
+    Reflect.set(
+      error.target,
+      key,
+      currentError ? this.mergeErrors(currentError, newError) : newError,
+    )
   }
 
   /**
@@ -162,9 +163,17 @@ export class ValidationsMetadata {
   public async getValidationErrors<T extends BaseRTO>(container: T) {
     type ErrorType = Promise<ValidationError | undefined>
     const keys = (Reflect.get(container, this.#errorKey) || []) as string[] // get error keys
-    const errors = await Promise.all(keys.map((key) => {
-      return Reflect.get(container, key) as ErrorType
-    }))
+    const read = () => keys.map((key) => Reflect.get(container, key) as ErrorType)
+
+    let pending = read()
+    let errors = await Promise.all(pending)
+    // An inner decorator behind an async one registers its error while the first read is awaited,
+    // replacing the stored promise: read again until no promise changes.
+    while (read().some((error, i) => error !== pending[i])) {
+      pending = read()
+      // deno-lint-ignore no-await-in-loop -- each pass depends on the previous one settling.
+      errors = await Promise.all(pending)
+    }
 
     return errors.filter(Boolean) as ValidationError[]
   }
@@ -208,18 +217,20 @@ export class ValidationsMetadata {
   }
 
   /**
-   * Add error constraints
+   * Merge two errors of the same property: the constraints of both when both fail, otherwise
+   * whichever one failed.
    */
-  private addConstraint(
-    constrains: string[],
-    currentError?: Promise<ValidationError | undefined>,
+  private async mergeErrors(
+    current: Promise<ValidationError | undefined>,
+    added: Promise<ValidationError | undefined>,
   ) {
-    currentError?.then((err) => {
-      if (!err) return
-      err.constraints = Array.from(
-        new Set([...err.constraints, ...constrains]),
-      )
-    })
+    const [first, second] = await Promise.all([current, added])
+    if (!first || !second) return first ?? second
+
+    first.constraints = Array.from(
+      new Set([...first.constraints, ...second.constraints]),
+    )
+    return first
   }
 
   /**

@@ -2,7 +2,12 @@
 
 import { classValidation } from 'modules/validations/main.ts'
 import { assertEquals, assertRejects } from '@std/assert'
-import { ValidateNestedDefaultArrayRTO, ValidateNestedRTO } from '../rtos/nested.ts'
+import {
+  NestedAboveLengthRTO,
+  NestedBelowLengthRTO,
+  ValidateNestedDefaultArrayRTO,
+  ValidateNestedRTO,
+} from '../rtos/nested.ts'
 
 Deno.test('Nested RTO required validations errors', async () => {
   const error: any = {}
@@ -340,3 +345,24 @@ Deno.test('Nested RTO multiple levels', async () => {
     },
   )
 })
+
+for (const RTO of [NestedBelowLengthRTO, NestedAboveLengthRTO]) {
+  Deno.test(`Nested array length is enforced regardless of decorator order (${RTO.name})`, async () => {
+    const item = { numberValue: '1' }
+
+    await classValidation(RTO, { Numbers: [item] })
+
+    const rejections = [[], [item, item, item]].map(async (Numbers) => {
+      const error: any = {}
+      await assertRejects(
+        () =>
+          classValidation(RTO, { Numbers }).catch((err) => {
+            Object.assign(error, err.cause)
+            throw err
+          }),
+      )
+      assertEquals(Object.keys(error.properties), ['Numbers'])
+    })
+    await Promise.all(rejections)
+  })
+}

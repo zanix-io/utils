@@ -9,7 +9,7 @@
 
 /**
  * General-purpose helpers for the Zanix ecosystem: config and path resolution, file utilities,
- * date/URL/encoding/network/casing/geo helpers, the Zanix namespace helper, cryptography
+ * date/URL/encoding/network/casing/geo/locale helpers (`isLangTag`, `parseAcceptLanguage`), the Zanix namespace helper, cryptography
  * (encryption and masking), code-to-storage sync reconciliation (`planCodeSync`), and lazy
  * resolution of a conditional/optional dependency (`lazyFunction`/`lazyClass`/`lazyValue`).
  *
@@ -31,6 +31,7 @@ export * from 'utils/concurrency.ts'
 export * from 'utils/cron.ts'
 export * from 'utils/routes.ts'
 export * from 'utils/params.ts'
+export * from 'utils/locale.ts'
 // Explicit, not `export *` — `registerConfigReader` (same file) is internal registration
 // plumbing (see its own doc), wired up as an import-time side effect below; it stays out of this
 // production surface the same way `resetConfig` (`./config.ts`, just below) does.

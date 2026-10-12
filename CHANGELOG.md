@@ -6,6 +6,26 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to
 [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [4.10.0] - 2026-10-12
+
+### Added
+
+- **`isLangTag(value)` and `parseAcceptLanguage(header)`** (`@zanix/utils/helpers`): the shape check
+  for a language tag (`es`, `es-MX`, `zh-Hant-TW`, at most 35 characters) and the languages of an
+  `Accept-Language` header in preference order (by `q`, ties in the order written; invalid tags,
+  `*` and `q=0` entries left out). `@zanix/space`, `@zanix/iam` and `@zanix/notifications` each kept
+  their own copy of both; they take them from here.
+
+### Fixed
+
+- **A decorator stacked below an async one (such as `@ValidateNested`) no longer loses its
+  errors.** `@ValidateNested(Item, { each: true })` declared above `@ArrayLength({ min: 1, max: 3 })`
+  ignored the length rule: an empty array and an array longer than `max` were accepted, while the
+  same decorators in the opposite order rejected them. When the outer decorator's validation was
+  asynchronous and passed, the error registered afterwards by the inner decorator was discarded.
+  The errors of every decorator on a field are now merged and reported whatever the order of the
+  decorators.
+
 ## [4.9.0] - 2026-10-03
 
 ### Added

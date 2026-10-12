@@ -1,5 +1,6 @@
 import { IsNumber } from 'modules/validations/decorators/numbers/is-number.ts'
 import { ValidateNested } from 'modules/validations/decorators/nested.ts'
+import { ArrayLength } from 'modules/validations/decorators/arrays/length.ts'
 import { StringsRTO } from './strings.ts'
 import { NumbersRTO } from './numbers.ts'
 import { BaseRTO } from 'modules/validations/mod.ts'
@@ -41,4 +42,16 @@ export class ValidateNestedDefaultArrayRTO extends BaseRTO {
     new NumbersRTO({ numberValue: '1' }),
     new NumbersRTO({ numberValue: '2' }),
   ]
+}
+
+export class NestedBelowLengthRTO extends BaseRTO {
+  @ValidateNested(NumbersRTO, { each: true })
+  @ArrayLength({ min: 1, max: 2 })
+  accessor Numbers!: NumbersRTO[]
+}
+
+export class NestedAboveLengthRTO extends BaseRTO {
+  @ArrayLength({ min: 1, max: 2 })
+  @ValidateNested(NumbersRTO, { each: true })
+  accessor Numbers!: NumbersRTO[]
 }
