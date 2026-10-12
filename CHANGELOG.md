@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to
 [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [4.11.0] - 2026-10-12
+
+### Added
+
+- **`escapeHtml(value)`** (`@zanix/utils/html`, also from `@zanix/utils/helpers`): escapes `&`, `<`, `>`,
+  `"` and `'`. The module has no imports, so it loads in a browser or a worker; the `html` subpath
+  exists so a light consumer does not pull in all of `helpers`. `@zanix/notifications` and
+  `@zanix/space` each kept a private copy; they take it from here.
+
 ## [4.10.0] - 2026-10-12
 
 ### Added
